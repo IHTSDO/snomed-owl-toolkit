@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.snomed.otf.reasoner.server.service;
+package org.snomed.otf.owltoolkit.service;
 
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
-import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
 import org.snomed.otf.owltoolkit.testutil.ZipUtil;
 
 import java.io.File;
@@ -29,8 +27,8 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.snomed.otf.owltoolkit.service.SnomedReasonerService.ELK_REASONER_FACTORY;
-import static org.snomed.otf.reasoner.server.service.TestFileUtil.readEquivalentConceptLinesTrim;
-import static org.snomed.otf.reasoner.server.service.TestFileUtil.readInferredRelationshipLinesTrim;
+import static org.snomed.otf.owltoolkit.service.TestFileUtil.readEquivalentConceptLinesTrim;
+import static org.snomed.otf.owltoolkit.service.TestFileUtil.readInferredRelationshipLinesTrim;
 
 public class EquivalenceClassificationIntegrationTest {
 

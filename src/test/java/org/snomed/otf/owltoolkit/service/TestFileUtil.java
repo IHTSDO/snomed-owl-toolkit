@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.snomed.otf.reasoner.server.service;
+package org.snomed.otf.owltoolkit.service;
 
 import org.snomed.otf.owltoolkit.testutil.ZipUtil;
 
