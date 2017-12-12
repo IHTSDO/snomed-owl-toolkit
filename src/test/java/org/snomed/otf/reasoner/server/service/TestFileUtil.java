@@ -15,7 +15,7 @@
  */
 package org.snomed.otf.reasoner.server.service;
 
-import org.snomed.otf.util.ZipUtil;
+import org.snomed.otf.owltoolkit.testutil.ZipUtil;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
-import org.snomed.otf.util.ZipUtil;
+import org.snomed.otf.owltoolkit.testutil.ZipUtil;
 
 import java.io.File;
 import java.io.IOException;

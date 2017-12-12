@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.snomed.otf.util;
+package org.snomed.otf.owltoolkit.testutil;
 
 import java.io.*;
 import java.nio.file.FileVisitResult;
