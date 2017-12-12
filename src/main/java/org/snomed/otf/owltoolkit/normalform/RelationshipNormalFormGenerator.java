@@ -215,22 +215,19 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 
 		final Map<Integer, Collection<Relationship>> relationshipsByGroupId = Multimaps.index(nonIsARelationshipFragments, Relationship::getGroup).asMap();
 
-		final Collection<Collection<Group>> groups = Maps.transformEntries(relationshipsByGroupId, 
-				new EntryTransformer<Integer, Collection<Relationship>, Collection<Group>>() {
-			@Override
-			public Collection<Group> transformEntry(final Integer key, final Collection<Relationship> values) {
-				final Iterable<UnionGroup> unionGroups = toUnionGroups(preserveNumbers, values);
-				final Set<UnionGroup> disjointUnionGroups = getDisjointComparables(unionGroups);
+		final Collection<Collection<Group>> groups = Maps.transformEntries(relationshipsByGroupId,
+				(EntryTransformer<Integer, Collection<Relationship>, Collection<Group>>) (key, values) -> {
+					final Iterable<UnionGroup> unionGroups = toUnionGroups(preserveNumbers, values);
+					final Set<UnionGroup> disjointUnionGroups = getDisjointComparables(unionGroups);
 
-				if (key == 0) {
-					// Relationships in group 0 form separate groups
-					return ImmutableList.copyOf(toZeroGroups(disjointUnionGroups));
-				} else {
-					// Other group numbers produce a single group from all fragments
-					return ImmutableList.of(toNonZeroGroup(preserveNumbers, key, disjointUnionGroups));
-				}
-			}
-		}).values();
+					if (key == 0) {
+						// Relationships in group 0 form separate groups
+						return ImmutableList.copyOf(toZeroGroups(disjointUnionGroups));
+					} else {
+						// Other group numbers produce a single group from all fragments
+						return ImmutableList.of(toNonZeroGroup(preserveNumbers, key, disjointUnionGroups));
+					}
+				}).values();
 
 		return Iterables.concat(groups);
 	}
