@@ -32,8 +32,6 @@ public class OntologyService {
 
 	public static final String SNOMED_IRI = "http://snomed.info/id/";
 	public static final String SNOMED_PREFIX = ":";
-	public static final String SNOMED_CONCEPT = SNOMED_PREFIX + "";
-	public static final String SNOMED_ROLE = SNOMED_PREFIX + "";
 	public static final String SNOMED_ROLE_GROUP = SNOMED_PREFIX + "roleGroup";
 	public static final String SNOMED_ROLE_HAS_MEASUREMENT = SNOMED_PREFIX + "roleHasMeasurement";
 
@@ -159,11 +157,11 @@ public class OntologyService {
 	}
 
 	private OWLObjectProperty getOwlObjectProperty(long typeId) {
-		return factory.getOWLObjectProperty(SNOMED_ROLE + typeId, prefixManager);
+		return factory.getOWLObjectProperty(SNOMED_PREFIX + typeId, prefixManager);
 	}
 
 	private OWLClass getOwlClass(Long conceptId) {
-		return factory.getOWLClass(SNOMED_CONCEPT + conceptId, prefixManager);
+		return factory.getOWLClass(SNOMED_PREFIX + conceptId, prefixManager);
 	}
 
 	public DefaultPrefixManager getPrefixManager() {
