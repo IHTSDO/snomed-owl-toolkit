@@ -1,0 +1,9 @@
+#
+# Comments are removed by unit test
+#
+# This MRCM Attribute Domain reference set is used to communicate which roles should not be grouped
+#
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	domainId	grouped	attributeCardinality	attributeInGroupCardinality	ruleStrengthId	contentTypeId
+
+# 738774007 | Is modification of (attribute) | should not be grouped
+3dcfcbf6-43bf-4a3c-ad78-d075b1c9dbe2	20170131	1	900000000000012004	723561005	738774007	373873005	0	0..*	0..0	723597001	723596005

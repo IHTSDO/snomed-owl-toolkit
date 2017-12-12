@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# Disorder of endocrine system clone
+1362969004	20180131	1	900000000000207008	900000000000073002

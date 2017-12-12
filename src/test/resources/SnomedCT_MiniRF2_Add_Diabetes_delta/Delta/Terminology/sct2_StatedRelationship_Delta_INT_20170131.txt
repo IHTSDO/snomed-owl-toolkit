@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+
+# Diabetes mellitus - is a - Disorder of endocrine system
+110001001	20170131	1	900000000000207008	73211009	362969004	0	116680003	900000000000010007	900000000000451002

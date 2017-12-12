@@ -1,0 +1,47 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+
+#
+# We will include two General Concept Inclusion axioms which will lead to
+# the concepts "Diabetes caused by drug" and "Diabetes due to cystic fibrosis"
+# to be classified under "Secondary diabetes mellitus"
+#
+
+# The following OWL Axiom states that "Diabetes mellitus" caused by "Drug" is a type of "Secondary diabetes mellitus"
+# This is an example of an axiom with an expression on the left (first part) and a 'named' concept on the right (second part).
+#
+# Here is a more human readable version:
+# SubClassOf(
+#    ObjectIntersectionOf(
+#        :73211009 - Diabetes mellitus
+#        ObjectSomeValuesFrom(
+#            :roleGroup
+#            ObjectSomeValuesFrom(
+#                :100105001 - Causative agent
+#                :100101001 - Drug
+#            )
+#        )
+#    )
+#    :8801005 - Secondary diabetes mellitus
+#)
+b046530d-aede-4751-9ecd-b50e908b66c5	20170131	1	900000000000207008	733073007	8801005	SubClassOf(ObjectIntersectionOf(:73211009 ObjectSomeValuesFrom(:roleGroup ObjectSomeValuesFrom(:100105001 :100101001))) :8801005)
+
+# The following OWL Axiom states that "Diabetes mellitus" due to "Cystic fibrosis" is a type of "Secondary diabetes mellitus"
+#
+# Here is a more human readable version:
+# SubClassOf(
+#    ObjectIntersectionOf(
+#        :73211009 - Diabetes mellitus
+#        ObjectSomeValuesFrom(
+#            :roleGroup
+#            ObjectSomeValuesFrom(
+#                :100106001 - Due to
+#                :100102001 - Cystic fibrosis
+#            )
+#        )
+#    )
+#    :8801005 - Secondary diabetes mellitus
+#)
+e35258b4-15d8-4fb2-bea5-dcc6b5e7de62	20170131	1	900000000000207008	733073007	8801005	SubClassOf(ObjectIntersectionOf(:73211009 ObjectSomeValuesFrom(:roleGroup ObjectSomeValuesFrom(:100106001 :100102001))) :8801005)

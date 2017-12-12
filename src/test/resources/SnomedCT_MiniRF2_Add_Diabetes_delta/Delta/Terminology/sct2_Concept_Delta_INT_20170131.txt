@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# Add concept Diabetes mellitus
+73211009	20170131	1	900000000000207008	900000000000074008

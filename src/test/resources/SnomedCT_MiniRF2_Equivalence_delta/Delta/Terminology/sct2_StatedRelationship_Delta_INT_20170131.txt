@@ -1,0 +1,10 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+
+# Disorder of endocrine system clone - is a - Clinical finding
+100107001	20180131	1	900000000000207008	1362969004	404684003	0	116680003	900000000000010007	900000000000451002
+
+# Disorder of endocrine system clone - Finding site - Structure of endocrine system
+100108001	20180131	1	900000000000207008	1362969004	113331007	0	363698007	900000000000010007	900000000000451002
