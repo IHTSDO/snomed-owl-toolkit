@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.snomed.otf.owltoolkit.service;
+package org.snomed.otf.owltoolkit.service.classification;
 
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.junit.Before;
@@ -22,6 +22,8 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
+import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
 import org.snomed.otf.owltoolkit.testutil.ZipUtil;
 
 import java.io.File;
@@ -30,7 +32,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.snomed.otf.owltoolkit.service.SnomedReasonerService.ELK_REASONER_FACTORY;
-import static org.snomed.otf.owltoolkit.service.TestFileUtil.readInferredRelationshipLinesTrim;
+import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.readInferredRelationshipLinesTrim;
 
 public class SimpleClassificationIntegrationTest {
 
