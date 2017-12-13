@@ -32,6 +32,10 @@ public class Relationship {
 		this(-1, -1, -1, typeId, destinationId, false, 0, 0, false, -1);
 	}
 
+	public Relationship(final int group, final long typeId, final long destinationId) {
+		this(-1, -1, -1, typeId, destinationId, false, group, 0, false, -1);
+	}
+
 	public Relationship(long relationshipId,
 						int effectiveTime,
 						long moduleId,
@@ -102,4 +106,11 @@ public class Relationship {
 		this.group = group;
 	}
 
+	@Override
+	public String toString() {
+		return "Relationship{" +
+				"typeId=" + typeId +
+				", destinationId=" + destinationId +
+				'}';
+	}
 }

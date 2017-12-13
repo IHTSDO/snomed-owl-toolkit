@@ -25,7 +25,7 @@ import org.semanticweb.owlapi.reasoner.impl.OWLClassNodeSet;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.owltoolkit.ontology.OntologyService;
+import org.snomed.otf.owltoolkit.conversion.ConversionService;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -35,11 +35,11 @@ public class ReasonerTaxonomyWalker {
 
 	private static final NodeSet<OWLClass> EMPTY_NODE_SET = new OWLClassNodeSet();
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ReasonerTaxonomyWalker.class);
-
 	private final OWLReasoner reasoner;
 
 	private final ReasonerTaxonomy taxonomy;
+
+	private final ConversionService conversionService;
 
 	private Set<Long> processedConceptIds;
 
@@ -47,10 +47,13 @@ public class ReasonerTaxonomyWalker {
 
 	private boolean nothingProcessed;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(ReasonerTaxonomyWalker.class);
+
 	public ReasonerTaxonomyWalker(final OWLReasoner reasoner, final ReasonerTaxonomy changeSet, DefaultPrefixManager prefixManager) {
 		this.reasoner = reasoner;
 		this.taxonomy = changeSet;
 		this.prefixManager = prefixManager;
+		this.conversionService = new ConversionService();
 		this.processedConceptIds = new LongOpenHashSet(600000);
 	}
 
@@ -159,11 +162,11 @@ public class ReasonerTaxonomyWalker {
 
 	private boolean isNodeProcessed(final Node<OWLClass> node) {
 		for (final OWLClass owlClass : node) {
-			if (!isConceptClass(owlClass)) {
+			if (!conversionService.isConceptClass(owlClass)) {
 				continue;
 			}
 
-			final long storageKey = getConceptId(owlClass);
+			final long storageKey = conversionService.getConceptId(owlClass);
 			if (!processedConceptIds.contains(storageKey)) {
 				return false;
 			}
@@ -174,11 +177,11 @@ public class ReasonerTaxonomyWalker {
 
 	private long getConceptIds(final Node<OWLClass> node, final Set<Long> conceptIds) {
 		for (final OWLClass owlClass : node) {
-			if (!isConceptClass(owlClass)) {
+			if (!conversionService.isConceptClass(owlClass)) {
 				continue;
 			}
 
-			final long conceptId = getConceptId(owlClass);
+			final long conceptId = conversionService.getConceptId(owlClass);
 			conceptIds.add(conceptId);
 		}
 
@@ -193,11 +196,4 @@ public class ReasonerTaxonomyWalker {
 		}
 	}
 
-	private boolean isConceptClass(final OWLClass owlClass) {
-		return owlClass.getIRI().toString().startsWith(OntologyService.SNOMED_IRI);
-	}
-
-	private long getConceptId(final OWLClass owlClass) {
-		return Long.parseLong(owlClass.getIRI().toString().substring(OntologyService.SNOMED_IRI.length()));
-	}
 }

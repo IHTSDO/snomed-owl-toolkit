@@ -146,14 +146,19 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		}
 	}
 
-	private OWLAxiom deserialiseAxiom(String axiomString, String memberId) throws OWLOntologyCreationException {
+	public OWLAxiom deserialiseAxiom(String axiomString) throws OWLOntologyCreationException {
+		return deserialiseAxiom(axiomString, null);
+	}
+
+	public OWLAxiom deserialiseAxiom(String axiomString, String axiomIdentifier) throws OWLOntologyCreationException {
 		OWLOntology owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(
 				new StringDocumentSource(ontologyDocStart + axiomString + ontologyDocEnd));
 		Set<OWLAxiom> axioms = owlOntology.getAxioms();
 		if (axioms.size() != 1) {
-			throw new IllegalArgumentException("OWL Axiom reference set member should contain a single Axiom, " +
-					"found " + axioms.size() + " for member id " + memberId);
+			throw new IllegalArgumentException("OWL Axiom string should contain a single Axiom" +
+					"found " + axioms.size() + " for axiom id " + axiomIdentifier);
 		}
+		owlOntologyManager.removeOntology(owlOntology);
 		return axioms.iterator().next();
 	}
 
