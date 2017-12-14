@@ -40,7 +40,7 @@ public class ConversionServiceTest {
 
 		assertEquals(
 				"0 116680003=73211009\n" +
-						"1 100105001=100101001",
+				"1 100105001=100101001",
 				toString(representation.getLeftHandSideRelationships()));
 
 		assertEquals(8801005, representation.getRightHandSideNamedConcept().longValue());
@@ -67,10 +67,50 @@ public class ConversionServiceTest {
 
 		assertEquals(
 				"0 116680003=73211009\n" +
-						"1 100105001=100101001",
+				"1 100105001=100101001",
 				toString(representation.getRightHandSideRelationships()));
 	}
 
+	@Test
+	public void testAdditionalAxiomSufficientlyDefinedTwoRelationshipsInGroup() throws ConversionException {
+		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(
+				"EquivalentClasses(" +
+					"<http://snomed.info/id/10002003> " +
+					"ObjectIntersectionOf(" +
+						"<http://snomed.info/id/116175006> " +
+						"ObjectSomeValuesFrom(" +
+							":roleGroup " +
+							"ObjectIntersectionOf(" +
+								"ObjectSomeValuesFrom(" +
+									"<http://snomed.info/id/260686004> " +
+									"<http://snomed.info/id/129304002>" +
+								") " +
+								"ObjectSomeValuesFrom(" +
+									"<http://snomed.info/id/405813007> " +
+									"<http://snomed.info/id/414003>" +
+								")" +
+							")" +
+						")" +
+					")" +
+				")");
+
+		assertEquals(10002003, representation.getLeftHandSideNamedConcept().longValue());
+
+		assertEquals(
+				"0 116680003=116175006\n" +
+				"1 260686004=129304002\n" +
+				"1 405813007=414003",
+				toString(representation.getRightHandSideRelationships()));
+	}
+
+	@Test
+	public void testAdditionalAxiomPrimitiveWithSingleRelationship() throws ConversionException {
+		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(
+				"SubClassOf(<http://snomed.info/id/118956008> <http://snomed.info/id/123037004>)");
+
+		assertEquals(118956008, representation.getLeftHandSideNamedConcept().longValue());
+		assertEquals(123037004, representation.getRightHandSideNamedConcept().longValue());
+	}
 	private String toString(Map<Integer, List<Relationship>> relationshipGroups) {
 		StringBuilder groupsString = new StringBuilder();
 		for (Integer group : relationshipGroups.keySet()) {
