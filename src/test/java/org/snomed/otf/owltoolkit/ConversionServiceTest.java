@@ -105,12 +105,27 @@ public class ConversionServiceTest {
 
 	@Test
 	public void testAdditionalAxiomPrimitiveWithSingleRelationship() throws ConversionException {
-		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(
-				"SubClassOf(<http://snomed.info/id/118956008> <http://snomed.info/id/123037004>)");
+		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(118956008L, "SubClassOf(<http://snomed.info/id/118956008> <http://snomed.info/id/123037004>)");
 
 		assertEquals(118956008, representation.getLeftHandSideNamedConcept().longValue());
-		assertEquals(123037004, representation.getRightHandSideNamedConcept().longValue());
+
+		assertEquals(
+				"0 116680003=123037004",
+				toString(representation.getRightHandSideRelationships()));
 	}
+
+	@Test
+	public void testGCIPrimitiveWithSingleRelationship() throws ConversionException {
+		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(123037004L, "SubClassOf(<http://snomed.info/id/118956008> <http://snomed.info/id/123037004>)");
+
+		assertEquals(
+				"0 116680003=118956008",
+				toString(representation.getLeftHandSideRelationships()));
+
+		assertEquals(123037004, representation.getRightHandSideNamedConcept().longValue());
+
+	}
+
 	private String toString(Map<Integer, List<Relationship>> relationshipGroups) {
 		StringBuilder groupsString = new StringBuilder();
 		for (Integer group : relationshipGroups.keySet()) {

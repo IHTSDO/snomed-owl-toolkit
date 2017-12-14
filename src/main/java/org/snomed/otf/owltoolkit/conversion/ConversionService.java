@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConversionService {
 
-	public static final String SNOMED_ROLE_GROUP = "http://snomed.info/id/roleGroup";
+	public static final String ROLE_GROUP_URI = OntologyService.SNOMED_IRI + OntologyService.ROLE_GROUP;
 
 	private SnomedTaxonomyLoader snomedTaxonomyLoader;
 
@@ -20,7 +20,26 @@ public class ConversionService {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
 	}
 
+	/**
+	 * Converts an OWL Axiom expression String to an ExpressionRepresentation containing a concept id or set of relationships for each side of the expression.
+	 *
+	 * @param axiomExpression The Axiom expression to convert.
+	 * @return
+	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
+	 */
 	public ExpressionRepresentation convertAxiomToRelationships(String axiomExpression) throws ConversionException {
+		return convertAxiomToRelationships(null, axiomExpression);
+	}
+
+	/**
+	 * Converts an OWL Axiom expression String to an ExpressionRepresentation containing a concept id or set of relationships for each side of the expression.
+	 *
+	 * @param referencedComponentId Specifying a referencedComponentId will force the other side of the axiom to be returned as relationships even if only a single named concept is on that side.
+	 * @param axiomExpression The Axiom expression to convert.
+	 * @return
+	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
+	 */
+	public ExpressionRepresentation convertAxiomToRelationships(Long referencedComponentId, String axiomExpression) throws ConversionException {
 		OWLAxiom owlAxiom;
 		try {
 			owlAxiom = snomedTaxonomyLoader.deserialiseAxiom(axiomExpression);
@@ -56,15 +75,31 @@ public class ConversionService {
 		}
 
 		Long leftNamedClass = getNamedClass(axiomExpression, leftHandExpression, "left");
-		representation.setLeftHandSideNamedConcept(leftNamedClass);
-		if (leftNamedClass == null) {
+		if (leftNamedClass != null) {
+			if (referencedComponentId != null && !referencedComponentId.equals(leftNamedClass)) {
+				// Force the named concept which is not the referencedComponentId to be returned as a set of relationships.
+				Map<Integer, List<Relationship>> relationships = new HashMap<>();
+				relationships.put(0, Collections.singletonList(new Relationship(0, Concepts.IS_A_LONG, leftNamedClass)));
+				representation.setLeftHandSideRelationships(relationships);
+			} else {
+				representation.setLeftHandSideNamedConcept(leftNamedClass);
+			}
+		} else {
 			// If not a named class it must be an expression which can be converted to a set of relationships
 			representation.setLeftHandSideRelationships(getRelationships(leftHandExpression, "left", axiomExpression));
 		}
 
 		Long rightNamedClass = getNamedClass(axiomExpression, rightHandExpression, "right");
-		representation.setRightHandSideNamedConcept(rightNamedClass);
-		if (rightNamedClass == null) {
+		if (rightNamedClass != null) {
+			if (referencedComponentId != null && !referencedComponentId.equals(rightNamedClass)) {
+				// Force the named concept which is not the referencedComponentId to be returned as a set of relationships.
+				Map<Integer, List<Relationship>> relationships = new HashMap<>();
+				relationships.put(0, Collections.singletonList(new Relationship(0, Concepts.IS_A_LONG, rightNamedClass)));
+				representation.setRightHandSideRelationships(relationships);
+			} else {
+				representation.setRightHandSideNamedConcept(rightNamedClass);
+			}
+		} else {
 			// If not a named class it must be an expression which can be converted to a set of relationships
 			representation.setRightHandSideRelationships(getRelationships(rightHandExpression, "right", axiomExpression));
 		}
@@ -165,7 +200,7 @@ public class ConversionService {
 
 	private boolean isRoleGroup(OWLObjectPropertyExpression expression) {
 		OWLObjectProperty namedProperty = expression.getNamedProperty();
-		return SNOMED_ROLE_GROUP.equals(namedProperty.getIRI().toString());
+		return ROLE_GROUP_URI.equals(namedProperty.getIRI().toString());
 	}
 
 	public long getConceptId(final OWLNamedObject owlNamedObject) {

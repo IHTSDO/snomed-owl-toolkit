@@ -32,7 +32,8 @@ public class OntologyService {
 
 	public static final String SNOMED_IRI = "http://snomed.info/id/";
 	public static final String SNOMED_PREFIX = ":";
-	public static final String SNOMED_ROLE_GROUP = SNOMED_PREFIX + "roleGroup";
+	public static final String ROLE_GROUP = "roleGroup";
+	public static final String SNOMED_ROLE_GROUP = SNOMED_PREFIX + ROLE_GROUP;
 	public static final String SNOMED_ROLE_HAS_MEASUREMENT = SNOMED_PREFIX + "roleHasMeasurement";
 
 	private final OWLOntologyManager manager;
