@@ -46,6 +46,7 @@ public class Concepts {
 	public static final String ALL_OR_PART_OF = "733928003";
 	public static final String PART_OF = "123005000";
 	public static final String LATERALITY = "272741003";
+	public static final Long LATERALITY_LONG = parseLong("272741003");
 	public static final String HAS_ACTIVE_INGREDIENT = "127489000";
 	public static final Long HAS_ACTIVE_INGREDIENT_LONG = parseLong(HAS_ACTIVE_INGREDIENT);
 	public static final String IS_MODIFICATION_OF = "738774007";

@@ -3,6 +3,7 @@ package org.snomed.otf.owltoolkit;
 import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
+import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.conversion.ConversionService;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
@@ -19,8 +20,7 @@ public class ConversionServiceTest {
 
 	@Before
 	public void setup() {
-		conversionService = new ConversionService(Sets.newHashSet());
-		// TODO add test case covering ungrouped relationships
+		conversionService = new ConversionService(Sets.newHashSet(Concepts.LATERALITY_LONG));
 	}
 
 	@Test
@@ -156,6 +156,37 @@ public class ConversionServiceTest {
 
 		// Test converting relationships back to an axiom
 		String recreatedAxiom = conversionService.convertRelationshipsToAxiom(representation);
+		assertEquals(axiom, recreatedAxiom);
+	}
+
+	@Test
+	public void testAdditionalAxiomNeverGrouped() throws ConversionException {
+		String axiom =
+				"EquivalentClasses(" +
+					":9846003 " +
+					"ObjectIntersectionOf(" +
+						":39132006 " +
+						":64033007 " +
+						"ObjectSomeValuesFrom(" +
+							":272741003 " +
+							":24028007" +
+						")" +
+					")" +
+				" )";
+
+		AxiomRepresentation representation = conversionService.convertAxiomToRelationships(9846003L, axiom);
+
+		assertEquals(9846003L, representation.getLeftHandSideNamedConcept().longValue());
+
+		assertEquals(
+				"0 116680003=39132006\n" +
+				"0 116680003=64033007\n" +
+				"0 272741003=24028007",
+				toString(representation.getRightHandSideRelationships()));
+
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = conversionService.convertRelationshipsToAxiom(representation);
+		recreatedAxiom = simplifySnomedPrefix(recreatedAxiom);
 		assertEquals(axiom, recreatedAxiom);
 	}
 
