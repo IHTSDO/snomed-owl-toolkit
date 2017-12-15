@@ -2,44 +2,46 @@ package org.snomed.otf.owltoolkit.conversion;
 
 import org.semanticweb.owlapi.model.*;
 import org.snomed.otf.owltoolkit.constants.Concepts;
-import org.snomed.otf.owltoolkit.domain.ExpressionRepresentation;
+import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
+import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ConversionService {
 
 	public static final String ROLE_GROUP_URI = OntologyService.SNOMED_IRI + OntologyService.ROLE_GROUP;
 
-	private SnomedTaxonomyLoader snomedTaxonomyLoader;
+	private final SnomedTaxonomyLoader snomedTaxonomyLoader;
+	private final OntologyService ontologyService;
 
-	public ConversionService() {
+	public ConversionService(Set<Long> ungroupedAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
+		ontologyService = new OntologyService(ungroupedAttributes);
 	}
 
 	/**
-	 * Converts an OWL Axiom expression String to an ExpressionRepresentation containing a concept id or set of relationships for each side of the expression.
+	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
 	 *
 	 * @param axiomExpression The Axiom expression to convert.
 	 * @return
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
-	public ExpressionRepresentation convertAxiomToRelationships(String axiomExpression) throws ConversionException {
+	public AxiomRepresentation convertAxiomToRelationships(String axiomExpression) throws ConversionException {
 		return convertAxiomToRelationships(null, axiomExpression);
 	}
 
 	/**
-	 * Converts an OWL Axiom expression String to an ExpressionRepresentation containing a concept id or set of relationships for each side of the expression.
+	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
 	 *
 	 * @param referencedComponentId Specifying a referencedComponentId will force the other side of the axiom to be returned as relationships even if only a single named concept is on that side.
 	 * @param axiomExpression The Axiom expression to convert.
 	 * @return
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
-	public ExpressionRepresentation convertAxiomToRelationships(Long referencedComponentId, String axiomExpression) throws ConversionException {
+	public AxiomRepresentation convertAxiomToRelationships(Long referencedComponentId, String axiomExpression) throws ConversionException {
 		OWLAxiom owlAxiom;
 		try {
 			owlAxiom = snomedTaxonomyLoader.deserialiseAxiom(axiomExpression);
@@ -54,7 +56,7 @@ public class ConversionService {
 					"Axiom given is of type " + axiomType.getName());
 		}
 
-		ExpressionRepresentation representation = new ExpressionRepresentation();
+		AxiomRepresentation representation = new AxiomRepresentation();
 		OWLClassExpression leftHandExpression;
 		OWLClassExpression rightHandExpression;
 		if (axiomType == AxiomType.EQUIVALENT_CLASSES) {
@@ -107,6 +109,11 @@ public class ConversionService {
 		return representation;
 	}
 
+	public String convertRelationshipsToAxiom(AxiomRepresentation representation) {
+		OWLClassAxiom owlClassAxiom = ontologyService.createOwlClassAxiom(representation);
+		return owlClassAxiom.toString();
+	}
+
 	private Long getNamedClass(String axiomExpression, OWLClassExpression owlClassExpression, String side) throws ConversionException {
 		if (owlClassExpression.getClassExpressionType() != ClassExpressionType.OWL_CLASS) {
 			return null;
@@ -118,7 +125,7 @@ public class ConversionService {
 
 		if (classesInSignature.size() == 1) {
 			OWLClass namedClass = classesInSignature.iterator().next();
-			return getConceptId(namedClass);
+			return OntologyHelper.getConceptId(namedClass);
 		}
 		return null;
 	}
@@ -140,7 +147,7 @@ public class ConversionService {
 			ClassExpressionType operandClassExpressionType = operand.getClassExpressionType();
 			if (operandClassExpressionType == ClassExpressionType.OWL_CLASS) {
 				// Is-a relationship
-				relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(new Relationship(0, Concepts.IS_A_LONG, getConceptId(operand.asOWLClass())));
+				relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(new Relationship(0, Concepts.IS_A_LONG, OntologyHelper.getConceptId(operand.asOWLClass())));
 
 			} else if (operandClassExpressionType == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
 				// Either start of attribute or role group
@@ -182,29 +189,21 @@ public class ConversionService {
 	private Relationship extractRelationship(OWLObjectSomeValuesFrom someValuesFrom, int groupNumber) throws ConversionException {
 		OWLObjectPropertyExpression property = someValuesFrom.getProperty();
 		OWLObjectProperty namedProperty = property.getNamedProperty();
-		long type = getConceptId(namedProperty);
+		long type = OntologyHelper.getConceptId(namedProperty);
 
 		OWLClassExpression filler = someValuesFrom.getFiller();
 		ClassExpressionType classExpressionType = filler.getClassExpressionType();
 		if (classExpressionType != ClassExpressionType.OWL_CLASS) {
 			throw new ConversionException("Expecting right hand side of ObjectSomeValuesFrom to be type Class, got " + classExpressionType + ".");
 		}
-		long value = getConceptId(filler.asOWLClass());
+		long value = OntologyHelper.getConceptId(filler.asOWLClass());
 
 		return new Relationship(groupNumber, type, value);
-	}
-
-	public boolean isConceptClass(final OWLClass owlClass) {
-		return owlClass.getIRI().toString().startsWith(OntologyService.SNOMED_IRI);
 	}
 
 	private boolean isRoleGroup(OWLObjectPropertyExpression expression) {
 		OWLObjectProperty namedProperty = expression.getNamedProperty();
 		return ROLE_GROUP_URI.equals(namedProperty.getIRI().toString());
-	}
-
-	public long getConceptId(final OWLNamedObject owlNamedObject) {
-		return Long.parseLong(owlNamedObject.getIRI().toString().substring(OntologyService.SNOMED_IRI.length()));
 	}
 
 }

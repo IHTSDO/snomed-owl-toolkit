@@ -1,10 +1,11 @@
 package org.snomed.otf.owltoolkit;
 
+import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.conversion.ConversionService;
-import org.snomed.otf.owltoolkit.domain.ExpressionRepresentation;
+import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 
 import java.util.List;
@@ -18,12 +19,13 @@ public class ConversionServiceTest {
 
 	@Before
 	public void setup() {
-		conversionService = new ConversionService();
+		conversionService = new ConversionService(Sets.newHashSet());
+		// TODO add test case covering ungrouped relationships
 	}
 
 	@Test
 	public void testGCIPrimitiveTwoGroupsOneRelationshipInEach() throws ConversionException {
-		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(
+		String axiom =
 				"SubClassOf(" +
 					"ObjectIntersectionOf(" +
 						":73211009 " +
@@ -36,7 +38,9 @@ public class ConversionServiceTest {
 						")" +
 					") " +
 					":8801005" +
-				")");
+				")";
+
+		AxiomRepresentation representation = conversionService.convertAxiomToRelationships(axiom);
 
 		assertEquals(
 				"0 116680003=73211009\n" +
@@ -44,11 +48,16 @@ public class ConversionServiceTest {
 				toString(representation.getLeftHandSideRelationships()));
 
 		assertEquals(8801005, representation.getRightHandSideNamedConcept().longValue());
+
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = conversionService.convertRelationshipsToAxiom(representation);
+		recreatedAxiom = simplifySnomedPrefix(recreatedAxiom);
+		assertEquals(axiom, recreatedAxiom);
 	}
 
 	@Test
 	public void testAdditionalAxiomPrimitiveTwoGroupsOneRelationshipInEach() throws ConversionException {
-		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(
+		String axiom =
 				"SubClassOf(" +
 					":8801005 " +
 					"ObjectIntersectionOf(" +
@@ -61,7 +70,9 @@ public class ConversionServiceTest {
 							")" +
 						")" +
 					")" +
-				")");
+				")";
+
+		AxiomRepresentation representation = conversionService.convertAxiomToRelationships(axiom);
 
 		assertEquals(8801005, representation.getLeftHandSideNamedConcept().longValue());
 
@@ -69,17 +80,22 @@ public class ConversionServiceTest {
 				"0 116680003=73211009\n" +
 				"1 100105001=100101001",
 				toString(representation.getRightHandSideRelationships()));
+
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = conversionService.convertRelationshipsToAxiom(representation);
+		recreatedAxiom = simplifySnomedPrefix(recreatedAxiom);
+		assertEquals(axiom, recreatedAxiom);
 	}
 
 	@Test
 	public void testAdditionalAxiomSufficientlyDefinedTwoRelationshipsInGroup() throws ConversionException {
-		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(
+		String axiom =
 				"EquivalentClasses(" +
 					"<http://snomed.info/id/10002003> " +
 					"ObjectIntersectionOf(" +
 						"<http://snomed.info/id/116175006> " +
 						"ObjectSomeValuesFrom(" +
-							":roleGroup " +
+							"<http://snomed.info/id/roleGroup> " +
 							"ObjectIntersectionOf(" +
 								"ObjectSomeValuesFrom(" +
 									"<http://snomed.info/id/260686004> " +
@@ -92,7 +108,9 @@ public class ConversionServiceTest {
 							")" +
 						")" +
 					")" +
-				")");
+				" )";
+
+		AxiomRepresentation representation = conversionService.convertAxiomToRelationships(axiom);
 
 		assertEquals(10002003, representation.getLeftHandSideNamedConcept().longValue());
 
@@ -101,22 +119,34 @@ public class ConversionServiceTest {
 				"1 260686004=129304002\n" +
 				"1 405813007=414003",
 				toString(representation.getRightHandSideRelationships()));
+
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = conversionService.convertRelationshipsToAxiom(representation);
+		assertEquals(axiom, recreatedAxiom);
 	}
 
 	@Test
 	public void testAdditionalAxiomPrimitiveWithSingleRelationship() throws ConversionException {
-		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(118956008L, "SubClassOf(<http://snomed.info/id/118956008> <http://snomed.info/id/123037004>)");
+		String axiom = "SubClassOf(<http://snomed.info/id/118956008> <http://snomed.info/id/123037004>)";
+
+		AxiomRepresentation representation = conversionService.convertAxiomToRelationships(118956008L, axiom);
 
 		assertEquals(118956008, representation.getLeftHandSideNamedConcept().longValue());
 
 		assertEquals(
 				"0 116680003=123037004",
 				toString(representation.getRightHandSideRelationships()));
+
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = conversionService.convertRelationshipsToAxiom(representation);
+		assertEquals(axiom, recreatedAxiom);
 	}
 
 	@Test
 	public void testGCIPrimitiveWithSingleRelationship() throws ConversionException {
-		ExpressionRepresentation representation = conversionService.convertAxiomToRelationships(123037004L, "SubClassOf(<http://snomed.info/id/118956008> <http://snomed.info/id/123037004>)");
+		String axiom = "SubClassOf(<http://snomed.info/id/118956008> <http://snomed.info/id/123037004>)";
+
+		AxiomRepresentation representation = conversionService.convertAxiomToRelationships(123037004L, axiom);
 
 		assertEquals(
 				"0 116680003=118956008",
@@ -124,6 +154,9 @@ public class ConversionServiceTest {
 
 		assertEquals(123037004, representation.getRightHandSideNamedConcept().longValue());
 
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = conversionService.convertRelationshipsToAxiom(representation);
+		assertEquals(axiom, recreatedAxiom);
 	}
 
 	private String toString(Map<Integer, List<Relationship>> relationshipGroups) {
@@ -131,7 +164,7 @@ public class ConversionServiceTest {
 		for (Integer group : relationshipGroups.keySet()) {
 			List<Relationship> relationships = relationshipGroups.get(group);
 			for (Relationship relationship : relationships) {
-				groupsString.append(group)
+				groupsString.append(relationship.getGroup())
 						.append(" ")
 						.append(relationship.getTypeId())
 						.append("=")
@@ -145,4 +178,8 @@ public class ConversionServiceTest {
 		return groupsString.toString();
 	}
 
+
+	private String simplifySnomedPrefix(String recreatedAxiom) {
+		return recreatedAxiom.replace("<http://snomed.info/id/", ":").replace(">", "");
+	}
 }

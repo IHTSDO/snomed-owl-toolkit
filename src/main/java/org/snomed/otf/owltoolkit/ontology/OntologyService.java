@@ -19,14 +19,12 @@ import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 public class OntologyService {
 
@@ -65,12 +63,55 @@ public class OntologyService {
 
 		// Create Axioms of all other Snomed concepts
 		for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
-			OWLClass conceptClass = getOwlClass(conceptId);
 
-			// Process all concept's relationships
-			final Set<OWLClassExpression> terms = new HashSet<>();
-			Map<Integer, ExpressionGroup> nonZeroRoleGroups = new TreeMap<>();
-			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(conceptId)) {
+			boolean primitive = snomedTaxonomy.isPrimitive(conceptId);
+			Collection<Relationship> statedRelationships = snomedTaxonomy.getStatedRelationships(conceptId);
+
+			AxiomRepresentation representation = new AxiomRepresentation();
+			representation.setPrimitive(primitive);
+			representation.setLeftHandSideNamedConcept(conceptId);
+			Map<Integer, List<Relationship>> relationshipMap = new HashMap<>();
+			for (Relationship statedRelationship : statedRelationships) {
+				relationshipMap.computeIfAbsent(statedRelationship.getGroup(), g -> new ArrayList<>()).add(statedRelationship);
+			}
+			representation.setRightHandSideRelationships(relationshipMap);
+			OWLClassAxiom conceptAxiom = createOwlClassAxiom(representation);
+			axioms.add(conceptAxiom);
+
+			// Add raw axioms from the axiom reference set file
+			Set<OWLAxiom> conceptAxioms = snomedTaxonomy.getConceptAxiomMap().get(conceptId);
+			if (conceptAxioms != null) {
+				axioms.addAll(conceptAxioms);
+			}
+		}
+
+		return manager.createOntology(axioms, IRI.create(SNOMED_IRI));
+	}
+
+	public OWLClassAxiom createOwlClassAxiom(AxiomRepresentation axiomRepresentation) {
+		// Left side is usually a single named concept
+		OWLClassExpression leftSide = createOwlClassExpression(axiomRepresentation.getLeftHandSideNamedConcept(), axiomRepresentation.getLeftHandSideRelationships());
+
+		// Right side is usually an expression created from a set of stated relationships
+		OWLClassExpression rightSide = createOwlClassExpression(axiomRepresentation.getRightHandSideNamedConcept(), axiomRepresentation.getRightHandSideRelationships());
+
+		if (axiomRepresentation.isPrimitive()) {
+			return factory.getOWLSubClassOfAxiom(leftSide, rightSide);
+		} else {
+			return factory.getOWLEquivalentClassesAxiom(leftSide, rightSide);
+		}
+	}
+
+	private OWLClassExpression createOwlClassExpression(Long namedConcept, Map<Integer, List<Relationship>> relationships) {
+		if (namedConcept != null) {
+			return getOwlClass(namedConcept);
+		}
+
+		// Process all concept's relationships
+		final Set<OWLClassExpression> terms = new HashSet<>();
+		Map<Integer, ExpressionGroup> nonZeroRoleGroups = new TreeMap<>();
+		for (List<Relationship> relationshipList : relationships.values()) {
+			for (Relationship relationship : relationshipList) {
 				int group = relationship.getGroup();
 				long typeId = relationship.getTypeId();
 				long destinationId = relationship.getDestinationId();
@@ -93,41 +134,29 @@ public class OntologyService {
 					}
 				}
 			}
+		}
 
-			// For each role group if there is more than one statement in the group we wrap them in an ObjectIntersectionOf statement
-			for (Integer group : nonZeroRoleGroups.keySet()) {
-				ExpressionGroup expressionGroup = nonZeroRoleGroups.get(group);
-				Set<OWLClassExpression> groupTerms = expressionGroup.getMembers();
-				if (expressionGroup.getHasActiveIngredientClassExpression() != null) {
-					// If one of the relationships in the group has the type Has Active Ingredient we use roleHasMeasurement rather than roleGroup
-					terms.add(getOwlObjectSomeValuesWithPrefix(SNOMED_ROLE_HAS_MEASUREMENT, getOnlyValueOrIntersection(groupTerms)));
-					// Repeat the Has Active Ingredient expression outside of the roleHasMeasurement expression
-					terms.add(expressionGroup.getHasActiveIngredientClassExpression());
-				} else {
-					// Write out a group of expressions
-					terms.add(getOwlObjectSomeValuesFromGroup(getOnlyValueOrIntersection(groupTerms)));
-				}
-			}
-
-			if (terms.isEmpty()) {
-				// SNOMED CT root concept
-				terms.add(factory.getOWLThing());
-			}
-
-			if (snomedTaxonomy.isPrimitive(conceptId)) {
-				axioms.add(factory.getOWLSubClassOfAxiom(conceptClass, getOnlyValueOrIntersection(terms)));
+		// For each role group if there is more than one statement in the group we wrap them in an ObjectIntersectionOf statement
+		for (Integer group : nonZeroRoleGroups.keySet()) {
+			ExpressionGroup expressionGroup = nonZeroRoleGroups.get(group);
+			Set<OWLClassExpression> groupTerms = expressionGroup.getMembers();
+			if (expressionGroup.getHasActiveIngredientClassExpression() != null) {
+				// If one of the relationships in the group has the type Has Active Ingredient we use roleHasMeasurement rather than roleGroup
+				terms.add(getOwlObjectSomeValuesWithPrefix(SNOMED_ROLE_HAS_MEASUREMENT, getOnlyValueOrIntersection(groupTerms)));
+				// Repeat the Has Active Ingredient expression outside of the roleHasMeasurement expression
+				terms.add(expressionGroup.getHasActiveIngredientClassExpression());
 			} else {
-				axioms.add(factory.getOWLEquivalentClassesAxiom(conceptClass, getOnlyValueOrIntersection(terms)));
-			}
-
-			// Add raw axioms from the axiom reference set file
-			Set<OWLAxiom> conceptAxioms = snomedTaxonomy.getConceptAxiomMap().get(conceptId);
-			if (conceptAxioms != null) {
-				axioms.addAll(conceptAxioms);
+				// Write out a group of expressions
+				terms.add(getOwlObjectSomeValuesFromGroup(getOnlyValueOrIntersection(groupTerms)));
 			}
 		}
 
-		return manager.createOntology(axioms, IRI.create(SNOMED_IRI));
+		if (terms.isEmpty()) {
+			// SNOMED CT root concept
+			terms.add(factory.getOWLThing());
+		}
+
+		return getOnlyValueOrIntersection(terms);
 	}
 
 	public Set<Long> getPropertiesDeclaredAsTransitive(OWLOntology owlOntology) {

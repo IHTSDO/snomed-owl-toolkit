@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class ExpressionRepresentation {
+public class AxiomRepresentation {
 
 	private boolean primitive;
 	private Long leftHandSideNamedConcept;
@@ -12,7 +12,7 @@ public class ExpressionRepresentation {
 	private Long rightHandSideNamedConcept;
 	private Map<Integer, List<Relationship>> rightHandSideRelationships;
 
-	public ExpressionRepresentation() {
+	public AxiomRepresentation() {
 	}
 
 	public boolean isPrimitive() {

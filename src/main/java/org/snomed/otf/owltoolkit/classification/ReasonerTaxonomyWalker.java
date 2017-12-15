@@ -26,6 +26,7 @@ import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.conversion.ConversionService;
+import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -39,8 +40,6 @@ public class ReasonerTaxonomyWalker {
 
 	private final ReasonerTaxonomy taxonomy;
 
-	private final ConversionService conversionService;
-
 	private Set<Long> processedConceptIds;
 
 	private final DefaultPrefixManager prefixManager;
@@ -53,7 +52,6 @@ public class ReasonerTaxonomyWalker {
 		this.reasoner = reasoner;
 		this.taxonomy = changeSet;
 		this.prefixManager = prefixManager;
-		this.conversionService = new ConversionService();
 		this.processedConceptIds = new LongOpenHashSet(600000);
 	}
 
@@ -162,11 +160,11 @@ public class ReasonerTaxonomyWalker {
 
 	private boolean isNodeProcessed(final Node<OWLClass> node) {
 		for (final OWLClass owlClass : node) {
-			if (!conversionService.isConceptClass(owlClass)) {
+			if (!OntologyHelper.isConceptClass(owlClass)) {
 				continue;
 			}
 
-			final long storageKey = conversionService.getConceptId(owlClass);
+			final long storageKey = OntologyHelper.getConceptId(owlClass);
 			if (!processedConceptIds.contains(storageKey)) {
 				return false;
 			}
@@ -177,11 +175,11 @@ public class ReasonerTaxonomyWalker {
 
 	private long getConceptIds(final Node<OWLClass> node, final Set<Long> conceptIds) {
 		for (final OWLClass owlClass : node) {
-			if (!conversionService.isConceptClass(owlClass)) {
+			if (!OntologyHelper.isConceptClass(owlClass)) {
 				continue;
 			}
 
-			final long conceptId = conversionService.getConceptId(owlClass);
+			final long conceptId = OntologyHelper.getConceptId(owlClass);
 			conceptIds.add(conceptId);
 		}
 
