@@ -79,4 +79,23 @@ public class SimpleClassificationIntegrationTest {
 		assertTrue(lines.contains("1\t\t73211009\t113331007\t0\t" + FINDING_SITE + "\t900000000000011006\t900000000000451002"));
 	}
 
+	
+	@Test
+	public void testClassifyConceptInactivation() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Concept_Inactivation_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		assertEquals(3, lines.size());
+		assertTrue(lines.contains("200009001\t\t0\t\t362969004\t404684003\t0\t116680003\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("200010001\t\t0\t\t362969004\t113331007\t0\t363698007\t900000000000011006\t900000000000451002"));
+	}
+	
+	
 }

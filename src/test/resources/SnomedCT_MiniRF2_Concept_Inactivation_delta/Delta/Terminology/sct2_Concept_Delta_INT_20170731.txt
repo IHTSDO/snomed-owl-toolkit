@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# Inactivate  Disorder of endocrine system
+362969004	20170731	0	900000000000207008	900000000000073002

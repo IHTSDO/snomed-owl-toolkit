@@ -25,6 +25,7 @@ import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomyWalker;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.normalform.RelationshipChangeCollector;
+import org.snomed.otf.owltoolkit.normalform.RelationshipInactivationProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
 import org.snomed.otf.owltoolkit.ontology.OntologyDebugUtil;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
@@ -131,15 +132,19 @@ public class SnomedReasonerService {
 
 		logger.info("Generate normal form");
 		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, propertiesDeclaredAsTransitive);
-		RelationshipChangeCollector changeCollector = new RelationshipChangeCollector();
+		RelationshipChangeCollector changeCollector = new RelationshipChangeCollector(true);
 		normalFormGenerator.collectNormalFormChanges(changeCollector);
-
 		logger.info("{} relationships added, {} removed", changeCollector.getAddedCount(), changeCollector.getRemovedCount());
 
+		logger.info("Inactivating inferred relationships for new inactive concepts");
+		RelationshipInactivationProcessor processor = new RelationshipInactivationProcessor(snomedTaxonomy);
+		RelationshipChangeCollector inactivationCollector = new RelationshipChangeCollector(false);
+		processor.processInactivationChanges(inactivationCollector);
+		changeCollector.getRemovedStatements().putAll(inactivationCollector.getRemovedStatements());
+		logger.info("{} relationships inactivated ", inactivationCollector.getRemovedCount());
+		
 		logger.info("Writing results archive");
-
 		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
-
 		logger.info("Results archive written.");
 		logger.info("{} seconds total", (new Date().getTime() - startDate.getTime())/1000f);
 	}

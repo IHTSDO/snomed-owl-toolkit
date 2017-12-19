@@ -66,6 +66,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			long id = parseLong(conceptId);
 			snomedTaxonomy.getAllConceptIds().remove(id);
 			snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
+			snomedTaxonomy.getInactivatedConcepts().add(id);
 		}
 	}
 

@@ -29,12 +29,14 @@ public class RelationshipChangeCollector extends OntologyChangeProcessor<Relatio
 	private final Map<Long, Set<Relationship>> removedStatements;
 	private Long addedCount;
 	private Long removedCount;
+	private boolean skipAdditionalPartOf;
 
-	public RelationshipChangeCollector() {
+	public RelationshipChangeCollector(boolean skipAdditionalRelationship) {
 		addedCount = 0L;
 		removedCount = 0L;
 		addedStatements = new Long2ObjectOpenHashMap<>();
 		removedStatements = new Long2ObjectOpenHashMap<>();
+		skipAdditionalPartOf = skipAdditionalRelationship;
 	}
 
 	@Override
@@ -45,8 +47,13 @@ public class RelationshipChangeCollector extends OntologyChangeProcessor<Relatio
 
 	@Override
 	protected void handleRemovedSubject(long conceptId, Relationship removedSubject) {
-		//We will preserve any "Additional" characteristic types eg PartOf relationships
-		if (removedSubject.getCharacteristicTypeId() == -1 || removedSubject.getCharacteristicTypeId() != Concepts.ADDITIONAL_RELATIONSHIP_LONG) {
+		if (skipAdditionalPartOf) {
+			//We will preserve any "Additional" characteristic types eg PartOf relationships
+			if (removedSubject.getCharacteristicTypeId() == -1 || removedSubject.getCharacteristicTypeId() != Concepts.ADDITIONAL_RELATIONSHIP_LONG) {
+				removedStatements.computeIfAbsent(conceptId, k -> new HashSet<>()).add(removedSubject);
+				removedCount++;
+			}
+		} else {
 			removedStatements.computeIfAbsent(conceptId, k -> new HashSet<>()).add(removedSubject);
 			removedCount++;
 		}

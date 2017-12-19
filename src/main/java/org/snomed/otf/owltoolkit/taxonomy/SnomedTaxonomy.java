@@ -41,6 +41,7 @@ public class SnomedTaxonomy {
 	private Map<Long, Set<OWLAxiom>> conceptAxiomMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> statedSubTypesMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
+	private Set<Long> inactivatedConcepts = new LongOpenHashSet(); 
 
 	public static final Set<Long> DEFAULT_NEVER_GROUPED_ROLE_IDS = Collections.unmodifiableSet(Sets.newHashSet(
 			parseLong(Concepts.PART_OF),
@@ -263,5 +264,9 @@ public class SnomedTaxonomy {
 				}
 			}
 		}
+	}
+
+	public Set<Long> getInactivatedConcepts() {
+		return inactivatedConcepts;
 	}
 }
