@@ -39,6 +39,12 @@ public class SnomedTaxonomyBuilder {
 			.withFullRefsetMemberObjects()
 			.withoutDescriptions();
 
+	static {
+		// Giving reference set filename patterns avoids reading them all
+		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*Axiom.*");
+		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*MRCM.*");
+	}
+
 	private static final LoadingProfile DELTA_LOADING_PROFILE = SNAPSHOT_LOADING_PROFILE
 			.withInactiveConcepts() // The delta needs to be able to inactivate previously active components
 			.withInactiveRelationships()
