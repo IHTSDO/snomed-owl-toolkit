@@ -29,10 +29,9 @@ import org.snomed.otf.owltoolkit.normalform.RelationshipInactivationProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
 import org.snomed.otf.owltoolkit.ontology.OntologyDebugUtil;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
-import org.snomed.otf.owltoolkit.service.ClassificationResultsWriter;
-import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
+import org.snomed.otf.owltoolkit.util.TimerUtil;
 
 import java.io.*;
 import java.util.Date;
@@ -82,8 +81,10 @@ public class SnomedReasonerService {
 						 boolean outputOntologyFileForDebug) throws ReasonerServiceException {
 
 		Date startDate = new Date();
+		TimerUtil timer = new TimerUtil("Classification");
 		logger.info("Checking requested reasoner is available");
 		OWLReasonerFactory reasonerFactory = getOWLReasonerFactory(reasonerFactoryClassName);
+		timer.checkpoint("Create reasoner factory");
 
 		logger.info("Building snomedTaxonomy");
 		SnomedTaxonomyBuilder snomedTaxonomyBuilder = new SnomedTaxonomyBuilder();
@@ -93,6 +94,7 @@ public class SnomedReasonerService {
 		} catch (ReleaseImportException e) {
 			throw new ReasonerServiceException("Failed to build existing taxonomy.", e);
 		}
+		timer.checkpoint("Build existing taxonomy");
 
 		Set<Long> ungroupedRoles = snomedTaxonomy.getUngroupedRolesForContentType(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
 		if (ungroupedRoles.isEmpty()) {
@@ -110,30 +112,36 @@ public class SnomedReasonerService {
 		} catch (OWLOntologyCreationException e) {
 			throw new ReasonerServiceException("Failed to build OWL Ontology.", e);
 		}
+		timer.checkpoint("Create OWL Ontology");
+
 		Set<Long> propertiesDeclaredAsTransitive = ontologyService.getPropertiesDeclaredAsTransitive(owlOntology);
 
 		if (outputOntologyFileForDebug) {
 			OntologyDebugUtil.serialiseOntologyForDebug(classificationId, owlOntology);
+			timer.checkpoint("Serialising OWL Ontology to disk for debug");
 		}
 
 		logger.info("Creating OwlReasoner");
 		final OWLReasonerConfiguration configuration = new SimpleConfiguration(new ConsoleProgressMonitor());
 		OWLReasoner reasoner = reasonerFactory.createReasoner(owlOntology, configuration);
+		timer.checkpoint("Create reasoner");
 
 		logger.info("OwlReasoner inferring class hierarchy");
 		reasoner.flush();
 		reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
-		logger.info("Inference complete");
-		logger.info("{} seconds so far", (new Date().getTime() - startDate.getTime())/1000f);
+		timer.checkpoint("Inference computation");
 
 		logger.info("Extract ReasonerTaxonomy");
 		ReasonerTaxonomyWalker walker = new ReasonerTaxonomyWalker(reasoner, new ReasonerTaxonomy(), ontologyService.getPrefixManager());
 		ReasonerTaxonomy reasonerTaxonomy = walker.walk();
+		timer.checkpoint("Extract ReasonerTaxonomy");
 
 		logger.info("Generate normal form");
 		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, propertiesDeclaredAsTransitive);
 		RelationshipChangeCollector changeCollector = new RelationshipChangeCollector(true);
 		normalFormGenerator.collectNormalFormChanges(changeCollector);
+		timer.checkpoint("Generate normal form");
+
 		logger.info("{} relationships added, {} removed", changeCollector.getAddedCount(), changeCollector.getRemovedCount());
 
 		logger.info("Inactivating inferred relationships for new inactive concepts");
@@ -145,8 +153,8 @@ public class SnomedReasonerService {
 		
 		logger.info("Writing results archive");
 		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
-		logger.info("Results archive written.");
-		logger.info("{} seconds total", (new Date().getTime() - startDate.getTime())/1000f);
+		timer.checkpoint("Write results to disk");
+		timer.finish();
 	}
 
 	private OWLReasonerFactory getOWLReasonerFactory(String reasonerFactoryClassName) throws ReasonerServiceException {
