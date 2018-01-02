@@ -134,6 +134,7 @@ public class SnomedReasonerService {
 		logger.info("Extract ReasonerTaxonomy");
 		ReasonerTaxonomyWalker walker = new ReasonerTaxonomyWalker(reasoner, new ReasonerTaxonomy(), ontologyService.getPrefixManager());
 		ReasonerTaxonomy reasonerTaxonomy = walker.walk();
+		reasoner.dispose();
 		timer.checkpoint("Extract ReasonerTaxonomy");
 
 		logger.info("Generate normal form");
