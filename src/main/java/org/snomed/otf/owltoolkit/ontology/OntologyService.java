@@ -32,7 +32,6 @@ public class OntologyService {
 	public static final String SNOMED_PREFIX = ":";
 	public static final String ROLE_GROUP = "roleGroup";
 	public static final String SNOMED_ROLE_GROUP = SNOMED_PREFIX + ROLE_GROUP;
-	public static final String SNOMED_ROLE_HAS_MEASUREMENT = SNOMED_PREFIX + "roleHasMeasurement";
 
 	private final OWLOntologyManager manager;
 	private OWLDataFactory factory;
@@ -109,7 +108,7 @@ public class OntologyService {
 
 		// Process all concept's relationships
 		final Set<OWLClassExpression> terms = new HashSet<>();
-		Map<Integer, ExpressionGroup> nonZeroRoleGroups = new TreeMap<>();
+		Map<Integer, Set<OWLClassExpression>> nonZeroRoleGroups = new TreeMap<>();
 		for (List<Relationship> relationshipList : relationships.values()) {
 			for (Relationship relationship : relationshipList) {
 				int group = relationship.getGroup();
@@ -127,28 +126,17 @@ public class OntologyService {
 					}
 				} else {
 					// Collect statements in the same role group into sets
-					nonZeroRoleGroups.computeIfAbsent(group, g -> new ExpressionGroup())
-							.addMember(getOwlObjectSomeValuesFrom(typeId, destinationId));
-					if (typeId == Concepts.HAS_ACTIVE_INGREDIENT_LONG) {
-						nonZeroRoleGroups.get(group).setHasActiveIngredientClassExpression(getOwlObjectSomeValuesFrom(typeId, destinationId));
-					}
+					nonZeroRoleGroups.computeIfAbsent(group, g -> new HashSet<>())
+							.add(getOwlObjectSomeValuesFrom(typeId, destinationId));
 				}
 			}
 		}
 
 		// For each role group if there is more than one statement in the group we wrap them in an ObjectIntersectionOf statement
 		for (Integer group : nonZeroRoleGroups.keySet()) {
-			ExpressionGroup expressionGroup = nonZeroRoleGroups.get(group);
-			Set<OWLClassExpression> groupTerms = expressionGroup.getMembers();
-			if (expressionGroup.getHasActiveIngredientClassExpression() != null) {
-				// If one of the relationships in the group has the type Has Active Ingredient we use roleHasMeasurement rather than roleGroup
-				terms.add(getOwlObjectSomeValuesWithPrefix(SNOMED_ROLE_HAS_MEASUREMENT, getOnlyValueOrIntersection(groupTerms)));
-				// Repeat the Has Active Ingredient expression outside of the roleHasMeasurement expression
-				terms.add(expressionGroup.getHasActiveIngredientClassExpression());
-			} else {
-				// Write out a group of expressions
-				terms.add(getOwlObjectSomeValuesFromGroup(getOnlyValueOrIntersection(groupTerms)));
-			}
+			Set<OWLClassExpression> expressionGroup = nonZeroRoleGroups.get(group);
+			// Write out a group of expressions
+			terms.add(getOwlObjectSomeValuesFromGroup(getOnlyValueOrIntersection(expressionGroup)));
 		}
 
 		if (terms.isEmpty()) {
