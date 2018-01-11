@@ -1,6 +1,8 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import org.semanticweb.owlapi.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
@@ -17,6 +19,8 @@ public class ConversionService {
 	private final SnomedTaxonomyLoader snomedTaxonomyLoader;
 	private final OntologyService ontologyService;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(ConversionService.class);
+
 	public ConversionService(Set<Long> ungroupedAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
 		ontologyService = new OntologyService(ungroupedAttributes);
@@ -24,9 +28,10 @@ public class ConversionService {
 
 	/**
 	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
+	 * Currently supported axiom types are SubClassOf and EquivalentClasses.
 	 *
 	 * @param axiomExpression The Axiom expression to convert.
-	 * @return
+	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
 	public AxiomRepresentation convertAxiomToRelationships(String axiomExpression) throws ConversionException {
@@ -35,10 +40,11 @@ public class ConversionService {
 
 	/**
 	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
+	 * Currently supported axiom types are SubClassOf and EquivalentClasses.
 	 *
 	 * @param referencedComponentId Specifying a referencedComponentId will force the other side of the axiom to be returned as relationships even if only a single named concept is on that side.
 	 * @param axiomExpression The Axiom expression to convert.
-	 * @return
+	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
 	public AxiomRepresentation convertAxiomToRelationships(Long referencedComponentId, String axiomExpression) throws ConversionException {
@@ -52,8 +58,9 @@ public class ConversionService {
 		AxiomType<?> axiomType = owlAxiom.getAxiomType();
 
 		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES) {
-			throw new ConversionException("Only SubClassOf and EquivalentClasses can be converted to relationships. " +
-					"Axiom given is of type " + axiomType.getName());
+			LOGGER.info("Only SubClassOf and EquivalentClasses can be converted to relationships. " +
+					"Axiom given is of type " + axiomType.getName() + ". Returning null.");
+			return null;
 		}
 
 		AxiomRepresentation representation = new AxiomRepresentation();

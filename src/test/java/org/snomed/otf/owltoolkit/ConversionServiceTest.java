@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class ConversionServiceTest {
 
@@ -188,6 +189,12 @@ public class ConversionServiceTest {
 		String recreatedAxiom = conversionService.convertRelationshipsToAxiom(representation);
 		recreatedAxiom = simplifySnomedPrefix(recreatedAxiom);
 		assertEquals(axiom, recreatedAxiom);
+	}
+
+	@Test
+	public void testConvertTransitiveObjectPropertyReturnNull() throws ConversionException {
+		AxiomRepresentation axiomRepresentation = conversionService.convertAxiomToRelationships("TransitiveObjectProperty(:738774007)");
+		assertNull(axiomRepresentation);
 	}
 
 	private String toString(Map<Integer, List<Relationship>> relationshipGroups) {
