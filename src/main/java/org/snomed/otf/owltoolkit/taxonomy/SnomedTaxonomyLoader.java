@@ -21,8 +21,11 @@ import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.io.StringDocumentSource;
 import org.semanticweb.owlapi.model.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
+import org.snomed.otf.owltoolkit.ontology.OntologyService;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -116,7 +119,10 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && owlParsingExceptionThrown == null) {
 			if (ACTIVE.equals(active)) {
 				try {
-					String owlExpressionString = otherValues[0];
+					String owlExpressionString = otherValues[0]
+							// Replace any remaining outdated role group constants
+							.replace(OntologyService.ROLE_GROUP_OUTDATED_CONSTANT, OntologyService.ROLE_GROUP_SCTID);
+
 					OWLAxiom owlAxiom = deserialiseAxiom(owlExpressionString, id);
 					snomedTaxonomy.addAxiom(referencedComponentId, id, owlAxiom);
 				} catch (OWLException | OWLRuntimeException e) {

@@ -12,9 +12,9 @@ import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 
 import java.util.*;
 
-public class ConversionService {
+import static org.snomed.otf.owltoolkit.ontology.OntologyService.SNOMED_ROLE_GROUP_FULL_URI;
 
-	public static final String ROLE_GROUP_URI = OntologyService.SNOMED_IRI + OntologyService.ROLE_GROUP;
+public class ConversionService {
 
 	private final SnomedTaxonomyLoader snomedTaxonomyLoader;
 	private final OntologyService ontologyService;
@@ -210,7 +210,7 @@ public class ConversionService {
 
 	private boolean isRoleGroup(OWLObjectPropertyExpression expression) {
 		OWLObjectProperty namedProperty = expression.getNamedProperty();
-		return ROLE_GROUP_URI.equals(namedProperty.getIRI().toString());
+		return SNOMED_ROLE_GROUP_FULL_URI.equals(namedProperty.getIRI().toString());
 	}
 
 }

@@ -5,10 +5,10 @@ import org.semanticweb.owlapi.model.OWLNamedObject;
 
 public class OntologyHelper {
 	public static boolean isConceptClass(final OWLClass owlClass) {
-		return owlClass.getIRI().toString().startsWith(OntologyService.SNOMED_IRI);
+		return owlClass.getIRI().toString().startsWith(OntologyService.SNOMED_CORE_COMPONENTS_URI);
 	}
 
 	public static long getConceptId(final OWLNamedObject owlNamedObject) {
-		return Long.parseLong(owlNamedObject.getIRI().toString().substring(OntologyService.SNOMED_IRI.length()));
+		return Long.parseLong(owlNamedObject.getIRI().toString().substring(OntologyService.SNOMED_CORE_COMPONENTS_URI.length()));
 	}
 }

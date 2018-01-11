@@ -28,10 +28,12 @@ import java.util.*;
 
 public class OntologyService {
 
-	public static final String SNOMED_IRI = "http://snomed.info/id/";
-	public static final String SNOMED_PREFIX = ":";
-	public static final String ROLE_GROUP = "roleGroup";
-	public static final String SNOMED_ROLE_GROUP = SNOMED_PREFIX + ROLE_GROUP;
+	public static final String SNOMED_CORE_COMPONENTS_URI = "http://snomed.info/id/";
+	public static final String COLON = ":";
+	public static final String ROLE_GROUP_SCTID = "609096000";
+	public static final String ROLE_GROUP_OUTDATED_CONSTANT = "roleGroup";
+	public static final String SNOMED_ROLE_GROUP_SHORT_URI = COLON + ROLE_GROUP_SCTID;
+	public static final String SNOMED_ROLE_GROUP_FULL_URI = SNOMED_CORE_COMPONENTS_URI + ROLE_GROUP_SCTID;
 
 	private final OWLOntologyManager manager;
 	private OWLDataFactory factory;
@@ -43,7 +45,7 @@ public class OntologyService {
 		manager = OWLManager.createOWLOntologyManager();
 		factory = new OWLDataFactoryImpl();
 		prefixManager = new DefaultPrefixManager();
-		prefixManager.setPrefix(SNOMED_PREFIX, SNOMED_IRI);
+		prefixManager.setDefaultPrefix(SNOMED_CORE_COMPONENTS_URI);
 	}
 
 	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy) throws OWLOntologyCreationException {
@@ -84,7 +86,7 @@ public class OntologyService {
 			}
 		}
 
-		return manager.createOntology(axioms, IRI.create(SNOMED_IRI));
+		return manager.createOntology(axioms, IRI.create(SNOMED_CORE_COMPONENTS_URI));
 	}
 
 	public OWLClassAxiom createOwlClassAxiom(AxiomRepresentation axiomRepresentation) {
@@ -163,7 +165,7 @@ public class OntologyService {
 	}
 
 	private OWLObjectSomeValuesFrom getOwlObjectSomeValuesFromGroup(OWLClassExpression owlObjectSomeValuesFrom) {
-		return getOwlObjectSomeValuesWithPrefix(SNOMED_ROLE_GROUP, owlObjectSomeValuesFrom);
+		return getOwlObjectSomeValuesWithPrefix(SNOMED_ROLE_GROUP_SHORT_URI, owlObjectSomeValuesFrom);
 	}
 
 	private OWLObjectSomeValuesFrom getOwlObjectSomeValuesWithPrefix(String prefix, OWLClassExpression owlObjectSomeValuesFrom) {
@@ -175,11 +177,11 @@ public class OntologyService {
 	}
 
 	private OWLObjectProperty getOwlObjectProperty(long typeId) {
-		return factory.getOWLObjectProperty(SNOMED_PREFIX + typeId, prefixManager);
+		return factory.getOWLObjectProperty(COLON + typeId, prefixManager);
 	}
 
 	private OWLClass getOwlClass(Long conceptId) {
-		return factory.getOWLClass(SNOMED_PREFIX + conceptId, prefixManager);
+		return factory.getOWLClass(COLON + conceptId, prefixManager);
 	}
 
 	public DefaultPrefixManager getPrefixManager() {

@@ -31,7 +31,7 @@ public class ConversionServiceTest {
 					"ObjectIntersectionOf(" +
 						":73211009 " +
 						"ObjectSomeValuesFrom(" +
-							":roleGroup " +
+							":609096000 " +
 							"ObjectSomeValuesFrom(" +
 								":100105001 " +
 								":100101001" +
@@ -64,7 +64,7 @@ public class ConversionServiceTest {
 					"ObjectIntersectionOf(" +
 						":73211009 " +
 						"ObjectSomeValuesFrom(" +
-							":roleGroup " +
+							":609096000 " +
 							"ObjectSomeValuesFrom(" +
 								":100105001 " +
 								":100101001" +
@@ -96,7 +96,7 @@ public class ConversionServiceTest {
 					"ObjectIntersectionOf(" +
 						"<http://snomed.info/id/116175006> " +
 						"ObjectSomeValuesFrom(" +
-							"<http://snomed.info/id/roleGroup> " +
+							"<http://snomed.info/id/609096000> " +
 							"ObjectIntersectionOf(" +
 								"ObjectSomeValuesFrom(" +
 									"<http://snomed.info/id/260686004> " +
