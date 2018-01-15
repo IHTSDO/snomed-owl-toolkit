@@ -132,8 +132,6 @@ public class ClassificationResultsWriter {
 
 				// mapTarget is the unique id for the set
 				writer.write(setId);
-				writer.write(TAB);
-
 				writer.newLine();
 			}
 		}
@@ -177,8 +175,6 @@ public class ClassificationResultsWriter {
 
 		// modifierId always existential at this time
 		writer.write(existentialRestrictionModifier);
-		writer.write(TAB);
-
 		writer.newLine();
 	}
 

@@ -17,6 +17,8 @@ package org.snomed.otf.owltoolkit.service.classification;
 
 import org.snomed.otf.owltoolkit.testutil.ZipUtil;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -28,21 +30,33 @@ import java.util.List;
 
 class TestFileUtil {
 
+	private static final String EQUIVALENT_DELTA = "der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_";
+	private static final String RELATIONSHIP_DELTA = "sct2_Relationship_Delta_Classification_";
+
 	static List<String> readInferredRelationshipLinesTrim(File zipFile) throws IOException {
-		return readLinesTrim(zipFile, "sct2_Relationship_Delta_Classification_");
+		return readLinesTrim(zipFile, RELATIONSHIP_DELTA);
 	}
 
 	static List<String> readEquivalentConceptLinesTrim(File zipFile) throws IOException {
-		return readLinesTrim(zipFile, "der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_");
+		return readLinesTrim(zipFile, EQUIVALENT_DELTA);
 	}
 
 	private static List<String> readLinesTrim(File zipFile, String zipEntryNamePrefix) throws IOException {
 		List<String> lines = new ArrayList<>();
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(ZipUtil.getZipEntryStreamOrThrow(zipFile, zipEntryNamePrefix)))) {
+			int totalColumn = 0;
+			if (zipEntryNamePrefix.equals(RELATIONSHIP_DELTA)) {
+				totalColumn = 10;
+			} else if (EQUIVALENT_DELTA.equals(zipEntryNamePrefix)) {
+				totalColumn = 7;
+			}
+			String msg = String.format("There should be %d columns separated by tab in line \n", totalColumn);
 			String line;
 			while ((line = reader.readLine()) != null) {
-				lines.add(line.trim());
 				System.out.println(line);
+				String[] splits = line.split("\t", -1);
+				assertTrue(msg + line, splits.length == totalColumn);
+				lines.add(line.trim());
 			}
 		}
 		return lines;
