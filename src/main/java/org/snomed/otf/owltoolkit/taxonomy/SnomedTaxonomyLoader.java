@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.Set;
 
 import static java.lang.Long.parseLong;
+import static org.snomed.otf.owltoolkit.constants.Concepts.ADDITIONAL_RELATIONSHIP;
 import static org.snomed.otf.owltoolkit.constants.Concepts.STATED_RELATIONSHIP;
 import static org.snomed.otf.owltoolkit.constants.Concepts.UNIVERSAL_RESTRICTION_MODIFIER;
 
@@ -77,7 +78,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	public void newRelationshipState(String id, String effectiveTime, String active, String moduleId, String sourceId, String destinationId, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
 		boolean stated = STATED_RELATIONSHIP.equals(characteristicTypeId);
 
-		if (ACTIVE.equals(active)) {
+		if (ACTIVE.equals(active) && !ADDITIONAL_RELATIONSHIP.equals(characteristicTypeId)) {// Ignore additional relationships
 
 			boolean universal = UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId);
 			int unionGroup = 0;
