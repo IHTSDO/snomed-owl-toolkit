@@ -40,7 +40,7 @@ public abstract class NormalFormGenerator<T> {
 
 	protected final Set<Long> allTransitiveProperties;
 
-	protected boolean preprocessingComplete = false;
+	protected boolean preprocessingComplete = false;// TODO Remove this if not needed
 
 	public NormalFormGenerator(final ReasonerTaxonomy reasonerTaxonomy, SnomedTaxonomy snomedTaxonomy, Set<Long> propertiesDeclaredAsTransitive) {
 		this.reasonerTaxonomy = reasonerTaxonomy;

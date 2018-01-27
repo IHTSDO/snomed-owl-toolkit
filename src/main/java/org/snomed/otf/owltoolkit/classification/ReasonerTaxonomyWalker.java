@@ -25,7 +25,6 @@ import org.semanticweb.owlapi.reasoner.impl.OWLClassNodeSet;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.owltoolkit.conversion.ConversionService;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
 
 import java.util.Deque;

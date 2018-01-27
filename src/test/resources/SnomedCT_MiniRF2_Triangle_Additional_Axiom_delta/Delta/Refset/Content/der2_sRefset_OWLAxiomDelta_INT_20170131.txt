@@ -1,0 +1,27 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+
+#
+# We will include an additional axiom for the Triangle concept
+#
+
+# The following OWL Axiom states that "Triangle" is a "Polygon" with "Number of corners" "3"
+# This is an example of an axiom with a named concept on the left (first part) and an expression on the right (second part).
+# This is the same type of axiom which stated relationships are converted into during the classification process.
+# The EquivalentClasses expression type is used to show that this axiom has a sufficiently defined definition status.
+# We use a concept id to represent the number 3 because at this point there are no concrete domains in the International Edition.
+#
+# Here is a more human readable version:
+# EquivalentClasses(
+#    :100105001 - Triangle
+#    ObjectIntersectionOf(
+#        :100102001 - Polygon
+#        ObjectSomeValuesFrom(
+#            :100104001 - Number of corners
+#            :100107001 - 3
+#        )
+#    )
+#)
+1b6427e7-23de-476f-8f25-423306f180ac	20180731	1	900000000000207008	733073007	100105001	EquivalentClasses(:100105001 ObjectIntersectionOf(:100102001 ObjectSomeValuesFrom(:100104001 :100107001)))

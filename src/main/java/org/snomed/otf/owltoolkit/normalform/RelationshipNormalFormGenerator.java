@@ -25,19 +25,21 @@ import com.google.common.collect.*;
 import com.google.common.collect.Maps.EntryTransformer;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import org.semanticweb.owlapi.model.OWLAxiom;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
+import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.conversion.ConversionException;
+import org.snomed.otf.owltoolkit.conversion.ConversionService;
+import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.normalform.internal.*;
 import org.snomed.otf.owltoolkit.normalform.transitive.NodeGraph;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 
 import java.text.MessageFormat;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.snomed.otf.owltoolkit.constants.Concepts.IS_A_LONG;
@@ -48,14 +50,14 @@ import static org.snomed.otf.owltoolkit.constants.Concepts.IS_A_LONG;
  */
 public final class RelationshipNormalFormGenerator extends NormalFormGenerator<Relationship> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(RelationshipNormalFormGenerator.class);
-
 	/**
 	 * Special group number indicating that the next free group/union group number
 	 * should be used when the fragments in this group/union group are converted into
 	 * relationships.
 	 */
 	public static final int NUMBER_NOT_PRESERVED = -1;
+
+	private final Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap;
 
 	private static final int ZERO_GROUP = 0;
 
@@ -66,15 +68,20 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 	// Concepts in this set should be processed a second time to try to normalise their relationships further
 	private final Set<Long> conceptsWithTransitiveAttributeValue = new LongOpenHashSet();
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(RelationshipNormalFormGenerator.class);
+
 	/**
 	 * Creates a new distribution normal form generator instance.
-	 *
 	 * @param reasonerTaxonomy the reasoner to extract results from (may not be {@code null})
 	 * @param snomedTaxonomy the taxonomy as it existed before this classification run (may not be {@code null})
+	 * @param conceptAxiomStatementMap
 	 * @param propertiesDeclaredAsTransitive the identifiers of properties declared as having transitive behaviour
 	 */
-	public RelationshipNormalFormGenerator(final ReasonerTaxonomy reasonerTaxonomy, final SnomedTaxonomy snomedTaxonomy, Set<Long> propertiesDeclaredAsTransitive) {
+	public RelationshipNormalFormGenerator(final ReasonerTaxonomy reasonerTaxonomy, final SnomedTaxonomy snomedTaxonomy,
+										   final Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap, Set<Long> propertiesDeclaredAsTransitive) {
 		super(reasonerTaxonomy, snomedTaxonomy, propertiesDeclaredAsTransitive);
+		
+		this.conceptAxiomStatementMap = conceptAxiomStatementMap;
 
 		// Initialise node graphs for each transitive property
 		LOGGER.info("Initialising node graphs for transitive properties {}", allTransitiveProperties);
@@ -119,7 +126,7 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 		return ImmutableList.copyOf(Iterables.concat(inferredIsAFragments, inferredNonIsAFragments));
 	}
 
-	private Set<Relationship> getInferredNonIsAFragmentsInNormalForm(long conceptId) {
+	private Set<Relationship> getInferredNonIsAFragmentsInNormalForm(Long conceptId) {
 		final Set<Long> directSuperTypes = reasonerTaxonomy.getParents(conceptId);
 
 		// Step 2: get all non IS-A relationships from ancestors and remove redundancy, then cache the results for later use
@@ -133,7 +140,22 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 			otherNonIsAFragments.put(directSuperTypeId, getCachedNonIsAFragments(directSuperTypeId));
 		}
 
-		final Collection<Relationship> ownStatedNonIsaRelationships = snomedTaxonomy.getNonIsARelationships(conceptId);
+		Set<AxiomRepresentation> axiomRepresentations = conceptAxiomStatementMap.get(conceptId);
+		final Collection<Relationship> ownStatedNonIsaRelationships;
+		if (axiomRepresentations == null) {
+			ownStatedNonIsaRelationships = snomedTaxonomy.getNonIsAStatements(conceptId);
+		} else {
+			ownStatedNonIsaRelationships = new ArrayList<>(snomedTaxonomy.getNonIsAStatements(conceptId));
+			ownStatedNonIsaRelationships.addAll(axiomRepresentations.stream()
+					.filter(axiomRepresentation -> conceptId.equals(axiomRepresentation.getLeftHandSideNamedConcept()))
+					.map(AxiomRepresentation::getRightHandSideRelationships)
+					.map(Map::values)
+					.flatMap(Collection::stream)
+					.flatMap(Collection::stream)
+					.filter(relationship -> relationship.getTypeId() != Concepts.IS_A_LONG)
+					.collect(Collectors.toList()));
+		}
+
 		final Collection<Relationship> ownInferredFragments = snomedTaxonomy.getInferredRelationships(conceptId);
 		final Collection<Relationship> ownInferredNonIsaFragments = Collections2.filter(ownInferredFragments, input -> input.getTypeId() != IS_A_LONG);
 

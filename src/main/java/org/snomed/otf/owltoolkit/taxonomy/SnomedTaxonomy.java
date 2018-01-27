@@ -139,7 +139,7 @@ public class SnomedTaxonomy {
 		return superTypes;
 	}
 
-	public Collection<Relationship> getNonIsARelationships(Long conceptId) {
+	public Collection<Relationship> getNonIsAStatements(Long conceptId) {
 		return conceptStatedRelationshipMap.getOrDefault(conceptId, Collections.emptySet()).stream().filter(f -> f.getTypeId() != Concepts.IS_A_LONG).collect(Collectors.toList());
 	}
 
