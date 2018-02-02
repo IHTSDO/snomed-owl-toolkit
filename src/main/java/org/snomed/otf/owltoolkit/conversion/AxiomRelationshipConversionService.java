@@ -11,21 +11,19 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.CORE_COMPONENT_NAMESPACE_PATTERN;
 
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.SNOMED_ROLE_GROUP_FULL_URI;
 
-public class ConversionService {
+public class AxiomRelationshipConversionService {
 
 	private final SnomedTaxonomyLoader snomedTaxonomyLoader;
 	private final OntologyService ontologyService;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ConversionService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AxiomRelationshipConversionService.class);
 
-	public ConversionService(Set<Long> ungroupedAttributes) {
+	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
 		ontologyService = new OntologyService(ungroupedAttributes);
 	}

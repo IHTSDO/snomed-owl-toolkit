@@ -50,6 +50,10 @@ public class SnomedTaxonomyBuilder {
 			.withInactiveRelationships()
 			.withInactiveRefsetMembers();
 
+	public SnomedTaxonomy build(InputStream snomedRf2SnapshotArchive) throws ReleaseImportException {
+		return build(snomedRf2SnapshotArchive, null);
+	}
+
 	public SnomedTaxonomy build(InputStream snomedRf2SnapshotArchive, InputStream currentReleaseRf2DeltaArchive) throws ReleaseImportException {
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
@@ -62,16 +66,18 @@ public class SnomedTaxonomyBuilder {
 				SNAPSHOT_LOADING_PROFILE,
 				snomedTaxonomyLoader);
 		snomedTaxonomyLoader.reportErrors();
-		logger.info("Loaded previous release snapshot");
+		logger.info("Loaded release snapshot");
 
-		snomedTaxonomyLoader.startLoadingDelta();
+		if (currentReleaseRf2DeltaArchive != null) {
+			snomedTaxonomyLoader.startLoadingDelta();
 
-		releaseImporter.loadDeltaReleaseFiles(
-				currentReleaseRf2DeltaArchive,
-				DELTA_LOADING_PROFILE,
-				snomedTaxonomyLoader);
-		snomedTaxonomyLoader.reportErrors();
-		logger.info("Loaded current release delta");
+			releaseImporter.loadDeltaReleaseFiles(
+					currentReleaseRf2DeltaArchive,
+					DELTA_LOADING_PROFILE,
+					snomedTaxonomyLoader);
+			snomedTaxonomyLoader.reportErrors();
+			logger.info("Loaded delta");
+		}
 
 		stopWatch.stop();
 		logger.info("SnomedTaxonomy loaded in {} seconds", stopWatch.getTotalTimeSeconds());

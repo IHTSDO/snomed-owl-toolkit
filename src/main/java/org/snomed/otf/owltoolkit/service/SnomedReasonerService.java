@@ -25,7 +25,7 @@ import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomyWalker;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
-import org.snomed.otf.owltoolkit.conversion.ConversionService;
+import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.normalform.RelationshipChangeCollector;
 import org.snomed.otf.owltoolkit.normalform.RelationshipInactivationProcessor;
@@ -142,10 +142,10 @@ public class SnomedReasonerService {
 		timer.checkpoint("Extract ReasonerTaxonomy");
 
 		logger.info("Generate normal form");
-		ConversionService conversionService = new ConversionService(ungroupedRoles);
+		AxiomRelationshipConversionService axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedRoles);
 		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap = null;
 		try {
-			conceptAxiomStatementMap = conversionService.convertAxiomsToRelationships(snomedTaxonomy.getConceptAxiomMap());
+			conceptAxiomStatementMap = axiomRelationshipConversionService.convertAxiomsToRelationships(snomedTaxonomy.getConceptAxiomMap());
 		} catch (ConversionException e) {
 			throw new ReasonerServiceException("Failed to convert OWL Axiom Expressions into relationships for normal form generation.", e);
 		}
