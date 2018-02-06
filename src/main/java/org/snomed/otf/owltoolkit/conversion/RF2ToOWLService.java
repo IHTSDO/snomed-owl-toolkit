@@ -12,9 +12,12 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Set;
+
+import static org.snomed.otf.owltoolkit.ontology.OntologyService.CORE_COMPONENT_NAMESPACE_PATTERN;
 
 public class RF2ToOWLService {
 
@@ -47,7 +50,7 @@ public class RF2ToOWLService {
 		// Write to OutputStream
 		try {
 			logger.info("Saving Ontology");
-			ontology.saveOntology(new FunctionalSyntaxDocumentFormat(), owlFileOutputStream);
+			ontology.saveOntology(new FunctionalSyntaxDocumentFormat(), new DefaultPrefixFilterOutputStream(owlFileOutputStream));
 		} catch (OWLOntologyStorageException e) {
 			throw new ConversionException("Failed to serialise and write OWL Ontology to output stream.", e);
 		}

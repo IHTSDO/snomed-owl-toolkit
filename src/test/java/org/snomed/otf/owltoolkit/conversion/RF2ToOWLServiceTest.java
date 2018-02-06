@@ -31,62 +31,62 @@ public class RF2ToOWLServiceTest {
 						"\n" +
 						"Ontology(<http://snomed.info/id/>\n" +
 						"\n" +
-						"Declaration(Class(<http://snomed.info/id/113331007>))\n" +
-						"Declaration(Class(<http://snomed.info/id/116680003>))\n" +
-						"Declaration(Class(<http://snomed.info/id/138875005>))\n" +
-						"Declaration(Class(<http://snomed.info/id/362969004>))\n" +
-						"Declaration(Class(<http://snomed.info/id/363698007>))\n" +
-						"Declaration(Class(<http://snomed.info/id/404684003>))\n" +
-						"Declaration(Class(<http://snomed.info/id/410662002>))\n" +
-						"Declaration(Class(<http://snomed.info/id/723594008>))\n" +
-						"Declaration(Class(<http://snomed.info/id/723596005>))\n" +
-						"Declaration(Class(<http://snomed.info/id/900000000000441003>))\n" +
-						"Declaration(ObjectProperty(<http://snomed.info/id/363698007>))\n" +
-						"Declaration(ObjectProperty(<http://snomed.info/id/609096000>))\n" +
+						"Declaration(Class(:113331007))\n" +
+						"Declaration(Class(:116680003))\n" +
+						"Declaration(Class(:138875005))\n" +
+						"Declaration(Class(:362969004))\n" +
+						"Declaration(Class(:363698007))\n" +
+						"Declaration(Class(:404684003))\n" +
+						"Declaration(Class(:410662002))\n" +
+						"Declaration(Class(:723594008))\n" +
+						"Declaration(Class(:723596005))\n" +
+						"Declaration(Class(:900000000000441003))\n" +
+						"Declaration(ObjectProperty(:363698007))\n" +
+						"Declaration(ObjectProperty(:609096000))\n" +
 						"\n" +
 						"############################\n" +
 						"#   Classes\n" +
 						"############################\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/113331007> (<http://snomed.info/id/113331007>)\n" +
+						"# Class: :113331007 (:113331007)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/113331007> <http://snomed.info/id/138875005>)\n" +
+						"SubClassOf(:113331007 :138875005)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/116680003> (<http://snomed.info/id/116680003>)\n" +
+						"# Class: :116680003 (:116680003)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/116680003> <http://snomed.info/id/900000000000441003>)\n" +
+						"SubClassOf(:116680003 :900000000000441003)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/138875005> (<http://snomed.info/id/138875005>)\n" +
+						"# Class: :138875005 (:138875005)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/138875005> owl:Thing)\n" +
+						"SubClassOf(:138875005 owl:Thing)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/362969004> (<http://snomed.info/id/362969004>)\n" +
+						"# Class: :362969004 (:362969004)\n" +
 						"\n" +
-						"EquivalentClasses(<http://snomed.info/id/362969004> ObjectIntersectionOf(<http://snomed.info/id/404684003> ObjectSomeValuesFrom(<http://snomed.info/id/609096000> ObjectSomeValuesFrom(<http://snomed.info/id/363698007> <http://snomed.info/id/113331007>))))\n" +
+						"EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/363698007> (<http://snomed.info/id/363698007>)\n" +
+						"# Class: :363698007 (:363698007)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/363698007> <http://snomed.info/id/410662002>)\n" +
+						"SubClassOf(:363698007 :410662002)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/404684003> (<http://snomed.info/id/404684003>)\n" +
+						"# Class: :404684003 (:404684003)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/404684003> <http://snomed.info/id/138875005>)\n" +
+						"SubClassOf(:404684003 :138875005)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/410662002> (<http://snomed.info/id/410662002>)\n" +
+						"# Class: :410662002 (:410662002)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/410662002> <http://snomed.info/id/900000000000441003>)\n" +
+						"SubClassOf(:410662002 :900000000000441003)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/723594008> (<http://snomed.info/id/723594008>)\n" +
+						"# Class: :723594008 (:723594008)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/723594008> <http://snomed.info/id/900000000000441003>)\n" +
+						"SubClassOf(:723594008 :900000000000441003)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/723596005> (<http://snomed.info/id/723596005>)\n" +
+						"# Class: :723596005 (:723596005)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/723596005> <http://snomed.info/id/723594008>)\n" +
+						"SubClassOf(:723596005 :723594008)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/900000000000441003> (<http://snomed.info/id/900000000000441003>)\n" +
+						"# Class: :900000000000441003 (:900000000000441003)\n" +
 						"\n" +
-						"SubClassOf(<http://snomed.info/id/900000000000441003> <http://snomed.info/id/138875005>)\n" +
+						"SubClassOf(:900000000000441003 :138875005)\n" +
 						"\n" +
 						"\n" +
 						")",

@@ -35,7 +35,7 @@ public class OntologyService {
 	public static final String SNOMED_ROLE_GROUP_SHORT_URI = COLON + ROLE_GROUP_SCTID;
 	public static final String SNOMED_ROLE_GROUP_FULL_URI = SNOMED_CORE_COMPONENTS_URI + ROLE_GROUP_SCTID;
 
-	public static final String CORE_COMPONENT_NAMESPACE_PATTERN = "<http://snomed.info/id/([0-9]*)>";
+	public static final String CORE_COMPONENT_NAMESPACE_PATTERN = "<http://snomed.info/id/([0-9]+)>";
 
 	private final OWLOntologyManager manager;
 	private OWLDataFactory factory;
