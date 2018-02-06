@@ -88,7 +88,7 @@ public class OntologyService {
 			}
 		}
 
-		return manager.createOntology(axioms, IRI.create(SNOMED_CORE_COMPONENTS_URI));
+		return manager.createOntology(axioms, IRI.create(SNOMED_CORE_COMPONENTS_URI + Concepts.SNOMED_CT_CORE_MODULE));
 	}
 
 	public OWLClassAxiom createOwlClassAxiom(AxiomRepresentation axiomRepresentation) {

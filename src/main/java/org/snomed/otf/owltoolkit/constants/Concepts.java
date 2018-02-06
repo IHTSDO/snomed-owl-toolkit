@@ -21,6 +21,7 @@ public class Concepts {
 
 	public static final String ROOT = "138875005";
 	public static final Long ROOT_LONG = parseLong(ROOT);
+	public static final String SNOMED_CT_CORE_MODULE = "900000000000207008";
 	public static final String IS_A = "116680003";
 	public static final Long IS_A_LONG = parseLong(IS_A);
 
