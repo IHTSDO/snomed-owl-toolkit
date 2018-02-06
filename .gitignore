@@ -3,3 +3,4 @@ target
 *.iml
 /debug
 /*.owl
+/local*
