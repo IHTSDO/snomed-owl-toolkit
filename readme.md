@@ -23,6 +23,9 @@ This toolkit is used within the SNOMED International Authoring Environment and w
   - Support for General Concept Axioms
   - *See AxiomRelationshipConversionService.java*
 
+## Documentation
+* [Calculating the Necessary Normal Form](documentation/calculating-necessary-normal-form.md)
+
 ## Snomed RF2 to OWL File Conversion
 Convert your Snomed RF2 archive containing Snapshot files to an OWL ontology file (functional syntax). Download the latest release then in the terminal:
 ```bash
