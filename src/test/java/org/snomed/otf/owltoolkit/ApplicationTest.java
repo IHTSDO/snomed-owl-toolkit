@@ -11,6 +11,12 @@ import static org.junit.Assert.*;
 
 public class ApplicationTest {
 
+	public static final String HELP = "Usage:\n" +
+			" -help                   Print this help message.\n" +
+			" -rf2-snap-zip <path>    Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
+			" -version <version>      Version date e.g. 20180731.\n" +
+			" -without-annotations    Don't include Fully Specified Name annotations in OWL file (smaller file size).\n" +
+			"\n";
 	private ByteArrayOutputStream errorStream;
 	private ByteArrayOutputStream outStream;
 
@@ -24,13 +30,7 @@ public class ApplicationTest {
 	public void mainNoArgs() throws Exception {
 		runApplication(new String[] {});
 
-		assertEquals("Usage:\n" +
-						" -help                   Print this help message.\n" +
-						" -rf2-snap-zip <path>    Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
-						" -version <version>      Version date e.g. 20180731.\n" +
-						" -without-annotations    Don't include Fully Specified Name annotations in OWL file (smaller file size).\n" +
-						"\n",
-				outStream.toString());
+		assertEquals(HELP, outStream.toString());
 		assertEquals("", errorStream.toString());
 	}
 
@@ -38,13 +38,7 @@ public class ApplicationTest {
 	public void mainHelpArg() throws Exception {
 		runApplication(new String[] {"-help"});
 
-		assertEquals("Usage:\n" +
-						" -help                   Print this help message.\n" +
-						" -rf2-snap-zip <path>    Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
-						" -version <version>      Version date e.g. 20180731.\n" +
-						" -without-annotations    Don't include Fully Specified Name annotations in OWL file (smaller file size).\n" +
-						"\n",
-				outStream.toString());
+		assertEquals(HELP, outStream.toString());
 		assertEquals("", errorStream.toString());
 	}
 
@@ -52,7 +46,7 @@ public class ApplicationTest {
 	public void mainArgFileNoValue() throws Exception {
 		runApplication(new String[] {"-rf2-snap-zip"});
 
-		assertEquals("", outStream.toString());
+		assertEquals("\n\n" + HELP, outStream.toString());
 		assertEquals("Expecting a value with parameter -rf2-snap-zip\n", errorStream.toString());
 	}
 
@@ -60,7 +54,7 @@ public class ApplicationTest {
 	public void mainArgsFileAndBadValue() throws Exception {
 		runApplication(new String[] {"-rf2-snap-zip", "dummy"});
 
-		assertEquals("", outStream.toString());
+		assertEquals("\n\n" + HELP, outStream.toString());
 		assertTrue(errorStream.toString().endsWith("dummy should be a file.\n"));
 	}
 
@@ -69,7 +63,7 @@ public class ApplicationTest {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 		runApplication(new String[] {"-rf2-snap-zip", baseRF2SnapshotZip.getAbsolutePath()});
 
-		assertEquals("", outStream.toString());
+		assertEquals("\n\n" + HELP, outStream.toString());
 		assertEquals("Expecting parameter -version\n", errorStream.toString());
 	}
 

@@ -36,20 +36,7 @@ public class Application {
 
 		if (args.isEmpty() || args.contains(ARG_HELP)) {
 			// Help
-			System.out.println(
-					"Usage:\n" +
-							pad(ARG_HELP) +
-							"Print this help message.\n" +
-
-							pad(ARG_RF2_ZIP + " <path>") +
-							"Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
-
-							pad(ARG_VERSION + " <version>") +
-							"Version date e.g. 20180731.\n" +
-
-							pad(ARG_WITHOUT_ANNOTATIONS) +
-							"Don't include Fully Specified Name annotations in OWL file (smaller file size).\n" +
-					"");
+			printHelp();
 		} else {
 			// RF2 to OWL
 			// Parameter validation
@@ -78,6 +65,23 @@ public class Application {
 		}
 	}
 
+	private void printHelp() {
+		System.out.println(
+				"Usage:\n" +
+						pad(ARG_HELP) +
+						"Print this help message.\n" +
+
+						pad(ARG_RF2_ZIP + " <path>") +
+						"Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
+
+						pad(ARG_VERSION + " <version>") +
+						"Version date e.g. 20180731.\n" +
+
+						pad(ARG_WITHOUT_ANNOTATIONS) +
+						"Don't include Fully Specified Name annotations in OWL file (smaller file size).\n" +
+				"");
+	}
+
 	private String getRequiredParameterValue(String paramName, List<String> args) {
 		assertTrue("Expecting parameter " + paramName, args.contains(paramName));
 		int valueIndex = args.indexOf(paramName) + 1;
@@ -87,7 +91,10 @@ public class Application {
 
 	private void assertTrue(String message, boolean bool) {
 		if (!bool) {
+			System.out.println();
 			System.err.println(message);
+			System.out.println();
+			printHelp();
 			throw new IllegalStateException();
 		}
 	}
