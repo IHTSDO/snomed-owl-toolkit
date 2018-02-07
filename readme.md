@@ -27,7 +27,7 @@ This toolkit is used within the SNOMED International Authoring Environment and w
 * [Calculating the Necessary Normal Form](documentation/calculating-necessary-normal-form.md)
 
 ## Snomed RF2 to OWL File Conversion
-Convert your Snomed RF2 archive containing Snapshot files to an OWL ontology file (functional syntax). Download the latest release then in the terminal:
+Convert your Snomed RF2 archive containing Snapshot files to an OWL ontology file (functional syntax). Download the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases) then in the terminal:
 ```bash
 java -jar snomed-owl-toolkit*.jar -rf2-snap-zip SnomedCT_InternationalRF2.zip
 ```
