@@ -29,6 +29,6 @@ This toolkit is used within the SNOMED International Authoring Environment and w
 ## Snomed RF2 to OWL File Conversion
 Convert your Snomed RF2 archive containing Snapshot files to an OWL ontology file (functional syntax). Download the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases) then in the terminal:
 ```bash
-java -jar snomed-owl-toolkit*.jar -rf2-snap-zip SnomedCT_InternationalRF2.zip
+java -jar snomed-owl-toolkit*executable.jar -rf2-snap-zip SnomedCT_InternationalRF2.zip
 ```
 After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
