@@ -23,7 +23,7 @@ public class RF2ToOWLService {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	public void convertRF2ArchiveToOWL(InputStream rf2ArchiveStream, OutputStream owlFileOutputStream) throws ConversionException {
+	public void convertRF2ArchiveToOWL(String versionDate, InputStream rf2ArchiveStream, OutputStream owlFileOutputStream) throws ConversionException {
 		// Load required parts of RF2 into memory
 		logger.info("Loading RF2 files");
 		SnomedTaxonomy snomedTaxonomy;
@@ -42,15 +42,14 @@ public class RF2ToOWLService {
 		OntologyService ontologyService = new OntologyService(neverGroupedRoles);
 		OWLOntology ontology;
 		try {
-			ontology = ontologyService.createOntology(snomedTaxonomy);
+			ontology = ontologyService.createOntology(snomedTaxonomy, versionDate);
 		} catch (OWLOntologyCreationException e) {
 			throw new ConversionException("Failed to build OWL Ontology from SNOMED taxonomy.", e);
 		}
 
 		// Write to OutputStream
 		try {
-			logger.info("Saving Ontology");
-			ontology.saveOntology(new FunctionalSyntaxDocumentFormat(), new DefaultPrefixFilterOutputStream(owlFileOutputStream));
+			ontologyService.saveOntology(ontology, owlFileOutputStream);
 		} catch (OWLOntologyStorageException e) {
 			throw new ConversionException("Failed to serialise and write OWL Ontology to output stream.", e);
 		}

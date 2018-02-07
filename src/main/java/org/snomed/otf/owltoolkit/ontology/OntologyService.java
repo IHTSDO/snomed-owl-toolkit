@@ -15,20 +15,28 @@
  */
 package org.snomed.otf.owltoolkit.ontology;
 
+import com.google.common.base.Strings;
 import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
+import org.snomed.otf.owltoolkit.ontology.render.SnomedFunctionalSyntaxDocumentFormat;
+import org.snomed.otf.owltoolkit.ontology.render.SnomedFunctionalSyntaxStorerFactory;
+import org.snomed.otf.owltoolkit.ontology.render.SnomedPrefixManager;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
+import java.io.OutputStream;
 import java.util.*;
 
 public class OntologyService {
 
 	public static final String SNOMED_CORE_COMPONENTS_URI = "http://snomed.info/id/";
+	public static final String SNOMED_INTERNATIONAL_EDITION_URI = "http://snomed.info/sct/900000000000207008";
+	public static final String SNOMED_INTERNATIONAL_EDITION_VERSION_URI_PREFIX = "http://snomed.info/sct/900000000000207008/version/";
 	public static final String COLON = ":";
 	public static final String ROLE_GROUP_SCTID = "609096000";
 	public static final String ROLE_GROUP_OUTDATED_CONSTANT = "roleGroup";
@@ -51,6 +59,10 @@ public class OntologyService {
 	}
 
 	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy) throws OWLOntologyCreationException {
+		return createOntology(snomedTaxonomy, null);
+	}
+
+	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy, String versionDate) throws OWLOntologyCreationException {
 
 		Set<OWLAxiom> axioms = new HashSet<>();
 
@@ -88,7 +100,18 @@ public class OntologyService {
 			}
 		}
 
-		return manager.createOntology(axioms, IRI.create(SNOMED_CORE_COMPONENTS_URI + Concepts.SNOMED_CT_CORE_MODULE));
+		String ontologyIRI = Strings.isNullOrEmpty(versionDate) ? SNOMED_INTERNATIONAL_EDITION_URI : SNOMED_INTERNATIONAL_EDITION_VERSION_URI_PREFIX + versionDate;
+		return manager.createOntology(axioms, IRI.create(ontologyIRI));
+	}
+
+	public void saveOntology(OWLOntology ontology, OutputStream outputStream) throws OWLOntologyStorageException {
+		manager.getOntologyStorers().add(new SnomedFunctionalSyntaxStorerFactory());
+
+		FunctionalSyntaxDocumentFormat owlDocumentFormat = new SnomedFunctionalSyntaxDocumentFormat();
+		owlDocumentFormat.setPrefixManager(new SnomedPrefixManager());
+		owlDocumentFormat.setDefaultPrefix("http://snomed.info/id/");
+		ontology.getOWLOntologyManager().setOntologyFormat(ontology, owlDocumentFormat);
+		ontology.saveOntology(owlDocumentFormat, outputStream);
 	}
 
 	public OWLClassAxiom createOwlClassAxiom(AxiomRepresentation axiomRepresentation) {

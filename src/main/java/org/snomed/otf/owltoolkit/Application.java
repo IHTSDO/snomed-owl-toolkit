@@ -17,49 +17,87 @@ public class Application {
 
 	private static final String ARG_HELP = "-help";
 	private static final String ARG_RF2_ZIP = "-rf2-snap-zip";
+	private static final String ARG_VERSION = "-version";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
+	private boolean deleteOntologyFileOnExit;
+
 	public static void main(String[] argsArray) throws FileNotFoundException, ConversionException {
+		try {
+			new Application().run(argsArray);
+		} catch (Exception e) {
+			System.exit(1);
+		}
+		System.exit(0);
+	}
+
+	public void run(String[] argsArray) throws IOException, ConversionException {
 		List<String> args = Lists.newArrayList(argsArray);
 
 		if (args.isEmpty() || args.contains(ARG_HELP)) {
 			// Help
 			System.out.println(
 					"Usage:\n" +
-							" " + ARG_HELP + "              Print this help message.\n" +
-							" " + ARG_RF2_ZIP + " <path>    Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
+							pad(ARG_HELP) +
+							"Print this help message.\n" +
+
+							pad(ARG_RF2_ZIP + " <path>") +
+							"Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
+
+							pad(ARG_VERSION + " <version>") +
+							"Version date e.g. 20180731.\n" +
 					"");
 		} else {
 			// RF2 to OWL
 			// Parameter validation
-			assertTrue("Expecting 1 key and value argument pair separated by a space.",
-					args.size() == 2);
-			assertTrue("Expecting argument " + ARG_RF2_ZIP,
-					args.contains(ARG_RF2_ZIP));
-			String rf2ArchivePath = args.get(1);
+			String rf2ArchivePath = getRequiredParameterValue(ARG_RF2_ZIP, args);
 			File rf2ArchiveFile = new File(rf2ArchivePath);
 			assertTrue(rf2ArchiveFile.getAbsolutePath() + " should be a file.", rf2ArchiveFile.isFile());
 
+			String versionDate = getRequiredParameterValue(ARG_VERSION, args);
+
 			// Conversion
 			String outputFilePath = "ontology-" + DATE_FORMAT.format(new Date()) + ".owl";
+			File ontologyOutputFile = new File(outputFilePath);
+			if (deleteOntologyFileOnExit) {
+				ontologyOutputFile.deleteOnExit();
+			}
 			try (FileInputStream rf2ArchiveStream = new FileInputStream(rf2ArchiveFile);
-				 FileOutputStream outputStream = new FileOutputStream(outputFilePath)) {
-				new RF2ToOWLService().convertRF2ArchiveToOWL(rf2ArchiveStream, outputStream);
+				 FileOutputStream outputStream = new FileOutputStream(ontologyOutputFile)) {
+				new RF2ToOWLService().convertRF2ArchiveToOWL(versionDate, rf2ArchiveStream, outputStream);
 			} catch (IOException e) {
 				System.err.println("Failed to close input or output stream.");
 				e.printStackTrace();
-				System.exit(1);
+				throw e;
 			}
 			System.out.println("OWL Ontology file written to - " + outputFilePath);
-			System.exit(0);
 		}
 	}
 
-	private static void assertTrue(String message, boolean bool) {
+	private String getRequiredParameterValue(String paramName, List<String> args) {
+		assertTrue("Expecting parameter " + paramName, args.contains(paramName));
+		int valueIndex = args.indexOf(paramName) + 1;
+		assertTrue("Expecting a value with parameter " + paramName, valueIndex < args.size());
+		return args.get(valueIndex);
+	}
+
+	private void assertTrue(String message, boolean bool) {
 		if (!bool) {
 			System.err.println(message);
-			System.exit(1);
+			throw new IllegalStateException();
 		}
 	}
 
+	private String pad(String argHelp) {
+		StringBuilder argHelpBuilder = new StringBuilder(" " + argHelp);
+		while (argHelpBuilder.length() < 25) {
+			argHelpBuilder.append(" ");
+		}
+		return argHelpBuilder.toString();
+	}
+
+
+	protected void deleteOntologyFileOnExit() {
+		this.deleteOntologyFileOnExit = true;
+	}
 }

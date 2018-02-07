@@ -18,9 +18,9 @@ public class RF2ToOWLServiceTest {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		rf2ToOWLService.convertRF2ArchiveToOWL(new FileInputStream(baseRF2SnapshotZip), byteArrayOutputStream);
+		rf2ToOWLService.convertRF2ArchiveToOWL("20180731", new FileInputStream(baseRF2SnapshotZip), byteArrayOutputStream);
 
-		assertEquals(
+		assertEquals("" +
 						"Prefix(:=<http://snomed.info/id/>)\n" +
 						"Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n" +
 						"Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n" +
@@ -29,7 +29,7 @@ public class RF2ToOWLServiceTest {
 						"Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n" +
 						"\n" +
 						"\n" +
-						"Ontology(<http://snomed.info/id/900000000000207008>\n" +
+						"Ontology(<http://snomed.info/sct/900000000000207008/version/20180731>\n" +
 						"\n" +
 						"Declaration(Class(:113331007))\n" +
 						"Declaration(Class(:116680003))\n" +
@@ -48,43 +48,43 @@ public class RF2ToOWLServiceTest {
 						"#   Classes\n" +
 						"############################\n" +
 						"\n" +
-						"# Class: :113331007 (:113331007)\n" +
+						"# Class: <http://snomed.info/id/113331007> (<http://snomed.info/id/113331007>)\n" +
 						"\n" +
 						"SubClassOf(:113331007 :138875005)\n" +
 						"\n" +
-						"# Class: :116680003 (:116680003)\n" +
+						"# Class: <http://snomed.info/id/116680003> (<http://snomed.info/id/116680003>)\n" +
 						"\n" +
 						"SubClassOf(:116680003 :900000000000441003)\n" +
 						"\n" +
-						"# Class: :138875005 (:138875005)\n" +
+						"# Class: <http://snomed.info/id/138875005> (<http://snomed.info/id/138875005>)\n" +
 						"\n" +
 						"SubClassOf(:138875005 owl:Thing)\n" +
 						"\n" +
-						"# Class: :362969004 (:362969004)\n" +
+						"# Class: <http://snomed.info/id/362969004> (<http://snomed.info/id/362969004>)\n" +
 						"\n" +
 						"EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
 						"\n" +
-						"# Class: :363698007 (:363698007)\n" +
+						"# Class: <http://snomed.info/id/363698007> (<http://snomed.info/id/363698007>)\n" +
 						"\n" +
 						"SubClassOf(:363698007 :410662002)\n" +
 						"\n" +
-						"# Class: :404684003 (:404684003)\n" +
+						"# Class: <http://snomed.info/id/404684003> (<http://snomed.info/id/404684003>)\n" +
 						"\n" +
 						"SubClassOf(:404684003 :138875005)\n" +
 						"\n" +
-						"# Class: :410662002 (:410662002)\n" +
+						"# Class: <http://snomed.info/id/410662002> (<http://snomed.info/id/410662002>)\n" +
 						"\n" +
 						"SubClassOf(:410662002 :900000000000441003)\n" +
 						"\n" +
-						"# Class: :723594008 (:723594008)\n" +
+						"# Class: <http://snomed.info/id/723594008> (<http://snomed.info/id/723594008>)\n" +
 						"\n" +
 						"SubClassOf(:723594008 :900000000000441003)\n" +
 						"\n" +
-						"# Class: :723596005 (:723596005)\n" +
+						"# Class: <http://snomed.info/id/723596005> (<http://snomed.info/id/723596005>)\n" +
 						"\n" +
 						"SubClassOf(:723596005 :723594008)\n" +
 						"\n" +
-						"# Class: :900000000000441003 (:900000000000441003)\n" +
+						"# Class: <http://snomed.info/id/900000000000441003> (<http://snomed.info/id/900000000000441003>)\n" +
 						"\n" +
 						"SubClassOf(:900000000000441003 :138875005)\n" +
 						"\n" +
