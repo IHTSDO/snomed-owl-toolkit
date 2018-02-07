@@ -94,7 +94,7 @@ public class SnomedReasonerService {
 		SnomedTaxonomyBuilder snomedTaxonomyBuilder = new SnomedTaxonomyBuilder();
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchive, currentReleaseRf2DeltaArchive);
+			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchive, currentReleaseRf2DeltaArchive, false);
 		} catch (ReleaseImportException e) {
 			throw new ReasonerServiceException("Failed to build existing taxonomy.", e);
 		}

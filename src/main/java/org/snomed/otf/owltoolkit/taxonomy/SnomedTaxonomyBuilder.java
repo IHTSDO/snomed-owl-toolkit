@@ -50,11 +50,11 @@ public class SnomedTaxonomyBuilder {
 			.withInactiveRelationships()
 			.withInactiveRefsetMembers();
 
-	public SnomedTaxonomy build(InputStream snomedRf2SnapshotArchive) throws ReleaseImportException {
-		return build(snomedRf2SnapshotArchive, null);
+	public SnomedTaxonomy build(InputStream snomedRf2SnapshotArchive, boolean includeFSNs) throws ReleaseImportException {
+		return build(snomedRf2SnapshotArchive, null, includeFSNs);
 	}
 
-	public SnomedTaxonomy build(InputStream snomedRf2SnapshotArchive, InputStream currentReleaseRf2DeltaArchive) throws ReleaseImportException {
+	public SnomedTaxonomy build(InputStream snomedRf2SnapshotArchive, InputStream currentReleaseRf2DeltaArchive, boolean includeFSNs) throws ReleaseImportException {
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
@@ -63,7 +63,7 @@ public class SnomedTaxonomyBuilder {
 		ReleaseImporter releaseImporter = new ReleaseImporter();
 		releaseImporter.loadSnapshotReleaseFiles(
 				snomedRf2SnapshotArchive,
-				SNAPSHOT_LOADING_PROFILE,
+				includeFSNs ? SNAPSHOT_LOADING_PROFILE.withFullDescriptionObjects() : SNAPSHOT_LOADING_PROFILE,
 				snomedTaxonomyLoader);
 		snomedTaxonomyLoader.reportErrors();
 		logger.info("Loaded release snapshot");
@@ -73,7 +73,7 @@ public class SnomedTaxonomyBuilder {
 
 			releaseImporter.loadDeltaReleaseFiles(
 					currentReleaseRf2DeltaArchive,
-					DELTA_LOADING_PROFILE,
+					includeFSNs ? DELTA_LOADING_PROFILE.withFullDescriptionObjects() : DELTA_LOADING_PROFILE,
 					snomedTaxonomyLoader);
 			snomedTaxonomyLoader.reportErrors();
 			logger.info("Loaded delta");

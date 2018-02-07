@@ -36,6 +36,8 @@ public class Concepts {
 	public static final Long ADDITIONAL_RELATIONSHIP_LONG = parseLong(ADDITIONAL_RELATIONSHIP);
 	public static final String DEFINING_RELATIONSHIP = "900000000000006009";
 
+	public static final String FSN = "900000000000003001";
+
 	public static final String ALL_PRECOORDINATED_CONTENT = "723594008";
 
 	public static final String OWL_AXIOM_REFERENCE_SET = "733073007";

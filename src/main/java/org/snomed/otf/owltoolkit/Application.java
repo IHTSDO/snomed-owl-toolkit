@@ -7,7 +7,6 @@ import org.snomed.otf.owltoolkit.conversion.RF2ToOWLService;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -18,6 +17,7 @@ public class Application {
 	private static final String ARG_HELP = "-help";
 	private static final String ARG_RF2_ZIP = "-rf2-snap-zip";
 	private static final String ARG_VERSION = "-version";
+	private static final String ARG_WITHOUT_ANNOTATIONS = "-without-annotations";
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
 	private boolean deleteOntologyFileOnExit;
@@ -46,6 +46,9 @@ public class Application {
 
 							pad(ARG_VERSION + " <version>") +
 							"Version date e.g. 20180731.\n" +
+
+							pad(ARG_WITHOUT_ANNOTATIONS) +
+							"Don't include Fully Specified Name annotations in OWL file (smaller file size).\n" +
 					"");
 		} else {
 			// RF2 to OWL
@@ -55,6 +58,7 @@ public class Application {
 			assertTrue(rf2ArchiveFile.getAbsolutePath() + " should be a file.", rf2ArchiveFile.isFile());
 
 			String versionDate = getRequiredParameterValue(ARG_VERSION, args);
+			boolean includeFSNs = !args.contains(ARG_WITHOUT_ANNOTATIONS);
 
 			// Conversion
 			String outputFilePath = "ontology-" + DATE_FORMAT.format(new Date()) + ".owl";
@@ -64,7 +68,7 @@ public class Application {
 			}
 			try (FileInputStream rf2ArchiveStream = new FileInputStream(rf2ArchiveFile);
 				 FileOutputStream outputStream = new FileOutputStream(ontologyOutputFile)) {
-				new RF2ToOWLService().convertRF2ArchiveToOWL(versionDate, rf2ArchiveStream, outputStream);
+				new RF2ToOWLService().convertRF2ArchiveToOWL(versionDate, includeFSNs, rf2ArchiveStream, outputStream);
 			} catch (IOException e) {
 				System.err.println("Failed to close input or output stream.");
 				e.printStackTrace();

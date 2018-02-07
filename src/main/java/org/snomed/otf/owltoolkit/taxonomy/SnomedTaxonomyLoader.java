@@ -147,6 +147,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		}
 	}
 
+	@Override
+	public void newDescriptionState(String id, String effectiveTime, String active, String moduleId, String conceptId, String languageCode, String typeId, String term, String caseSignificanceId) {
+		if (ACTIVE.equals(active) && typeId.equals(Concepts.FSN)) {
+			snomedTaxonomy.addFsn(conceptId, term);
+		}
+	}
+
 	void reportErrors() throws ReleaseImportException {
 		if (owlParsingExceptionThrown != null) {
 			throw new ReleaseImportException("Failed to parse OWL Axiom in reference set member '" + owlParsingExceptionMemberId + "'",

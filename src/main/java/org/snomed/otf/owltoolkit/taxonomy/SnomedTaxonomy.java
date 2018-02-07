@@ -41,7 +41,8 @@ public class SnomedTaxonomy {
 	private Map<Long, Set<OWLAxiom>> conceptAxiomMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> statedSubTypesMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
-	private Set<Long> inactivatedConcepts = new LongOpenHashSet(); 
+	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
+	private Map<Long, String> conceptFsnTermMap = new Long2ObjectOpenHashMap<>();
 
 	public static final Set<Long> DEFAULT_NEVER_GROUPED_ROLE_IDS = Collections.unmodifiableSet(Sets.newHashSet(
 			parseLong(Concepts.PART_OF),
@@ -204,6 +205,14 @@ public class SnomedTaxonomy {
 		if (owlAxiomToRemove != null) {
 			conceptAxiomMap.get(parseLong(referencedComponentId)).remove(owlAxiomToRemove);
 		}
+	}
+
+	public void addFsn(String conceptId, String term) {
+		conceptFsnTermMap.put(parseLong(conceptId), term);
+	}
+
+	public String getConceptFsnTerm(Long conceptId) {
+		return conceptFsnTermMap.get(conceptId);
 	}
 
 	public void addUngroupedRole(Long contentType, Long attributeId) {

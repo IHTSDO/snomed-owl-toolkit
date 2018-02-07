@@ -69,11 +69,13 @@ public class OntologyService {
 		// Create Axioms of Snomed attributes
 		Set<Long> attributeConceptIds = snomedTaxonomy.getAttributeConceptIds();
 		for (Long attributeConceptId : attributeConceptIds) {
+			OWLObjectProperty owlObjectProperty = getOwlObjectProperty(attributeConceptId);
 			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(attributeConceptId)) {
 				if (relationship.getTypeId() == Concepts.IS_A_LONG && relationship.getDestinationId() != Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG) {
-					axioms.add(factory.getOWLSubObjectPropertyOfAxiom(getOwlObjectProperty(attributeConceptId), getOwlObjectProperty(relationship.getDestinationId())));
+					axioms.add(factory.getOWLSubObjectPropertyOfAxiom(owlObjectProperty, getOwlObjectProperty(relationship.getDestinationId())));
 				}
 			}
+			addFSNAnnotation(attributeConceptId, snomedTaxonomy, axioms);
 		}
 
 		// Create Axioms of all other Snomed concepts
@@ -98,6 +100,8 @@ public class OntologyService {
 			if (conceptAxioms != null) {
 				axioms.addAll(conceptAxioms);
 			}
+
+			addFSNAnnotation(conceptId, snomedTaxonomy, axioms);
 		}
 
 		String ontologyIRI = Strings.isNullOrEmpty(versionDate) ? SNOMED_INTERNATIONAL_EDITION_URI : SNOMED_INTERNATIONAL_EDITION_VERSION_URI_PREFIX + versionDate;
@@ -207,6 +211,13 @@ public class OntologyService {
 
 	private OWLClass getOwlClass(Long conceptId) {
 		return factory.getOWLClass(COLON + conceptId, prefixManager);
+	}
+
+	private void addFSNAnnotation(Long conceptId, SnomedTaxonomy snomedTaxonomy, Set<OWLAxiom> axioms) {
+		String conceptFsnTerm = snomedTaxonomy.getConceptFsnTerm(conceptId);
+		if (conceptFsnTerm != null) {
+			axioms.add(factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(), IRI.create(SNOMED_CORE_COMPONENTS_URI + conceptId), factory.getOWLLiteral(conceptFsnTerm)));
+		}
 	}
 
 	public DefaultPrefixManager getPrefixManager() {

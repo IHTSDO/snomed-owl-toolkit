@@ -28,6 +28,7 @@ public class ApplicationTest {
 						" -help                   Print this help message.\n" +
 						" -rf2-snap-zip <path>    Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
 						" -version <version>      Version date e.g. 20180731.\n" +
+						" -without-annotations    Don't include Fully Specified Name annotations in OWL file (smaller file size).\n" +
 						"\n",
 				outStream.toString());
 		assertEquals("", errorStream.toString());
@@ -41,6 +42,7 @@ public class ApplicationTest {
 						" -help                   Print this help message.\n" +
 						" -rf2-snap-zip <path>    Path to the SNOMED CT RF2 archive containing Snapshot files.\n" +
 						" -version <version>      Version date e.g. 20180731.\n" +
+						" -without-annotations    Don't include Fully Specified Name annotations in OWL file (smaller file size).\n" +
 						"\n",
 				outStream.toString());
 		assertEquals("", errorStream.toString());

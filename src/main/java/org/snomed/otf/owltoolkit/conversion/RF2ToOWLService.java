@@ -23,12 +23,12 @@ public class RF2ToOWLService {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	public void convertRF2ArchiveToOWL(String versionDate, InputStream rf2ArchiveStream, OutputStream owlFileOutputStream) throws ConversionException {
+	public void convertRF2ArchiveToOWL(String versionDate, boolean includeFSNs, InputStream rf2ArchiveStream, OutputStream owlFileOutputStream) throws ConversionException {
 		// Load required parts of RF2 into memory
 		logger.info("Loading RF2 files");
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = new SnomedTaxonomyBuilder().build(rf2ArchiveStream);
+			snomedTaxonomy = new SnomedTaxonomyBuilder().build(rf2ArchiveStream, includeFSNs);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}
