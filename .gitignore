@@ -1,6 +1,7 @@
 target
 .*
 *.iml
+*.zip
 /debug
 /*.owl
 /local*
