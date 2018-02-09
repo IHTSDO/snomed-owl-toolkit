@@ -100,15 +100,8 @@ public class SnomedReasonerService {
 		}
 		timer.checkpoint("Build existing taxonomy");
 
-		Set<Long> ungroupedRoles = snomedTaxonomy.getUngroupedRolesForContentType(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
-		if (ungroupedRoles.isEmpty()) {
-			ungroupedRoles = SnomedTaxonomy.DEFAULT_NEVER_GROUPED_ROLE_IDS;
-			logger.info("Using ungrouped roles defaults {}", ungroupedRoles);
-		} else {
-			logger.info("Using ungrouped roles from MRCM reference set {}", ungroupedRoles);
-		}
-
 		logger.info("Creating OwlOntology");
+		Set<Long> ungroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
 		OntologyService ontologyService = new OntologyService(ungroupedRoles);
 		OWLOntology owlOntology;
 		try {

@@ -19,6 +19,8 @@ import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.semanticweb.owlapi.model.OWLAxiom;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 
@@ -50,6 +52,8 @@ public class SnomedTaxonomy {
 			parseLong(Concepts.HAS_ACTIVE_INGREDIENT),
 			parseLong(Concepts.HAS_DOSE_FORM)
 	));
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomy.class);
 
 	public boolean isPrimitive(Long conceptId) {
 		return !fullyDefinedConceptIds.contains(conceptId);
@@ -230,13 +234,20 @@ public class SnomedTaxonomy {
 		return ungroupedRolesByContentType;
 	}
 
-	public Set<Long> getUngroupedRolesForContentType(Long contentTypeId) {
+	public Set<Long> getUngroupedRolesForContentTypeOrDefault(Long contentTypeId) {
 		Set<Long> subTypeIds = getSubTypeIds(contentTypeId);
 		Set<Long> ungrouped = new HashSet<>();
 		for (Long subTypeId : subTypeIds) {
 			ungrouped.addAll(ungroupedRolesByContentType.getOrDefault(subTypeId, new HashSet<>()));
 		}
 		ungrouped.addAll(ungroupedRolesByContentType.getOrDefault(contentTypeId, new HashSet<>()));
+
+		if (!ungrouped.isEmpty()) {
+			LOGGER.info("Using never grouped role list from MRCM reference set {}", ungrouped);
+		} else {
+			ungrouped = SnomedTaxonomy.DEFAULT_NEVER_GROUPED_ROLE_IDS;
+			LOGGER.info("No MRCM information found, falling back to legacy never grouped role list {}", ungrouped);
+		}
 		return ungrouped;
 	}
 

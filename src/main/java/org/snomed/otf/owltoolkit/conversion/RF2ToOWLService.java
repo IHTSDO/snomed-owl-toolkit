@@ -1,7 +1,6 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
-import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
@@ -12,12 +11,9 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.util.Arrays;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Set;
-
-import static org.snomed.otf.owltoolkit.ontology.OntologyService.CORE_COMPONENT_NAMESPACE_PATTERN;
 
 public class RF2ToOWLService {
 
@@ -34,7 +30,7 @@ public class RF2ToOWLService {
 		}
 
 		// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
-		Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentType(Long.parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
+		Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(Long.parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
 
 		// Create OWL Ontology from stated relationships and OWL Axiom reference set
 		// using list of never grouped roles during relationship to axiom conversion
