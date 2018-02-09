@@ -104,8 +104,17 @@ public class OntologyService {
 			addFSNAnnotation(conceptId, snomedTaxonomy, axioms);
 		}
 
-		String ontologyIRI = Strings.isNullOrEmpty(versionDate) ? SNOMED_INTERNATIONAL_EDITION_URI : SNOMED_INTERNATIONAL_EDITION_VERSION_URI_PREFIX + versionDate;
-		return manager.createOntology(axioms, IRI.create(ontologyIRI));
+		OWLOntology ontology;
+		if (Strings.isNullOrEmpty(versionDate)) {
+			ontology = manager.createOntology(IRI.create(SNOMED_INTERNATIONAL_EDITION_URI));
+		} else {
+			ontology = manager.createOntology(new OWLOntologyID(
+					com.google.common.base.Optional.of(IRI.create(SNOMED_INTERNATIONAL_EDITION_URI)),
+					com.google.common.base.Optional.of(IRI.create(SNOMED_INTERNATIONAL_EDITION_VERSION_URI_PREFIX + versionDate))));
+		}
+
+		manager.addAxioms(ontology, axioms);
+		return ontology;
 	}
 
 	public void saveOntology(OWLOntology ontology, OutputStream outputStream) throws OWLOntologyStorageException {

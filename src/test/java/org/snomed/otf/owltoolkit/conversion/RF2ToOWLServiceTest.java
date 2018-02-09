@@ -29,7 +29,8 @@ public class RF2ToOWLServiceTest {
 						"Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)\n" +
 						"\n" +
 						"\n" +
-						"Ontology(<http://snomed.info/sct/900000000000207008/version/20180731>\n" +
+						"Ontology(<http://snomed.info/sct/900000000000207008>\n" +
+						"<http://snomed.info/sct/900000000000207008/version/20180731>\n" +
 						"\n" +
 						"Declaration(Class(:113331007))\n" +
 						"Declaration(Class(:116680003))\n" +
