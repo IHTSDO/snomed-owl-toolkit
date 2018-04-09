@@ -38,6 +38,6 @@ A classification REST API using this toolkit is available, see the [Classificati
 Convert your Snomed Edition RF2 archive containing Snapshot files to an OWL ontology file (functional syntax). Download the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases), then on the command line give the release file and its release date as arguments to the tool. 
 The release date is used in the ontology identifier. 
 ```bash
-java -jar snomed-owl-toolkit*executable.jar -rf2-snap-zip SnomedCT_InternationalRF2.zip -version=20180731
+java -jar snomed-owl-toolkit*executable.jar -rf2-snap-zip SnomedCT_InternationalRF2.zip -version 20180731
 ```
 After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
