@@ -69,8 +69,9 @@ public class RF2ToOWLServiceTest {
 						"AnnotationAssertion(rdfs:label :116680003 \"Is a (attribute)\"^^xsd:string)\n" +
 						"SubClassOf(:116680003 :900000000000441003)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/138875005> (<http://snomed.info/id/138875005>)\n" +
+						"# Class: <http://snomed.info/id/138875005> (SNOMED CT Concept (SNOMED RT+CTV3))\n" +
 						"\n" +
+						"AnnotationAssertion(rdfs:label :138875005 \"SNOMED CT Concept (SNOMED RT+CTV3)\"^^xsd:string)\n" +
 						"SubClassOf(:138875005 owl:Thing)\n" +
 						"\n" +
 						"# Class: <http://snomed.info/id/362969004> (Disorder of endocrine system (disorder))\n" +
