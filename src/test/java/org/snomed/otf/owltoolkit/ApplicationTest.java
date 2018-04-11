@@ -3,11 +3,15 @@ package org.snomed.otf.owltoolkit;
 import org.junit.Before;
 import org.junit.Test;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
-import org.snomed.otf.owltoolkit.testutil.ZipUtil;
+import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ApplicationTest {
 

@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
-import org.snomed.otf.owltoolkit.testutil.ZipUtil;
+import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.File;
 import java.io.FileInputStream;

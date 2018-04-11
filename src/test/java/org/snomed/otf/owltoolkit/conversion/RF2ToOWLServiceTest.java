@@ -1,13 +1,13 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import org.junit.Test;
-import org.snomed.otf.owltoolkit.testutil.ZipUtil;
+import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class RF2ToOWLServiceTest {
 

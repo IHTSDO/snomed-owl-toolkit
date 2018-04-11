@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
-import org.snomed.otf.owltoolkit.testutil.ZipUtil;
+import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,8 +32,9 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 import static org.snomed.otf.owltoolkit.service.SnomedReasonerService.ELK_REASONER_FACTORY;
-import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.readInferredRelationshipLinesTrim;
 import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.readEquivalentConceptLinesTrim;
+import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.readInferredRelationshipLinesTrim;
+
 public class SimpleClassificationIntegrationTest {
 
 	private SnomedReasonerService snomedReasonerService = new SnomedReasonerService();

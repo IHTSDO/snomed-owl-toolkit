@@ -15,9 +15,7 @@
  */
 package org.snomed.otf.owltoolkit.service.classification;
 
-import org.snomed.otf.owltoolkit.testutil.ZipUtil;
-
-import static org.junit.Assert.assertTrue;
+import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -27,6 +25,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 class TestFileUtil {
 
