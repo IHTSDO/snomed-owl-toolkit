@@ -4,9 +4,7 @@
 id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
 
 # Make 733928003 'All_or_Part_of (attribute)' Transitive
-# This behaviour will be inherited by any ancestors of this attribute
 c69ad177-9756-4ad1-a8b3-02407ca95b36	20170131	1	900000000000012004	733073007	733928003	TransitiveObjectProperty(:733928003)
 
 # Make 733928003 'All_or_Part_of (attribute)' Reflexive
-# This behaviour will be inherited by any ancestors of this attribute
 bf8c83c5-a5db-4bd9-9b04-151f6e937fec	20170131	1	900000000000012004	733073007	733928003	ReflexiveObjectProperty(:733928003)
