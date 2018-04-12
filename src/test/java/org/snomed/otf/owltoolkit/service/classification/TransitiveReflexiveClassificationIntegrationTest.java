@@ -23,8 +23,6 @@ import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -46,9 +44,9 @@ public class TransitiveReflexiveClassificationIntegrationTest {
 		File results = TestFileUtil.newTemporaryFile();
 		snomedReasonerService.classify(
 				"",
-				new FileInputStream(baseRF2SnapshotZip),
-				new FileInputStream(deltaZip),
-				new FileOutputStream(results),
+				baseRF2SnapshotZip,
+				deltaZip,
+				results,
 				ELK_REASONER_FACTORY,
 				false);
 

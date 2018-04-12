@@ -20,6 +20,7 @@ import org.ihtsdo.otf.snomedboot.ReleaseImporter;
 import org.ihtsdo.otf.snomedboot.factory.LoadingProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.springframework.util.StopWatch;
 
 import java.io.InputStream;
@@ -50,19 +51,22 @@ public class SnomedTaxonomyBuilder {
 			.withInactiveRelationships()
 			.withInactiveRefsetMembers();
 
-	public SnomedTaxonomy build(InputStream snomedRf2SnapshotArchive, boolean includeFSNs) throws ReleaseImportException {
-		return build(snomedRf2SnapshotArchive, null, includeFSNs);
+	public SnomedTaxonomy build(InputStreamSet snomedRf2SnapshotArchives, boolean includeFSNs) throws ReleaseImportException {
+		return build(snomedRf2SnapshotArchives, null, includeFSNs);
 	}
 
-	public SnomedTaxonomy build(InputStream snomedRf2SnapshotArchive, InputStream currentReleaseRf2DeltaArchive, boolean includeFSNs) throws ReleaseImportException {
+	public SnomedTaxonomy build(
+			InputStreamSet snomedRf2SnapshotArchives,
+			InputStream currentReleaseRf2DeltaArchive,
+			boolean includeFSNs) throws ReleaseImportException {
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader();
 
 		ReleaseImporter releaseImporter = new ReleaseImporter();
-		releaseImporter.loadSnapshotReleaseFiles(
-				snomedRf2SnapshotArchive,
+		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(
+				snomedRf2SnapshotArchives.getFileInputStreams(),
 				includeFSNs ? SNAPSHOT_LOADING_PROFILE.withFullDescriptionObjects() : SNAPSHOT_LOADING_PROFILE,
 				snomedTaxonomyLoader);
 		snomedTaxonomyLoader.reportErrors();

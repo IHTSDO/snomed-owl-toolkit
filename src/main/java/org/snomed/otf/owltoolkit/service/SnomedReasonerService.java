@@ -24,8 +24,8 @@ import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomyWalker;
 import org.snomed.otf.owltoolkit.constants.Concepts;
-import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
+import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.normalform.RelationshipChangeCollector;
 import org.snomed.otf.owltoolkit.normalform.RelationshipInactivationProcessor;
@@ -34,9 +34,11 @@ import org.snomed.otf.owltoolkit.ontology.OntologyDebugUtil;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
+import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.TimerUtil;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.Set;
@@ -56,18 +58,34 @@ public class SnomedReasonerService {
 	}
 
 	public void classify(String classificationId,
-						 File previousReleaseRf2SnapshotArchiveFile,
-						 File currentReleaseRf2DeltaArchiveFile,
-						 File resultsRf2DeltaArchiveFile,
-						 String reasonerFactoryClassName,
-						 boolean outputOntologyFileForDebug) throws ReasonerServiceException {
+			File previousReleaseRf2SnapshotArchiveFiles,
+			File currentReleaseRf2DeltaArchiveFile,
+			File resultsRf2DeltaArchiveFile,
+			String reasonerFactoryClassName,
+			boolean outputOntologyFileForDebug) throws ReasonerServiceException {
 
-		try (InputStream previousReleaseRf2SnapshotArchive = new FileInputStream(previousReleaseRf2SnapshotArchiveFile);
+		classify(classificationId,
+				Collections.singleton(previousReleaseRf2SnapshotArchiveFiles),
+				currentReleaseRf2DeltaArchiveFile,
+				resultsRf2DeltaArchiveFile,
+				reasonerFactoryClassName,
+				outputOntologyFileForDebug
+		);
+	}
+
+	public void classify(String classificationId,
+			Set<File> previousReleaseRf2SnapshotArchiveFile,
+			File currentReleaseRf2DeltaArchiveFile,
+			File resultsRf2DeltaArchiveFile,
+			String reasonerFactoryClassName,
+			boolean outputOntologyFileForDebug) throws ReasonerServiceException {
+
+		try (InputStreamSet previousReleaseRf2SnapshotArchives = new InputStreamSet(previousReleaseRf2SnapshotArchiveFile);
 			 InputStream currentReleaseRf2DeltaArchive = new FileInputStream(currentReleaseRf2DeltaArchiveFile);
 			 OutputStream resultsRf2DeltaArchive = new FileOutputStream(resultsRf2DeltaArchiveFile)) {
 
 			classify(classificationId,
-					previousReleaseRf2SnapshotArchive,
+					previousReleaseRf2SnapshotArchives,
 					currentReleaseRf2DeltaArchive,
 					resultsRf2DeltaArchive,
 					reasonerFactoryClassName,
@@ -78,11 +96,11 @@ public class SnomedReasonerService {
 	}
 
 	public void classify(String classificationId,
-						 InputStream previousReleaseRf2SnapshotArchive,
-						 InputStream currentReleaseRf2DeltaArchive,
-						 OutputStream resultsRf2DeltaArchive,
-						 String reasonerFactoryClassName,
-						 boolean outputOntologyFileForDebug) throws ReasonerServiceException {
+			InputStreamSet previousReleaseRf2SnapshotArchives,
+			InputStream currentReleaseRf2DeltaArchive,
+			OutputStream resultsRf2DeltaArchive,
+			String reasonerFactoryClassName,
+			boolean outputOntologyFileForDebug) throws ReasonerServiceException {
 
 		Date startDate = new Date();
 		TimerUtil timer = new TimerUtil("Classification");
@@ -94,7 +112,7 @@ public class SnomedReasonerService {
 		SnomedTaxonomyBuilder snomedTaxonomyBuilder = new SnomedTaxonomyBuilder();
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchive, currentReleaseRf2DeltaArchive, false);
+			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchives, currentReleaseRf2DeltaArchive, false);
 		} catch (ReleaseImportException e) {
 			throw new ReasonerServiceException("Failed to build existing taxonomy.", e);
 		}
@@ -136,7 +154,7 @@ public class SnomedReasonerService {
 
 		logger.info("Generate normal form");
 		AxiomRelationshipConversionService axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedRoles);
-		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap = null;
+		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap;
 		try {
 			conceptAxiomStatementMap = axiomRelationshipConversionService.convertAxiomsToRelationships(snomedTaxonomy.getConceptAxiomMap());
 		} catch (ConversionException e) {
@@ -155,7 +173,7 @@ public class SnomedReasonerService {
 		processor.processInactivationChanges(inactivationCollector);
 		changeCollector.getRemovedStatements().putAll(inactivationCollector.getRemovedStatements());
 		logger.info("{} relationships inactivated ", inactivationCollector.getRemovedCount());
-		
+
 		logger.info("Writing results archive");
 		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
 		timer.checkpoint("Write results to disk");
@@ -173,5 +191,23 @@ public class SnomedReasonerService {
 			throw new ReasonerServiceException(String.format("An instance of requested reasoner '%s' could not be created.", reasonerFactoryClass), e);
 		}
 	}
+
+	// For local testing
+	/*
+	public static void main(String[] args) throws ReasonerServiceException {
+		Set<File> releases = Sets.newHashSet(
+				new File("/Users/kai/release/SnomedCT_InternationalRF2_PRODUCTION_20180131T120000Z_snapshot.zip"),
+				new File("/Users/kai/release/SnomedCT_USExtensionRF2_PRODUCTION_20180301T120000Z.zip")
+		);
+		new SnomedReasonerService().classify(
+				"local",
+				releases,
+				new File("/Users/kai/release/empty.zip"),
+				new File("us-results.zip"),
+				ELK_REASONER_FACTORY,
+				false
+		);
+	}
+	*/
 
 }

@@ -10,6 +10,7 @@ import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
+import org.snomed.otf.owltoolkit.util.InputStreamSet;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,7 +25,7 @@ public class RF2ToOWLService {
 		logger.info("Loading RF2 files");
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = new SnomedTaxonomyBuilder().build(rf2ArchiveStream, includeFSNs);
+			snomedTaxonomy = new SnomedTaxonomyBuilder().build(new InputStreamSet(rf2ArchiveStream), includeFSNs);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}
