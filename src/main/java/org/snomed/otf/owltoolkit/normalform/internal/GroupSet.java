@@ -28,10 +28,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
 
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a set of groups that do not allow redundant elements.
@@ -142,5 +139,9 @@ public final class GroupSet extends AbstractSet<Group> {
 				group.setGroupNumber(groupNumber++);
 			}
 		}
+	}
+
+	public void sort(Comparator<Group> groupComparator) {
+		groups.sort(groupComparator);
 	}
 }

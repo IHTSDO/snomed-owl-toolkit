@@ -44,8 +44,6 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 	private RelationshipNormalFormGenerator relationshipNormalFormGenerator;
 	private final Relationship fragment;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(RelationshipFragment.class);
-
 	/**
 	 * Creates a new relationship fragment from the specified relationship.
 	 *
@@ -74,6 +72,9 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 		return fragment.getTypeId();
 	}
 
+	public long getModuleId() {
+		return fragment.getModuleId();
+	}
 
 	public long getDestinationId() {
 		return fragment.getDestinationId();

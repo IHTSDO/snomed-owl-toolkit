@@ -65,6 +65,19 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 	// Concepts in this set should be processed a second time to try to normalise their relationships further
 	private final Set<Long> conceptsWithTransitiveAttributeValue = new LongOpenHashSet();
 
+	private static final long INTERNATIONAL_CORE_MODULE_ID = Long.parseLong(Concepts.SNOMED_CT_CORE_MODULE);
+
+	private static final Comparator<Group> CORE_MODULE_GROUP_COMPARATOR = (o1, o2) -> {
+		long moduleId1 = o1.getUnionGroups().iterator().next().getRelationshipFragments().iterator().next().getModuleId();
+		long moduleId2 = o2.getUnionGroups().iterator().next().getRelationshipFragments().iterator().next().getModuleId();
+		if (moduleId1 == INTERNATIONAL_CORE_MODULE_ID && moduleId2 != INTERNATIONAL_CORE_MODULE_ID) {
+			return -1;
+		} else if (moduleId1 != INTERNATIONAL_CORE_MODULE_ID && moduleId2 == INTERNATIONAL_CORE_MODULE_ID) {
+			return 1;
+		}
+		return 0;
+	};
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(RelationshipNormalFormGenerator.class);
 
 	/**
@@ -190,9 +203,9 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 	 *
 	 */
 	private Set<Relationship> getInferredNonIsAFragments(long conceptId,
-															  final Collection<Relationship> ownInferredNonIsAFragments,
-															  final Collection<Relationship> ownStatedNonIsAFragments,
-															  final Map<Long, Collection<Relationship>> parentStatedNonIsAFragments) {
+			final Collection<Relationship> ownInferredNonIsAFragments,
+			final Collection<Relationship> ownStatedNonIsAFragments,
+			final Map<Long, Collection<Relationship>> parentStatedNonIsAFragments) {
 
 		// Index existing inferred non-IS A relationship groups into a GroupSet (without redundancy check)
 		final GroupSet inferredGroups = new GroupSet();
@@ -215,6 +228,8 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 		// The remaining non-redundant groups should be numbered from 1
 		groups.fillNumbers();
 
+		// Sort groups to favour the core module
+		inferredGroups.sort(CORE_MODULE_GROUP_COMPARATOR);
 		// Shuffle around the numbers to match existing inferred group numbers as much as possible
 		groups.adjustOrder(inferredGroups);
 
@@ -375,7 +390,7 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 				.map(input -> new Relationship(
 						input.getStatementId(),
 						-1,
-						-1,
+						input.getModuleId(),
 						input.getTypeId(),
 						input.getDestinationId(),
 						input.isDestinationNegated(),

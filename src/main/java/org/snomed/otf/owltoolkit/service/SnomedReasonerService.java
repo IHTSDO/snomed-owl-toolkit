@@ -15,6 +15,7 @@
  */
 package org.snomed.otf.owltoolkit.service;
 
+import com.google.common.collect.Sets;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -193,7 +194,6 @@ public class SnomedReasonerService {
 	}
 
 	// For local testing
-	/*
 	public static void main(String[] args) throws ReasonerServiceException {
 		Set<File> releases = Sets.newHashSet(
 				new File("/Users/kai/release/SnomedCT_InternationalRF2_PRODUCTION_20180131T120000Z_snapshot.zip"),
@@ -208,6 +208,5 @@ public class SnomedReasonerService {
 				false
 		);
 	}
-	*/
 
 }
