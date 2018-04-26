@@ -1,0 +1,31 @@
+package org.snomed.otf.owltoolkit.util;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Optional;
+
+public class OptionalInputStream implements AutoCloseable {
+
+	private final Optional<InputStream> inputStream;
+
+	public OptionalInputStream(java.io.File file) throws FileNotFoundException {
+		if (file != null) {
+			this.inputStream = Optional.of(new FileInputStream(file));
+		} else {
+			this.inputStream = Optional.empty();
+		}
+	}
+
+	public Optional<InputStream> getInputStream() {
+		return inputStream;
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (inputStream.isPresent()) {
+			inputStream.get().close();
+		}
+	}
+}

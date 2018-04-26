@@ -1,6 +1,8 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import org.junit.Test;
+import org.snomed.otf.owltoolkit.util.InputStreamSet;
+import org.snomed.otf.owltoolkit.util.OptionalInputStream;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -18,7 +20,8 @@ public class RF2ToOWLServiceTest {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		rf2ToOWLService.convertRF2ArchiveToOWL("20180731", true, new FileInputStream(baseRF2SnapshotZip), byteArrayOutputStream);
+		final FileInputStream rf2ArchiveStream = new FileInputStream(baseRF2SnapshotZip);
+		rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180731", true, new InputStreamSet(rf2ArchiveStream), new OptionalInputStream(null), byteArrayOutputStream);
 
 		assertEquals("" +
 						"Prefix(:=<http://snomed.info/id/>)\n" +

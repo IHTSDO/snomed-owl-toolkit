@@ -11,8 +11,8 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
+import org.snomed.otf.owltoolkit.util.OptionalInputStream;
 
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
 
@@ -20,12 +20,14 @@ public class RF2ToOWLService {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	public void convertRF2ArchiveToOWL(String versionDate, boolean includeFSNs, InputStream rf2ArchiveStream, OutputStream owlFileOutputStream) throws ConversionException {
+	public void convertRF2ArchiveToOWL(String ontologyUri, String versionDate, boolean includeFSNs, InputStreamSet snomedRf2SnapshotArchives,
+			OptionalInputStream deltaStream, OutputStream owlFileOutputStream) throws ConversionException {
+
 		// Load required parts of RF2 into memory
 		logger.info("Loading RF2 files");
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = new SnomedTaxonomyBuilder().build(new InputStreamSet(rf2ArchiveStream), includeFSNs);
+			snomedTaxonomy = new SnomedTaxonomyBuilder().build(snomedRf2SnapshotArchives, deltaStream.getInputStream().orElse(null), includeFSNs);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}
@@ -39,7 +41,7 @@ public class RF2ToOWLService {
 		OntologyService ontologyService = new OntologyService(neverGroupedRoles);
 		OWLOntology ontology;
 		try {
-			ontology = ontologyService.createOntology(snomedTaxonomy, versionDate);
+			ontology = ontologyService.createOntology(snomedTaxonomy, ontologyUri, versionDate);
 		} catch (OWLOntologyCreationException e) {
 			throw new ConversionException("Failed to build OWL Ontology from SNOMED taxonomy.", e);
 		}

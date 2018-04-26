@@ -27,17 +27,35 @@ A classification REST API using this toolkit is available, see the [Classificati
   - Support for General Concept Axioms
   - *See AxiomRelationshipConversionService.java*
 
-## Roadmap
-### End of April 2018
-- Support for multiple release file inputs to enable classification of a Snomed Extension during it's authoring cycle.
-
 ## Documentation
 * [Calculating the Necessary Normal Form](documentation/calculating-necessary-normal-form.md)
 
 ## Snomed RF2 to OWL File Conversion
-Convert your Snomed Edition RF2 archive containing Snapshot files to an OWL ontology file (functional syntax). Download the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases), then on the command line give the release file and its release date as arguments to the tool. 
-The release date is used in the ontology identifier. 
+Convert Snomed RF2 files to an OWL ontology file with functional syntax.
+
+Download the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases), then on the command line give the RF2 file as an argument to the tool. 
 ```bash
-java -jar snomed-owl-toolkit*executable.jar -rf2-snap-zip SnomedCT_InternationalRF2.zip -version 20180731
+java -jar snomed-owl-toolkit*executable.jar -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
 ```
 After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
+
+Full argument options here:
+```bash
+Usage:
+ -help                                  Print this help message.
+ 
+ -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. 
+                                        At least one Snapshot archive is required.
+ 
+ -rf2-authoring-delta-archive <path>    (Optional) Path to a zip file containing RF2 Delta files to be applied on top 
+                                        of the Snapshots. This is helpful during an authoring cycle.
+ 
+ -uri <uri>                             (Optional) URI for the ontology identifier.
+                                        Defaults to http://snomed.info/sct/900000000000207008.
+ 
+ -version <version>                     (Optional) Date for the ontology version e.g. 20180731.
+                                        Defaults to today's date.
+ 
+ -without-annotations                   (Optional) Flag to omit Fully Specified Name annotations from the ontology 
+                                        resulting in a smaller file size.
+```

@@ -32,11 +32,12 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 import java.io.OutputStream;
 import java.util.*;
 
+@SuppressWarnings("Guava")
 public class OntologyService {
 
 	public static final String SNOMED_CORE_COMPONENTS_URI = "http://snomed.info/id/";
 	public static final String SNOMED_INTERNATIONAL_EDITION_URI = "http://snomed.info/sct/900000000000207008";
-	public static final String SNOMED_INTERNATIONAL_EDITION_VERSION_URI_PREFIX = "http://snomed.info/sct/900000000000207008/version/";
+	public static final String ONTOLOGY_URI_VERSION_POSTFIX = "/version/";
 	public static final String COLON = ":";
 	public static final String ROLE_GROUP_SCTID = "609096000";
 	public static final String ROLE_GROUP_OUTDATED_CONSTANT = "roleGroup";
@@ -59,10 +60,10 @@ public class OntologyService {
 	}
 
 	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy) throws OWLOntologyCreationException {
-		return createOntology(snomedTaxonomy, null);
+		return createOntology(snomedTaxonomy, null, null);
 	}
 
-	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy, String versionDate) throws OWLOntologyCreationException {
+	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy, String ontologyUri, String versionDate) throws OWLOntologyCreationException {
 
 		Set<OWLAxiom> axioms = new HashSet<>();
 
@@ -105,12 +106,15 @@ public class OntologyService {
 		}
 
 		OWLOntology ontology;
+		if (Strings.isNullOrEmpty(ontologyUri)) {
+			ontologyUri = SNOMED_INTERNATIONAL_EDITION_URI;
+		}
 		if (Strings.isNullOrEmpty(versionDate)) {
-			ontology = manager.createOntology(IRI.create(SNOMED_INTERNATIONAL_EDITION_URI));
+			ontology = manager.createOntology(IRI.create(ontologyUri));
 		} else {
 			ontology = manager.createOntology(new OWLOntologyID(
-					com.google.common.base.Optional.of(IRI.create(SNOMED_INTERNATIONAL_EDITION_URI)),
-					com.google.common.base.Optional.of(IRI.create(SNOMED_INTERNATIONAL_EDITION_VERSION_URI_PREFIX + versionDate))));
+					com.google.common.base.Optional.of(IRI.create(ontologyUri)),
+					com.google.common.base.Optional.of(IRI.create(ontologyUri + ONTOLOGY_URI_VERSION_POSTFIX + versionDate))));
 		}
 
 		manager.addAxioms(ontology, axioms);
