@@ -6,6 +6,8 @@ This toolkit is used within the SNOMED International Authoring Environment and w
 
 A classification REST API using this toolkit is available, see the [Classification Service](https://github.com/IHTSDO/classification-service).
 
+This project currently requires Java 8.
+
 ## Capabilities
 - Convert Snomed RF2 to an OWL Ontology
   - Works on the command line
@@ -33,7 +35,9 @@ A classification REST API using this toolkit is available, see the [Classificati
 ## Snomed RF2 to OWL File Conversion
 Convert Snomed RF2 files to an OWL ontology file with functional syntax.
 
-Download the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases), then on the command line give the RF2 file as an argument to the tool. 
+Download the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases), then on the command line give the RF2 file as an argument to the tool.  
+This project currently requires Java 8.
+
 ```bash
 java -jar snomed-owl-toolkit*executable.jar -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
 ```
