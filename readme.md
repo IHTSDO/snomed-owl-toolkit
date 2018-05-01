@@ -1,6 +1,6 @@
 # Snomed OWL Toolkit [![Build Status](https://travis-ci.org/IHTSDO/snomed-owl-toolkit.svg?branch=master)](https://travis-ci.org/IHTSDO/snomed-owl-toolkit) [![codecov](https://codecov.io/gh/IHTSDO/snomed-owl-toolkit/branch/master/graph/badge.svg)](https://codecov.io/gh/IHTSDO/snomed-owl-toolkit)
 
-An Open Source Toolkit enabling simple SNOMED CT to OWL conversion and classification.
+An Open Source Toolkit to make SNOMED CT to OWL conversion and classification simple.
 
 This toolkit is used within the SNOMED International Authoring Environment and will keep pace with all the latest changes.
 
@@ -12,8 +12,8 @@ A classification REST API using this toolkit is available, see the [Classificati
   - Uses MRCM Attribute Domain Reference Set for grouping information
   - Uses OWL Axiom Reference Set
   - Can include FSN annotations
-  - Backward compatible with older Snomed RF2 releases
-  - Uses a Snomed Edition RF2 Snapshot archive
+  - Backward compatible with all Snomed RF2 releases
+  - Support for Snomed Editions and Extensions
   - *For Java integration see RF2ToOWLService.java*
 - Classify Snomed
   - Uses RF2 to OWL conversion
@@ -40,12 +40,13 @@ java -jar snomed-owl-toolkit*executable.jar -rf2-snapshot-archives SnomedCT_Inte
 After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
 
 Full argument options here:
-```bash
+```
 Usage:
  -help                                  Print this help message.
  
  -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. 
-                                        At least one Snapshot archive is required.
+                                        One Snomed Edition archive is required.
+                                        Snomed Extension archives can be added.
  
  -rf2-authoring-delta-archive <path>    (Optional) Path to a zip file containing RF2 Delta files to be applied on top 
                                         of the Snapshots. This is helpful during an authoring cycle.
