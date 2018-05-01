@@ -81,25 +81,17 @@
 		<plugins>
 			<!-- Create Executable Application Archive -->
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>1.5.12.RELEASE</version>
 				<executions>
 					<execution>
-						<phase>package</phase>
 						<goals>
-							<goal>single</goal>
+							<goal>repackage</goal>
 						</goals>
 						<configuration>
-							<finalName>${project.artifactId}-${project.version}-executable</finalName>
-							<appendAssemblyId>false</appendAssemblyId>
-							<archive>
-								<manifest>
-									<mainClass>org.snomed.otf.owltoolkit.Application</mainClass>
-								</manifest>
-							</archive>
-							<descriptorRefs>
-								<descriptorRef>jar-with-dependencies</descriptorRef>
-							</descriptorRefs>
+							<classifier>executable</classifier>
+							<mainClass>org.snomed.otf.owltoolkit.Application</mainClass>
 						</configuration>
 					</execution>
 				</executions>
