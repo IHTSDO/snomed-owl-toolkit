@@ -66,6 +66,8 @@ public class TransitiveReflexiveClassificationIntegrationTest {
 
 		assertTrue("Inferred relationship. Structure_of_hand - is a - Structure_of_upper_limb",
 				lines.contains("1		500007001	500006001	0	116680003	900000000000011006	900000000000451002"));
+		assertTrue("Inferred relationship. Structure_of_hand - All_or_Part_of - Entire_upper_limb",
+				lines.contains("1		500007001	500003001	0	733928003	900000000000011006	900000000000451002"));
 		assertTrue("Redundant relationship. Structure_of_hand - is a - Body_structure",
 				lines.contains("200112001		0		500007001	500001001	0	116680003	900000000000011006	900000000000451002"));
 
@@ -76,25 +78,25 @@ public class TransitiveReflexiveClassificationIntegrationTest {
 
 		assertTrue("Inferred relationship. Structure_of_finger - is a - Structure_of_hand",
 				lines.contains("1		500008001	500007001	0	116680003	900000000000011006	900000000000451002"));
-		assertTrue("Redundant relationship. Structure_of_finger - is a - Structure_of_hand",
+		assertTrue("Inferred relationship. Structure_of_finger - All_or_Part_of - Entire_hand",
+				lines.contains("1		500008001	500004001	0	733928003	900000000000011006	900000000000451002"));
+		assertTrue("Redundant relationship. Structure_of_finger - is a - Body_structure",
 				lines.contains("200114001		0		500008001	500001001	0	116680003	900000000000011006	900000000000451002"));
 
-		assertTrue("Inferred relationship. Entire_finger - All_or_Part_of - Entire_finger",
-				lines.contains("1		500005001	500005001	0	733928003	900000000000011006	900000000000451002"));
 		assertTrue("Inferred relationship. Entire_finger - is a - Structure_of_finger",
 				lines.contains("1		500005001	500008001	0	116680003	900000000000011006	900000000000451002"));
+		assertTrue("Inferred relationship. Entire_finger - All_or_Part_of - Entire_finger",
+				lines.contains("1		500005001	500005001	0	733928003	900000000000011006	900000000000451002"));
 
 		// Although these relationships would normally be inherited from supertypes they should not be part of the normal form
 		// because more specific attributes are present, as identified via the Part_of transitive closure
 		// A new transitive closure graph is built for each transitive attribute type and it's subtypes
 		assertFalse("Should not be part of the normal form: Structure_of_finger - All_or_Part_of - Entire_upper_limb",
 				lines.contains("1		500008001	500003001	0	733928003	900000000000011006	900000000000451002"));
-		assertFalse("Should not be part of the normal form: Structure_of_finger - All_or_Part_of - Entire_upper_limb",
-				lines.contains("1		500008001	500004001	0	733928003	900000000000011006	900000000000451002"));
 		assertFalse("Should not be part of the normal form: Entire_finger - All_or_Part_of - Entire_upper_limb",
 				lines.contains("1		500005001	500003001	0	733928003	900000000000011006	900000000000451002"));
 
-		assertEquals(11, lines.size());
+		assertEquals(13, lines.size());
 	}
 
 }
