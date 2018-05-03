@@ -24,7 +24,6 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.*;
 import com.google.common.collect.Maps.EntryTransformer;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
@@ -33,6 +32,7 @@ import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.normalform.internal.*;
 import org.snomed.otf.owltoolkit.normalform.transitive.NodeGraph;
+import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 
 import java.text.MessageFormat;
@@ -60,10 +60,11 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 
 	private final Map<Long, NodeGraph> transitiveNodeGraphs = new HashMap<>();
 
-	private final Map<Long, Collection<Relationship>> generatedNonIsACache = new Long2ObjectOpenHashMap<>();
+	private final Set<Long> traversableProperties;
 
-	// Concepts in this set should be processed a second time to try to normalise their relationships further
-	private final Set<Long> conceptsWithTransitiveAttributeValue = new LongOpenHashSet();
+	private boolean secondStage = false;
+
+	private final Map<Long, Collection<Relationship>> generatedNonIsACache = new Long2ObjectOpenHashMap<>();
 
 	private static final long INTERNATIONAL_CORE_MODULE_ID = Long.parseLong(Concepts.SNOMED_CT_CORE_MODULE);
 
@@ -84,18 +85,20 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 	 * Creates a new distribution normal form generator instance.
 	 * @param reasonerTaxonomy the reasoner to extract results from (may not be {@code null})
 	 * @param snomedTaxonomy the taxonomy as it existed before this classification run (may not be {@code null})
-	 * @param conceptAxiomStatementMap
-	 * @param propertiesDeclaredAsTransitive the identifiers of properties declared as having transitive behaviour
+	 * @param conceptAxiomStatementMap map of concept id to axiom set
+	 * @param propertyChains collection of property chains
 	 */
 	public RelationshipNormalFormGenerator(final ReasonerTaxonomy reasonerTaxonomy, final SnomedTaxonomy snomedTaxonomy,
-										   final Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap, Set<Long> propertiesDeclaredAsTransitive) {
-		super(reasonerTaxonomy, snomedTaxonomy, propertiesDeclaredAsTransitive);
+			final Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap, final Set<PropertyChain> propertyChains) {
+		super(reasonerTaxonomy, snomedTaxonomy, propertyChains);
 		
 		this.conceptAxiomStatementMap = conceptAxiomStatementMap;
 
-		// Initialise node graphs for each transitive property
-		LOGGER.info("Initialising node graphs for transitive properties {}", allTransitiveProperties);
-		allTransitiveProperties.forEach(id -> transitiveNodeGraphs.put(id, new NodeGraph()));
+		traversableProperties = propertyChains.stream().map(PropertyChain::getDestinationType).collect(Collectors.toSet());
+
+		// Initialise node graphs for properties we need to traverse
+		LOGGER.info("Initialising node graphs for traversable properties {}", traversableProperties);
+		traversableProperties.forEach(id -> transitiveNodeGraphs.put(id, new NodeGraph()));
 	}
 
 	@Override
@@ -111,25 +114,30 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 		generatedNonIsACache.put(conceptId, ImmutableList.copyOf(inferredNonIsAFragments));
 
 		// Add to transitive graphs
-		inferredNonIsAFragments.stream().filter(r -> allTransitiveProperties.contains(r.getTypeId())).forEach(r -> {
+		inferredNonIsAFragments.stream().filter(r -> traversableProperties.contains(r.getTypeId())).forEach(r -> {
 			transitiveNodeGraphs.get(r.getTypeId()).addParent(conceptId, r.getDestinationId());
-			conceptsWithTransitiveAttributeValue.add(conceptId);
 		});
 	}
 
 	@Override
 	public Collection<Relationship> secondNormalisationPass(final long conceptId) {
+		secondStage = true;
 		final Set<Long> directSuperTypes = reasonerTaxonomy.getParents(conceptId);
 
-		// Step 1: create IS-A relationships
+		// Step 1: collect IS-A relationships
 		final Iterable<Relationship> inferredIsAFragments = getInferredIsAFragments(conceptId, directSuperTypes);
 
-		Iterable<Relationship> inferredNonIsAFragments;
-		inferredNonIsAFragments = generatedNonIsACache.get(conceptId);
-		for (Relationship inferredNonIsAFragment : inferredNonIsAFragments) {
-			if (conceptsWithTransitiveAttributeValue.contains(inferredNonIsAFragment.getDestinationId())) {
-				inferredNonIsAFragments = getInferredNonIsAFragmentsInNormalForm(conceptId);
-				break;
+		Iterable<Relationship> inferredNonIsAFragments = generatedNonIsACache.get(conceptId);
+		if (!propertyChains.isEmpty()) {
+			for (Relationship inferredNonIsAFragment : inferredNonIsAFragments) {
+				// Is there a property chain for this relationship?
+				if (propertyChains.stream()
+						.filter(propertyChain -> propertyChain.getSourceType().equals(inferredNonIsAFragment.getTypeId()))
+						.count() > 0) {
+
+					inferredNonIsAFragments = getInferredNonIsAFragmentsInNormalForm(conceptId);
+					break;
+				}
 			}
 		}
 
@@ -416,11 +424,16 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 		return snomedTaxonomy;
 	}
 
-	public Set<Long> getAllTransitiveProperties() {
-		return allTransitiveProperties;
+	public Set<PropertyChain> getPropertyChains() {
+		return propertyChains;
 	}
 
 	public Map<Long, NodeGraph> getTransitiveNodeGraphs() {
 		return transitiveNodeGraphs;
 	}
+
+	public boolean isSecondStage() {
+		return secondStage;
+	}
+
 }

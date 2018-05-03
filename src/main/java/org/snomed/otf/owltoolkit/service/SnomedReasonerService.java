@@ -33,6 +33,7 @@ import org.snomed.otf.owltoolkit.normalform.RelationshipInactivationProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
 import org.snomed.otf.owltoolkit.ontology.OntologyDebugUtil;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
+import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
@@ -130,7 +131,7 @@ public class SnomedReasonerService {
 		}
 		timer.checkpoint("Create OWL Ontology");
 
-		Set<Long> propertiesDeclaredAsTransitive = ontologyService.getPropertiesDeclaredAsTransitive(owlOntology);
+		Set<PropertyChain> propertyChains = ontologyService.getPropertyChains(owlOntology);
 
 		if (outputOntologyFileForDebug) {
 			OntologyDebugUtil.serialiseOntologyForDebug(classificationId, owlOntology);
@@ -161,7 +162,8 @@ public class SnomedReasonerService {
 		} catch (ConversionException e) {
 			throw new ReasonerServiceException("Failed to convert OWL Axiom Expressions into relationships for normal form generation.", e);
 		}
-		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, conceptAxiomStatementMap, propertiesDeclaredAsTransitive);
+		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, conceptAxiomStatementMap, propertyChains);
+
 		RelationshipChangeCollector changeCollector = new RelationshipChangeCollector(true);
 		normalFormGenerator.collectNormalFormChanges(changeCollector);
 		timer.checkpoint("Generate normal form");

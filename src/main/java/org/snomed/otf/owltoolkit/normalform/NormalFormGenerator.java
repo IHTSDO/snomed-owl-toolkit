@@ -18,6 +18,7 @@ package org.snomed.otf.owltoolkit.normalform;
 
 import com.google.common.collect.Ordering;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
+import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 
 import java.util.Collection;
@@ -38,20 +39,15 @@ public abstract class NormalFormGenerator<T> {
 	
 	protected final SnomedTaxonomy snomedTaxonomy;
 
-	protected final Set<Long> allTransitiveProperties;
+	protected final Set<PropertyChain> propertyChains;
 
 	protected boolean preprocessingComplete = false;// TODO Remove this if not needed
 
-	public NormalFormGenerator(final ReasonerTaxonomy reasonerTaxonomy, SnomedTaxonomy snomedTaxonomy, Set<Long> propertiesDeclaredAsTransitive) {
+	public NormalFormGenerator(final ReasonerTaxonomy reasonerTaxonomy, SnomedTaxonomy snomedTaxonomy, Set<PropertyChain> propertyChains) {
+
 		this.reasonerTaxonomy = reasonerTaxonomy;
 		this.snomedTaxonomy = snomedTaxonomy;
-		Set<Long> allTransitiveProperties = new HashSet<>(propertiesDeclaredAsTransitive);
-
-		// Make sure that the sub types of the attributes declared as transitive are also recognised
-		for (Long transitivePropertyId : propertiesDeclaredAsTransitive) {
-			allTransitiveProperties.addAll(snomedTaxonomy.getDescendants(transitivePropertyId));
-		}
-		this.allTransitiveProperties = allTransitiveProperties;
+		this.propertyChains = propertyChains;
 	}
 	
 	/**
@@ -94,7 +90,7 @@ public abstract class NormalFormGenerator<T> {
 
 	/**
 	 * Performs additional normalisation as required before returning components in normal form for the specified concept.
-	 * The second pass uses the hierarchies of any other transitive properties in order to further normalise components.
+	 * The second pass uses property chains and transitive properties in order to further normalise components.
 	 * Other transitive hierarchies can not be guaranteed to be complete during the first pass because the super-type of a
 	 * concept in a transitive property hierarchy may be at a lower level in the is-a hierarchy meaning that it's processed later during the first pass.
 	 *

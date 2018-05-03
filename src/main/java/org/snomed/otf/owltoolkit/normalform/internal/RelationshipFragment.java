@@ -23,15 +23,16 @@ package org.snomed.otf.owltoolkit.normalform.internal;
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
 import org.snomed.otf.owltoolkit.normalform.transitive.NodeGraph;
+import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 
 import java.text.MessageFormat;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -103,22 +104,58 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 
 		if (!isDestinationNegated() && !other.isDestinationNegated()) {
 
+			// noinspection UnnecessaryLocalVariable
+			RelationshipFragment A = other;
+			RelationshipFragment B = this;
+
 			/*
-			 * Things same or stronger than (some/all) rA:
+			 * We will return true if A is redundant.
 			 *
-			 * - (some/all) r'A, where r' is equal to r or is a descendant of r
-			 * - (some/all) rA', where A' is equal to A or is a descendant of A
-			 * - (some/all) r'A', where both of the above applies
+			 * Rules for determining redundant relationships.
+			 *
+			 * Rule 1 - Class and Role inclusions
+			 * 	Given two relationships, A and B, A with r = C and B with s = D, within the same role group,
+			 * 	A is redundant if:
+			 * 		r is the same as or a supertype of s, and
+			 * 		C is the same as or a supertype of D
+			 *
+			 * Rule 2 - Property chains including transitive properties
+			 * 	Given attribute r, s and t with a property chain SubObjectPropertyOf(ObjectPropertyChain(t s) r),
+			 * 	and two relationships A and B, A with r = C and B with u = D, within the same role group,
+			 * 	A is redundant if:
+			 * 		Attribute u is the same as or a subtype of t, and
+			 * 		D has relationship to C via attribute s
+			 *
 			 */
-			final Set<Long> attributeClosure = getConceptAndAllSuperTypes(getTypeId());
-			final Set<Long> valueClosure = getValueClosure(getDestinationId());
 
-			return attributeClosure.contains(other.getTypeId()) && valueClosure.contains(other.getDestinationId());
+			final Set<Long> BAttributeClosure = getTransitiveClosure(B.getTypeId());
+			final Set<Long> BValueClosure = getTransitiveClosure(B.getDestinationId());
 
+			// Rule 1
+			if (BAttributeClosure.contains(A.getTypeId()) && BValueClosure.contains(A.getDestinationId())) {
+				return true;
+			}
+
+			// Rule 2
+			else {
+				Set<PropertyChain> relevantPropertyChains = relationshipNormalFormGenerator.getPropertyChains().stream()
+						.filter(propertyChain -> BAttributeClosure.contains(propertyChain.getSourceType()))
+						.filter(propertyChain -> propertyChain.getInferredType().equals(A.getTypeId()))
+						.collect(Collectors.toSet());
+				for (PropertyChain propertyChain : relevantPropertyChains) {
+					if (getPropertyChainTransitiveClosure(B.getDestinationId(), propertyChain.getDestinationType())
+							.contains(A.getDestinationId())) {
+						return true;
+					}
+				}
+			}
+			return false;
+
+		// TODO: Remove all negation logic - Snomed International does not use it.
 		} else if (isDestinationNegated() && !other.isDestinationNegated()) {
 
-			final Set<Long> otherAttributeClosure = getConceptAndAllSuperTypes(other.getTypeId());
-			final Set<Long> superTypes = getValueClosure(getDestinationId());
+			final Set<Long> otherAttributeClosure = getTransitiveClosure(other.getTypeId());
+			final Set<Long> superTypes = getTransitiveClosure(getDestinationId());
 			superTypes.remove(getDestinationId());
 
 			/*
@@ -135,7 +172,7 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 
 		} else if (!isDestinationNegated() && other.isDestinationNegated()) {
 
-			final Set<Long> attributeClosure = getConceptAndAllSuperTypes(getTypeId());
+			final Set<Long> attributeClosure = getTransitiveClosure(getTypeId());
 
 			/*
 			 * Any contradictions should be filtered out by the reasoner beforehand, so we just check if the two concepts
@@ -149,8 +186,8 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 			 * Note that the comparison is the exact opposite of the first case - if both fragments are negated,
 			 * the one which negates a more loose definition is the one that is more strict in the end.
 			 */
-			final Set<Long> otherAttributeClosure = getConceptAndAllSuperTypes(other.getTypeId());
-			final Set<Long> otherValueClosure = getValueClosure(other.getDestinationId());
+			final Set<Long> otherAttributeClosure = getTransitiveClosure(other.getTypeId());
+			final Set<Long> otherValueClosure = getTransitiveClosure(other.getDestinationId());
 
 			return otherAttributeClosure.contains(getTypeId()) && otherValueClosure.contains(getDestinationId());
 		}
@@ -189,21 +226,29 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 	 * @return a set containing the starting concept and all reachable
 	 *         supertypes
 	 */
-	private Set<Long> getConceptAndAllSuperTypes(final long conceptId) {
+	private Set<Long> getTransitiveClosure(final long conceptId) {
 		final Set<Long> ancestors = relationshipNormalFormGenerator.getReasonerTaxonomy().getAncestors(conceptId);
 		final Set<Long> conceptAndAncestors = new LongOpenHashSet(ancestors);
 		conceptAndAncestors.add(conceptId);
 		return conceptAndAncestors;
 	}
 
-	private Set<Long> getValueClosure(final long conceptId) {
-		Set<Long> closure = getConceptAndAllSuperTypes(conceptId);
-		Collection<NodeGraph> graphs = relationshipNormalFormGenerator.getTransitiveNodeGraphs().values();
-		for (NodeGraph graph : graphs) {
-			Set<Long> ancestors = graph.getAncestors(conceptId);
-			closure.addAll(ancestors);
+	private Set<Long> getPropertyChainTransitiveClosure(final long conceptId, Long chainDestinationType) {
+		// Build closure containing all possible hops using chainDestinationType
+		// For every concept found also add its super types
+
+		NodeGraph nodeGraph = relationshipNormalFormGenerator.getTransitiveNodeGraphs().getOrDefault(chainDestinationType, new NodeGraph());
+		ReasonerTaxonomy reasonerTaxonomy = relationshipNormalFormGenerator.getReasonerTaxonomy();
+
+		Set<Long> chainPaths = new HashSet<>();
+		chainPaths.add(conceptId);
+		chainPaths.addAll(nodeGraph.getAncestors(conceptId));
+		Set<Long> chainStepAncestors = new HashSet<>();
+		for (Long chainNode : chainPaths) {
+			chainStepAncestors.addAll(reasonerTaxonomy.getAncestors(chainNode));
 		}
-		return closure;
+		chainPaths.addAll(chainStepAncestors);
+		return chainPaths;
 	}
 
 	@Override
