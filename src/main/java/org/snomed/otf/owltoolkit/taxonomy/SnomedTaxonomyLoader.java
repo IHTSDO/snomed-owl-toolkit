@@ -120,12 +120,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && owlParsingExceptionThrown == null) {
 			if (ACTIVE.equals(active)) {
 				try {
-					String owlExpressionString = otherValues[0]
-							// Replace any remaining outdated role group constants
-							.replace(OntologyService.ROLE_GROUP_OUTDATED_CONSTANT, OntologyService.ROLE_GROUP_SCTID);
-
-					OWLAxiom owlAxiom = deserialiseAxiom(owlExpressionString, id);
-					snomedTaxonomy.addAxiom(referencedComponentId, id, owlAxiom);
+					addActiveAxiom(id, referencedComponentId, otherValues[0]);
 				} catch (OWLException | OWLRuntimeException e) {
 					owlParsingExceptionThrown = e;
 					owlParsingExceptionMemberId = id;
@@ -145,6 +140,15 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				snomedTaxonomy.removeUngroupedRole(contentTypeId, attributeId);
 			}
 		}
+	}
+
+	public void addActiveAxiom(String id, String referencedComponentId, String owlExpression) throws OWLOntologyCreationException {
+		String owlExpressionString = owlExpression
+				// Replace any remaining outdated role group constants
+				.replace(OntologyService.ROLE_GROUP_OUTDATED_CONSTANT, OntologyService.ROLE_GROUP_SCTID);
+
+		OWLAxiom owlAxiom = deserialiseAxiom(owlExpressionString, id);
+		snomedTaxonomy.addAxiom(referencedComponentId, id, owlAxiom);
 	}
 
 	@Override

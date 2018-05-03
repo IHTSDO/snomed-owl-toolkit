@@ -26,11 +26,15 @@ import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.ontology.render.SnomedFunctionalSyntaxDocumentFormat;
 import org.snomed.otf.owltoolkit.ontology.render.SnomedFunctionalSyntaxStorerFactory;
 import org.snomed.otf.owltoolkit.ontology.render.SnomedPrefixManager;
+import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
+import org.snomed.otf.owltoolkit.service.ReasonerServiceRuntimeException;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 import java.io.OutputStream;
 import java.util.*;
+
+import static java.lang.Long.parseLong;
 
 @SuppressWarnings("Guava")
 public class OntologyService {
@@ -191,15 +195,32 @@ public class OntologyService {
 		return getOnlyValueOrIntersection(terms);
 	}
 
-	public Set<Long> getPropertiesDeclaredAsTransitive(OWLOntology owlOntology) {
-		Set<Long> transitiveProperties = new HashSet<>();
-		Set<OWLTransitiveObjectPropertyAxiom> transitiveObjectPropertyAxioms = owlOntology.getAxioms(AxiomType.TRANSITIVE_OBJECT_PROPERTY);
-		for (OWLTransitiveObjectPropertyAxiom transitiveObjectPropertyAxiom : transitiveObjectPropertyAxioms) {
-			String propertyIdString = transitiveObjectPropertyAxiom.getProperty().getNamedProperty().getIRI().getShortForm();
-			transitiveProperties.add(Long.parseLong(propertyIdString));
+	public Set<PropertyChain> getPropertyChains(OWLOntology owlOntology) {
+		Set<PropertyChain> propertyChains = new HashSet<>();
+
+		// Collect property chain axioms
+		for (OWLSubPropertyChainOfAxiom propertyChainAxiom : owlOntology.getAxioms(AxiomType.SUB_PROPERTY_CHAIN_OF)) {
+			List<OWLObjectPropertyExpression> propertyChain = propertyChainAxiom.getPropertyChain();
+			assertTrue("Property chain must be 2 properties long.", propertyChain.size() == 2);
+			Long sourceType = getShortForm(propertyChain.get(0));
+			Long destinationType = getShortForm(propertyChain.get(1));
+			OWLObjectPropertyExpression superProperty = propertyChainAxiom.getSuperProperty();
+			Long inferredType = getShortForm(superProperty);
+			propertyChains.add(new PropertyChain(sourceType, destinationType, inferredType));
 		}
 
-		return transitiveProperties;
+		// Build property chains from transitive properties
+		for (OWLTransitiveObjectPropertyAxiom transitiveObjectPropertyAxiom : owlOntology.getAxioms(AxiomType.TRANSITIVE_OBJECT_PROPERTY)) {
+			Long propertyId = getShortForm(transitiveObjectPropertyAxiom.getProperty());
+			propertyChains.add(new PropertyChain(propertyId, propertyId, propertyId));
+		}
+
+		return propertyChains;
+	}
+
+	private Long getShortForm(OWLObjectPropertyExpression property) {
+		String shortForm = property.getNamedProperty().getIRI().getShortForm();
+		return parseLong(shortForm);
 	}
 
 	private OWLClassExpression getOnlyValueOrIntersection(Set<OWLClassExpression> terms) {
@@ -235,5 +256,11 @@ public class OntologyService {
 
 	public DefaultPrefixManager getPrefixManager() {
 		return prefixManager;
+	}
+
+	private void assertTrue(String message, boolean bool) {
+		if (!bool) {
+			throw new ReasonerServiceRuntimeException(message);
+		}
 	}
 }
