@@ -20,9 +20,4 @@ id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
 #     )
 #     :127489000 - Has active ingredient attribute
 # )
-# This behaviour will NOT be inherited by any ancestors of this attribute
 2771a3fd-3b35-495c-936e-8cfb19db8a8b	20180731	1	900000000000207008	733073007	127489000	SubObjectPropertyOf(ObjectPropertyChain(:127489000 :738774007) :127489000)
-
-# Make 738774007 'Is modification of (attribute)' Transitive
-# This behaviour WILL be inherited by any ancestors of this attribute
-c69ad177-9756-4ad1-a8b3-02407ca95b36	20170131	1	900000000000012004	733073007	738774007	TransitiveObjectProperty(:738774007)
