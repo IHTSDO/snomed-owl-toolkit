@@ -48,15 +48,24 @@ public class PropertyChainClassificationIntegrationTest {
 		List<String> lines = readInferredRelationshipLinesTrim(results);
 		assertEquals(3, lines.size());
 
-		// This relationship is inferred by the property chain and leads to 'Morphine sulphate product' being subsumed by 'Morphine product'
-		// however it should not be part of the normal form because:
-		// although 'Morphine substance' is NOT a subclass of 'Morphine sulphate substance'
-		// it is a modification of 'Morphine sulphate substance'
-		// 'Is modification of' is a transitive attribute
-		// This makes the stated relationships "Morphine sulphate product - Has active ingredient - Morphine sulphate substance" more specific.
-		// This makes the relationship "Morphine sulphate product - Has active ingredient - Morphine substance" redundant.
-		// This relationship is redundant even though it's in a different group to the more specific active ingredient.
-		assertFalse("Inferred relationship. Morphine sulphate product - Has active ingredient - Morphine substance",
+		/*
+			We have a property chain: Has active ingredient o Is modification of -> Has active ingredient
+					let's call these: 'Source type'         o 'Destination type' -> 'Inferred type'
+
+			Also 'Morphine sulphate' is a modification of 'Morphine'
+
+			We state relationship B: Morphine sulphate product - Has active ingredient - Morphine sulphate substance
+			The reasoner infers relationship A: Morphine sulphate product - Has active ingredient - Morphine substance
+			After classification this relationship is inherited from the parent.
+
+			Relationship A is redundant because:
+			 - B's type is the same as or a subtype of the property chain source type
+			 - A's type is the same as the property chain inferred type
+			 - B's value has a path to A's value via the property chain destination type
+
+			This relationship is redundant even though it's in a different group to the more specific active ingredient.
+		*/
+		assertFalse("Relationship not inferred. Morphine sulphate product - Has active ingredient - Morphine substance",
 				lines.contains("1\t\t100206001\t100202001\t2\t127489000\t900000000000011006\t900000000000451002"));
 
 		assertTrue("Inferred relationship. Morphine sulphate product - Is a - Morphine product",
@@ -65,6 +74,27 @@ public class PropertyChainClassificationIntegrationTest {
 		assertTrue("Redundant relationship. Morphine sulphate product - Is a - Product",
 				lines.contains("200210021\t\t0\t\t100206001\t100204001\t0\t116680003\t900000000000011006\t900000000000451002"));
 
+
+		/*
+			We have a property chain: Has active ingredient o Is modification of -> Has active ingredient
+					let's call these: 'Source type'         o 'Destination type' -> 'Inferred type'
+
+			Also 'Fluocortolone hexanoate' is a modification of 'Fluocortolone'
+
+			We state relationship B: Morphine sulphate product - Has precise active ingredient - Fluocortolone hexanoate (substance)
+			We state relationship A: Morphine sulphate product - Has precise active ingredient - Fluocortolone (substance)
+
+			Relationship A is not redundant because:
+			 - B's type is the same as or a subtype of the property chain source type
+			 - A's type is NOT the same as the property chain inferred type
+			 	.. so we can not use the property chain destination type path
+
+			Neither of these relationships are redundant even though Fluocortolone hexanoate (substance) is a modification of Fluocortolone (substance)
+		*/
+		assertFalse("Relationship not redundant. Morphine sulphate product - Has precise active ingredient - Fluocortolone (substance)",
+				lines.contains("200212021\t\t0\t900000000000207008\t100206001\t100301001\t3\t762949000\t900000000000011006\t900000000000451002"));
+		assertFalse("Relationship not redundant. Morphine sulphate product - Has precise active ingredient - Fluocortolone hexanoate (substance)",
+				lines.contains("200213021\t\t0\t900000000000207008\t100206001\t100302001\t3\t762949000\t900000000000011006\t900000000000451002"));
 	}
 
 }
