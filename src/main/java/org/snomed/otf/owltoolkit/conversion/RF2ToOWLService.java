@@ -11,7 +11,7 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
-import org.snomed.otf.owltoolkit.util.OptionalInputStream;
+import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 
 import java.io.OutputStream;
 import java.util.Set;
@@ -21,7 +21,7 @@ public class RF2ToOWLService {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void convertRF2ArchiveToOWL(String ontologyUri, String versionDate, boolean includeFSNs, InputStreamSet snomedRf2SnapshotArchives,
-			OptionalInputStream deltaStream, OutputStream owlFileOutputStream) throws ConversionException {
+			OptionalFileInputStream deltaStream, OutputStream owlFileOutputStream) throws ConversionException {
 
 		// Load required parts of RF2 into memory
 		logger.info("Loading RF2 files");

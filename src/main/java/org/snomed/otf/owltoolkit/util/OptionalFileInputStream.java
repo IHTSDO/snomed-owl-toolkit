@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-public class OptionalInputStream implements AutoCloseable {
+public class OptionalFileInputStream implements AutoCloseable {
 
 	private final Optional<InputStream> inputStream;
 
-	public OptionalInputStream(java.io.File file) throws FileNotFoundException {
+	public OptionalFileInputStream(java.io.File file) throws FileNotFoundException {
 		if (file != null) {
 			this.inputStream = Optional.of(new FileInputStream(file));
 		} else {

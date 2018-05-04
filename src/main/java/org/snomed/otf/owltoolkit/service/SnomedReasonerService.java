@@ -37,13 +37,11 @@ import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
+import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 import org.snomed.otf.owltoolkit.util.TimerUtil;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.lang.Long.parseLong;
 
@@ -83,12 +81,12 @@ public class SnomedReasonerService {
 			boolean outputOntologyFileForDebug) throws ReasonerServiceException {
 
 		try (InputStreamSet previousReleaseRf2SnapshotArchives = new InputStreamSet(previousReleaseRf2SnapshotArchiveFile);
-			 InputStream currentReleaseRf2DeltaArchive = new FileInputStream(currentReleaseRf2DeltaArchiveFile);
+			 OptionalFileInputStream currentReleaseRf2DeltaArchive = new OptionalFileInputStream(currentReleaseRf2DeltaArchiveFile);
 			 OutputStream resultsRf2DeltaArchive = new FileOutputStream(resultsRf2DeltaArchiveFile)) {
 
 			classify(classificationId,
 					previousReleaseRf2SnapshotArchives,
-					currentReleaseRf2DeltaArchive,
+					currentReleaseRf2DeltaArchive.getInputStream().orElse(null),
 					resultsRf2DeltaArchive,
 					reasonerFactoryClassName,
 					outputOntologyFileForDebug);

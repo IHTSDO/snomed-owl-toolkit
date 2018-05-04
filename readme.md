@@ -32,29 +32,36 @@ This project currently requires Java 8.
 ## Documentation
 * [Calculating the Necessary Normal Form](documentation/calculating-necessary-normal-form.md)
 
-## Snomed RF2 to OWL File Conversion
-Convert Snomed RF2 files to an OWL ontology file with functional syntax.
+## Command Line Use
 
-Download the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases), then on the command line give the RF2 file as an argument to the tool.  
+This toolkit has been developed for use in other Java applications as a library but some functionality 
+can be used via the command line.
+
+The 'executable' jar file is available on the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases) page for use on the command line. 
+
 This project currently requires Java 8.
 
-```bash
-java -jar snomed-owl-toolkit*executable.jar -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
-```
-After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
-
-Full argument options here:
+Command line options:
 ```
 Usage:
  -help                                  Print this help message.
  
+ -classify                              Run classification process.
+                                        Results are written to an RF2 delta archive.
+ 
+ -rf2-to-owl                            (Default mode) Convert RF2 to OWL Functional Syntax.
+                                        Results are written to an .owl file.
+ 
  -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. 
-                                        One Snomed Edition archive is required.
-                                        Snomed Extension archives can be added.
+                                        At least one Snapshot archive is required.
  
  -rf2-authoring-delta-archive <path>    (Optional) Path to a zip file containing RF2 Delta files to be applied on top 
                                         of the Snapshots. This is helpful during an authoring cycle.
  
+ -debug                                 Additional output for debugging.
+ 
+ 
+Optional parameters for OWL conversion:
  -uri <uri>                             (Optional) URI for the ontology identifier.
                                         Defaults to http://snomed.info/sct/900000000000207008.
  
@@ -64,3 +71,25 @@ Usage:
  -without-annotations                   (Optional) Flag to omit Fully Specified Name annotations from the ontology 
                                         resulting in a smaller file size.
 ```
+
+### Snomed RF2 to OWL File Conversion
+Convert Snomed RF2 files to an OWL ontology file with functional syntax.
+
+Using the executable jar give an RF2 snapshot file as an argument. 
+```bash
+java -jar snomed-owl-toolkit*executable.jar -rf2-to-owl -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
+```
+After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
+
+### Snomed RF2 Classification
+Run the classification process using a Snomed RF2 Snapshot file.
+
+Using the executable jar give an RF2 snapshot file as an argument. 
+```bash
+java -jar snomed-owl-toolkit*executable.jar -classify -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
+```
+After about one and a half minutes an RF2 delta archive will be written to `classification-results-xxxx.zip` including a timestamp in the name.
+
+This archive contains a relationship file with active rows for new inferences and inactive rows for redundant relationships. 
+
+The archive also has a reference set containing any sets of concepts which the reasoner found to be logically equivalent. This refset should be empty.

@@ -3,6 +3,7 @@ package org.snomed.otf.owltoolkit;
 import org.junit.Before;
 import org.junit.Test;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
+import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -18,12 +19,22 @@ public class ApplicationTest {
 	public static final String HELP = "Usage:\n" +
 			" -help                                  Print this help message.\n" +
 			"\n" +
+			" -classify                              Run classification process.\n" +
+			"                                        Results are written to an RF2 delta archive.\n" +
+			"\n" +
+			" -rf2-to-owl                            (Default mode) Convert RF2 to OWL Functional Syntax.\n" +
+			"                                        Results are written to an .owl file.\n" +
+			"\n" +
 			" -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. \n" +
 			"                                        At least one Snapshot archive is required.\n" +
 			"\n" +
 			" -rf2-authoring-delta-archive <path>    (Optional) Path to a zip file containing RF2 Delta files to be applied on top \n" +
 			"                                        of the Snapshots. This is helpful during an authoring cycle.\n" +
 			"\n" +
+			" -debug                                 Additional output for debugging.\n" +
+			"\n" +
+			"\n" +
+			"Optional parameters for OWL conversion:\n" +
 			" -uri <uri>                             (Optional) URI for the ontology identifier.\n" +
 			"                                        Defaults to http://snomed.info/sct/900000000000207008.\n" +
 			"\n" +
@@ -32,6 +43,7 @@ public class ApplicationTest {
 			"\n" +
 			" -without-annotations                   (Optional) Flag to omit Fully Specified Name annotations from the ontology \n" +
 			"                                        resulting in a smaller file size.\n" +
+			"\n" +
 			"\n";
 
 	private ByteArrayOutputStream errorStream;
@@ -98,7 +110,7 @@ public class ApplicationTest {
 			Application application = new Application();
 			application.deleteOntologyFileOnExit();// Automatic file cleanup
 			application.run(args);
-		} catch (ConversionException | IOException | IllegalArgumentException e) {
+		} catch (ConversionException | IOException | IllegalArgumentException | ReasonerServiceException e) {
 			// Swallow all
 		} finally {
 			System.setErr(originalErrorStream);
