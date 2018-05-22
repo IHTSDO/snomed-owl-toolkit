@@ -11,6 +11,7 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.CORE_COMPONENT_NAMESPACE_PATTERN;
 
@@ -50,12 +51,7 @@ public class AxiomRelationshipConversionService {
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
 	public AxiomRepresentation convertAxiomToRelationships(Long referencedComponentId, String axiomExpression) throws ConversionException {
-		OWLAxiom owlAxiom;
-		try {
-			owlAxiom = snomedTaxonomyLoader.deserialiseAxiom(axiomExpression);
-		} catch (OWLOntologyCreationException e) {
-			throw new ConversionException("Failed to deserialise axiom expression '" + axiomExpression + "'.");
-		}
+		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(axiomExpression);
 		return convertAxiomToRelationships(referencedComponentId, owlAxiom);
 	}
 
@@ -154,6 +150,29 @@ public class AxiomRelationshipConversionService {
 	public String convertRelationshipsToAxiom(AxiomRepresentation representation) {
 		OWLClassAxiom owlClassAxiom = ontologyService.createOwlClassAxiom(representation);
 		return owlClassAxiom.toString().replaceAll(CORE_COMPONENT_NAMESPACE_PATTERN, ":$1");
+	}
+
+	/**
+	 * Extracts all concept ids from any axiom type.
+	 * This is intended for validation purposes.
+	 *
+	 * @param axiomExpression The Axiom expression to extract from.
+	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
+	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
+	 */
+	public Set<Long> getIdsOfConceptsNamedInAxiom(String axiomExpression) throws ConversionException {
+		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(axiomExpression);
+		return owlAxiom.getSignature().stream().map(OntologyHelper::getConceptId).collect(Collectors.toSet());
+	}
+
+	private OWLAxiom convertOwlExpressionToOWLAxiom(String axiomExpression) throws ConversionException {
+		OWLAxiom owlAxiom;
+		try {
+			owlAxiom = snomedTaxonomyLoader.deserialiseAxiom(axiomExpression);
+		} catch (OWLOntologyCreationException e) {
+			throw new ConversionException("Failed to deserialise axiom expression '" + axiomExpression + "'.");
+		}
+		return owlAxiom;
 	}
 
 	private Long getNamedClass(OWLAxiom owlAxiom, OWLClassExpression owlClassExpression, String side) throws ConversionException {

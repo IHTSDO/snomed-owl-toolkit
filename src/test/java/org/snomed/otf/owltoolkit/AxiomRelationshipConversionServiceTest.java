@@ -194,6 +194,30 @@ public class AxiomRelationshipConversionServiceTest {
 		assertNull(axiomRepresentation);
 	}
 
+	@Test
+	public void testGetIdsOfConceptsNamedInAxiom() throws ConversionException {
+		assertEquals(Sets.newHashSet(733930001L), axiomRelationshipConversionService.getIdsOfConceptsNamedInAxiom("TransitiveObjectProperty(:733930001)"));
+
+		assertEquals(Sets.newHashSet(738774007L), axiomRelationshipConversionService.getIdsOfConceptsNamedInAxiom("ReflexiveObjectProperty(:738774007)"));
+
+		assertEquals(Sets.newHashSet(246093002L, 738774007L),
+				axiomRelationshipConversionService.getIdsOfConceptsNamedInAxiom("SubObjectPropertyOf(ObjectPropertyChain(:246093002 :738774007) :246093002)"));
+
+		String equivalentClassAxiom =
+				"EquivalentClasses(" +
+						":9846003 " +
+						"ObjectIntersectionOf(" +
+						":39132006 " +
+						":64033007 " +
+						"ObjectSomeValuesFrom(" +
+						":272741003 " +
+						":24028007" +
+						")" +
+						")" +
+						" )";
+		assertEquals(Sets.newHashSet(9846003L, 39132006L, 64033007L, 272741003L, 24028007L), axiomRelationshipConversionService.getIdsOfConceptsNamedInAxiom(equivalentClassAxiom));
+	}
+
 	private String toString(Map<Integer, List<Relationship>> relationshipGroups) {
 		StringBuilder groupsString = new StringBuilder();
 		for (Integer group : relationshipGroups.keySet()) {
