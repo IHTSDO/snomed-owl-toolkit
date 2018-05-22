@@ -62,8 +62,6 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 
 	private final Set<Long> traversableProperties;
 
-	private boolean secondStage = false;
-
 	private final Map<Long, Collection<Relationship>> generatedNonIsACache = new Long2ObjectOpenHashMap<>();
 
 	private static final long INTERNATIONAL_CORE_MODULE_ID = Long.parseLong(Concepts.SNOMED_CT_CORE_MODULE);
@@ -114,14 +112,12 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 		generatedNonIsACache.put(conceptId, ImmutableList.copyOf(inferredNonIsAFragments));
 
 		// Add to transitive graphs
-		inferredNonIsAFragments.stream().filter(r -> traversableProperties.contains(r.getTypeId())).forEach(r -> {
-			transitiveNodeGraphs.get(r.getTypeId()).addParent(conceptId, r.getDestinationId());
-		});
+		inferredNonIsAFragments.stream().filter(r -> traversableProperties.contains(r.getTypeId())).forEach(r ->
+				transitiveNodeGraphs.get(r.getTypeId()).addParent(conceptId, r.getDestinationId()));
 	}
 
 	@Override
 	public Collection<Relationship> secondNormalisationPass(final long conceptId) {
-		secondStage = true;
 		final Set<Long> directSuperTypes = reasonerTaxonomy.getParents(conceptId);
 
 		// Step 1: collect IS-A relationships
@@ -430,10 +426,6 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 
 	public Map<Long, NodeGraph> getTransitiveNodeGraphs() {
 		return transitiveNodeGraphs;
-	}
-
-	public boolean isSecondStage() {
-		return secondStage;
 	}
 
 }
