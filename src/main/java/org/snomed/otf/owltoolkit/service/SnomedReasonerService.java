@@ -173,7 +173,6 @@ public class SnomedReasonerService {
 		RelationshipChangeCollector inactivationCollector = new RelationshipChangeCollector(false);
 		processor.processInactivationChanges(inactivationCollector);
 		changeCollector.getRemovedStatements().putAll(inactivationCollector.getRemovedStatements());
-		logger.info("{} relationships inactivated ", inactivationCollector.getRemovedCount());
 
 		logger.info("Writing results archive");
 		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
