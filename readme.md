@@ -6,8 +6,6 @@ This toolkit is used within the SNOMED International Authoring Environment and w
 
 A classification REST API using this toolkit is available, see the [Classification Service](https://github.com/IHTSDO/classification-service).
 
-This project currently requires Java 8.
-
 ## Capabilities
 - Convert Snomed RF2 to an OWL Ontology
   - Works on the command line
@@ -38,8 +36,6 @@ This toolkit has been developed for use in other Java applications as a library 
 can be used via the command line.
 
 The 'executable' jar file is available on the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases) page for use on the command line. 
-
-This project currently requires Java 8.
 
 Command line options:
 ```
