@@ -2,7 +2,7 @@
 
 An Open Source Toolkit to make SNOMED CT to OWL conversion and classification simple.
 
-This toolkit is used within the SNOMED International Authoring Environment and will keep pace with all the latest changes.
+This toolkit is used within the SNOMED International Authoring Environment. It is backward compatible with all past RF2 releases and will be forward compatible with all future releases. New versions of this tool will be produced as new description logic features are added to SNOMED CT.
 
 A classification REST API using this toolkit is available, see the [Classification Service](https://github.com/IHTSDO/classification-service).
 
@@ -12,7 +12,6 @@ A classification REST API using this toolkit is available, see the [Classificati
   - Uses MRCM Attribute Domain Reference Set for grouping information
   - Uses OWL Axiom Reference Set
   - Can include FSN annotations
-  - Backward compatible with all Snomed RF2 releases
   - Support for Snomed Editions and Extensions
   - *For Java integration see RF2ToOWLService.java*
 - Classify Snomed
