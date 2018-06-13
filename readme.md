@@ -49,7 +49,7 @@ Usage:
                                         Results are written to an .owl file.
  
  -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. 
-                                        At least one Snapshot archive is required.
+                                        At least one zip file containing Snapshot files is required.
  
  -rf2-authoring-delta-archive <path>    (Optional) Path to a zip file containing RF2 Delta files to be applied on top 
                                         of the Snapshots. This is helpful during an authoring cycle.
@@ -71,16 +71,16 @@ Optional parameters for OWL conversion:
 ### Snomed RF2 to OWL File Conversion
 Convert Snomed RF2 files to an OWL ontology file with functional syntax.
 
-Using the executable jar give an RF2 snapshot file as an argument. 
+Using the executable jar supply a zip file which contains RF2 snapshot files as an argument.
 ```bash
 java -jar snomed-owl-toolkit*executable.jar -rf2-to-owl -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
 ```
 After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
 
 ### Snomed RF2 Classification
-Run the classification process using a Snomed RF2 Snapshot file.
+Run the classification process.
 
-Using the executable jar give an RF2 snapshot file as an argument. 
+Using the executable jar supply a zip file which contains RF2 snapshot files as an argument.
 ```bash
 java -jar snomed-owl-toolkit*executable.jar -classify -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
 ```
