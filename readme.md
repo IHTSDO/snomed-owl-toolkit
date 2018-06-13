@@ -6,7 +6,7 @@ This toolkit is used within the SNOMED International Authoring Environment. It i
 
 A classification REST API using this toolkit is available, see the [Classification Service](https://github.com/IHTSDO/classification-service).
 
-## Capabilities
+## Java Library Capabilities
 - Convert Snomed RF2 to an OWL Ontology
   - Works on the command line
   - Uses MRCM Attribute Domain Reference Set for grouping information
@@ -17,8 +17,8 @@ A classification REST API using this toolkit is available, see the [Classificati
 - Classify Snomed
   - Uses RF2 to OWL conversion
     - Optionally load an RF2 Delta archive on top of the Snapshot
-  - Any OWL API Reasoner supported (default is ELK)
   - RF2 delta output of relationship changes (no identifier generation)
+  - Any OWL API Reasoner supported (default is ELK)
   - *See SnomedReasonerService.java*
 - Authoring Environment UI Support
   - Convert relationships to axioms
