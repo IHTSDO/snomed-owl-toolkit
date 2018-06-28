@@ -15,6 +15,8 @@
  */
 package org.snomed.otf.owltoolkit.domain;
 
+import java.util.Objects;
+
 public class Relationship {
 
 	private final long relationshipId;
@@ -104,6 +106,28 @@ public class Relationship {
 
 	public void setGroup(int group) {
 		this.group = group;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Relationship that = (Relationship) o;
+		return relationshipId == that.relationshipId &&
+				effectiveTime == that.effectiveTime &&
+				moduleId == that.moduleId &&
+				typeId == that.typeId &&
+				destinationId == that.destinationId &&
+				group == that.group &&
+				unionGroup == that.unionGroup &&
+				universal == that.universal &&
+				destinationNegated == that.destinationNegated &&
+				characteristicTypeId == that.characteristicTypeId;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(relationshipId, effectiveTime, moduleId, typeId, destinationId, group, unionGroup, universal, destinationNegated, characteristicTypeId);
 	}
 
 	@Override
