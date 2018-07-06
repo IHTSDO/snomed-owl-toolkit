@@ -33,6 +33,8 @@ import static java.lang.Long.parseLong;
 
 public class SnomedTaxonomy {
 
+	private Map<String, String> ontologyNamespaces = new HashMap<>();
+	private Map<String, String> ontologyHeader = new HashMap<>();
 	private Set<Long> allConceptIds = new LongOpenHashSet();
 	private Set<Long> fullyDefinedConceptIds = new LongOpenHashSet();
 	private Map<Long, Relationship> statedRelationshipsById = new HashMap<>();
@@ -196,6 +198,30 @@ public class SnomedTaxonomy {
 			getInferredRelationships(parseLong(sourceId)).removeIf(relationship -> relationshipId == relationship.getRelationshipId());
 			inferredRelationshipsById.remove(relationshipId);
 		}
+	}
+
+	public void addOntologyNamespace(String id, String namespace) {
+		ontologyNamespaces.put(id, namespace);
+	}
+
+	public void removeOntologyNamespace(String id) {
+		ontologyNamespaces.remove(id);
+	}
+
+	public Map<String, String> getOntologyNamespaces() {
+		return ontologyNamespaces;
+	}
+
+	public void addOntologyHeader(String id, String namespace) {
+		ontologyHeader.put(id, namespace);
+	}
+
+	public void removeOntologyHeader(String id) {
+		ontologyHeader.remove(id);
+	}
+
+	public Map<String, String> getOntologyHeader() {
+		return ontologyHeader;
 	}
 
 	public void addAxiom(String referencedComponentId, String axiomId, OWLAxiom owlAxiom) {

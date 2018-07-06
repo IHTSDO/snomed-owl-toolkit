@@ -24,6 +24,7 @@ public class RF2ToOWLServiceTest {
 		rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180731", true, new InputStreamSet(rf2ArchiveStream), new OptionalFileInputStream(null), byteArrayOutputStream);
 
 		assertEquals("" +
+						"Prefix(test:=<http://test.com/test/>)\n" +
 						"Prefix(:=<http://snomed.info/id/>)\n" +
 						"Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n" +
 						"Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)\n" +

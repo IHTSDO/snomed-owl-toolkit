@@ -1,5 +1,6 @@
 package org.snomed.otf.owltoolkit.conversion;
 
+import com.google.common.collect.Sets;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -13,14 +14,29 @@ import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class RF2ToOWLService {
 
+	private static final Set<String> DEFAULT_NAMESPACES = Sets.newHashSet(
+			"Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)",
+			"Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)",
+			"Prefix(owl:=<http://www.w3.org/2002/07/owl#>)",
+			"Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)",
+			"Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)",
+			"Prefix(:=<http://snomed.info/id/>)"
+	);
+
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	public void convertRF2ArchiveToOWL(String ontologyUri, String versionDate, boolean includeFSNs, InputStreamSet snomedRf2SnapshotArchives,
+	public void convertRF2ArchiveToOWL(String ontologyUriOverride, String versionDate, boolean includeFSNs, InputStreamSet snomedRf2SnapshotArchives,
 			OptionalFileInputStream deltaStream, OutputStream owlFileOutputStream) throws ConversionException {
 
 		// Load required parts of RF2 into memory
@@ -30,6 +46,27 @@ public class RF2ToOWLService {
 			snomedTaxonomy = new SnomedTaxonomyBuilder().build(snomedRf2SnapshotArchives, deltaStream.getInputStream().orElse(null), includeFSNs);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
+		}
+
+		String ontologyUri;
+		if (ontologyUriOverride != null && !ontologyUriOverride.isEmpty()) {
+			ontologyUri = ontologyUriOverride;
+		} else {
+			Collection<String> ontologyHeaders = snomedTaxonomy.getOntologyHeader().values();
+			if (ontologyHeaders.size() > 1) {
+				throw new ConversionException("Multiple active Ontology identifiers found. " +
+						"An extension should make other Ontology identifier records inactive when adding its own. " + ontologyHeaders.toString());
+			} else if (ontologyHeaders.isEmpty()) {
+				logger.warn("No Ontology identifier found. Using default identifier {}", OntologyService.SNOMED_INTERNATIONAL_EDITION_URI);
+				ontologyHeaders.add(OntologyService.SNOMED_INTERNATIONAL_EDITION_URI);
+			}
+			String ontologyHeader = ontologyHeaders.iterator().next();
+			String prefix = "Ontology(<";
+			String suffix = ">)";
+			if (!ontologyHeader.startsWith(prefix) || !ontologyHeader.endsWith(suffix)) {
+				throw new ConversionException(String.format("Ontology header should start with '%s' and end with '%s' but this found '%s'", prefix, suffix, ontologyHeader));
+			}
+			ontologyUri = ontologyHeader.substring(prefix.length(), ontologyHeader.length() - 2);
 		}
 
 		// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
@@ -46,7 +83,23 @@ public class RF2ToOWLService {
 			throw new ConversionException("Failed to build OWL Ontology from SNOMED taxonomy.", e);
 		}
 
-		// Write to OutputStream
+		// Write to any non-default namespaces to OutputStream
+		Set<String> extraOntologyNamespaces = snomedTaxonomy.getOntologyNamespaces().values().stream()
+				.filter(namespace -> !DEFAULT_NAMESPACES.contains(namespace)).collect(Collectors.toSet());
+		if (!extraOntologyNamespaces.isEmpty()) {
+			try {
+				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(owlFileOutputStream));
+				for (String extraOntologyNamespace : extraOntologyNamespaces) {
+					writer.write(extraOntologyNamespace);
+					writer.newLine();
+				}
+				writer.flush();
+			} catch (IOException e) {
+				throw new ConversionException("Failed to write ontology namespaces to output stream.", e);
+			}
+		}
+
+		// Write ontology to OutputStream
 		try {
 			ontologyService.saveOntology(ontology, owlFileOutputStream);
 		} catch (OWLOntologyStorageException e) {

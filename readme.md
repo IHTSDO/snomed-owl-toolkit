@@ -58,7 +58,8 @@ Usage:
  
 Optional parameters for OWL conversion:
  -uri <uri>                             (Optional) URI for the ontology identifier.
-                                        Defaults to http://snomed.info/sct/900000000000207008.
+                                        Defaults to the id within the header entry of the OWL Ontology reference set. 
+                                        If no entry found defaults to http://snomed.info/sct/900000000000207008.
  
  -version <version>                     (Optional) Date for the ontology version e.g. 20180731.
                                         Defaults to today's date.

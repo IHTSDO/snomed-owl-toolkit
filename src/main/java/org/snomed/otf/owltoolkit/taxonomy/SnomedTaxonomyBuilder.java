@@ -17,6 +17,7 @@ package org.snomed.otf.owltoolkit.taxonomy;
 
 import static org.snomed.otf.owltoolkit.constants.Concepts.MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET;
 import static org.snomed.otf.owltoolkit.constants.Concepts.OWL_AXIOM_REFERENCE_SET;
+import static org.snomed.otf.owltoolkit.constants.Concepts.OWL_ONTOLOGY_REFERENCE_SET;
 
 import java.io.InputStream;
 
@@ -34,8 +35,9 @@ public class SnomedTaxonomyBuilder {
 
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
 			.withStatedRelationships()
-			.withInactiveConcepts() 
+			.withInactiveConcepts()
 			.withFullRelationshipObjects()
+			.withRefset(OWL_ONTOLOGY_REFERENCE_SET)
 			.withRefset(OWL_AXIOM_REFERENCE_SET)
 			.withRefset(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)
 			.withFullRefsetMemberObjects()
@@ -43,8 +45,9 @@ public class SnomedTaxonomyBuilder {
 
 	static {
 		// Giving reference set filename patterns avoids reading them all
-		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*Axiom.*");
-		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*MRCM.*");
+		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_sRefset_OWLOntology.*");
+		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_sRefset_OWLAxiom.*");
+		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_cissccRefset_MRCMAttributeDomain.*");
 	}
 
 	private static final LoadingProfile DELTA_LOADING_PROFILE = SNAPSHOT_LOADING_PROFILE

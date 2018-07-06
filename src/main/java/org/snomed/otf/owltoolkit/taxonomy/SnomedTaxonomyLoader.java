@@ -55,6 +55,8 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	private Exception owlParsingExceptionThrown;
 	private String owlParsingExceptionMemberId;
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomyLoader.class);
+
 	public SnomedTaxonomyLoader() {
 		owlOntologyManager = OWLManager.createOWLOntologyManager();
 	}
@@ -140,6 +142,23 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				// Remove the axiom from our active set
 				// Match by id rather than a deserialised representation because the equals method may fail.
 				snomedTaxonomy.removeAxiom(referencedComponentId, id);
+			}
+		} else if (refsetId.equals(Concepts.OWL_ONTOLOGY_REFERENCE_SET)) {
+			if (Concepts.OWL_ONTOLOGY_NAMESPACE.equals(referencedComponentId)) {
+				if (ACTIVE.equals(active)) {
+					snomedTaxonomy.addOntologyNamespace(id, otherValues[0]);
+				} else {
+					snomedTaxonomy.removeOntologyNamespace(id);
+				}
+			} else if (Concepts.OWL_ONTOLOGY_HEADER.equals(referencedComponentId)) {
+				if (ACTIVE.equals(active)) {
+					snomedTaxonomy.addOntologyHeader(id, otherValues[0]);
+				} else {
+					snomedTaxonomy.removeOntologyHeader(id);
+				}
+			} else {
+				LOGGER.warn("Unrecognised referencedComponentId '{}' in OWL Ontology reference set file. Only {} or {} are expected. Ignoring entry.",
+						referencedComponentId, Concepts.OWL_ONTOLOGY_NAMESPACE, Concepts.OWL_ONTOLOGY_HEADER);
 			}
 		} else if (refsetId.equals(Concepts.MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)) {
 			long attributeId = parseLong(referencedComponentId);

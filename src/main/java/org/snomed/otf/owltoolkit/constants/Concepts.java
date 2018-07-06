@@ -40,6 +40,9 @@ public class Concepts {
 
 	public static final String ALL_PRECOORDINATED_CONTENT = "723594008";
 
+	public static final String OWL_ONTOLOGY_REFERENCE_SET = "762103008";
+	public static final String OWL_ONTOLOGY_NAMESPACE = "734146004";
+	public static final String OWL_ONTOLOGY_HEADER = "734147008";
 	public static final String OWL_AXIOM_REFERENCE_SET = "733073007";
 	public static final String MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET = "723561005";
 
