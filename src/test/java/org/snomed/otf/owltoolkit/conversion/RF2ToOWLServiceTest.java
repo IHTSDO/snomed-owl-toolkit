@@ -1,6 +1,5 @@
 package org.snomed.otf.owltoolkit.conversion;
 
-import com.google.common.collect.Sets;
 import org.junit.Test;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;

@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,6 +34,8 @@ public class RF2ToOWLService {
 	);
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+	public static final String HEADER_PREFIX = "Ontology(<";
+	public static final String HEADER_SUFFIX = ">)";
 
 	public void convertRF2ArchiveToOWL(String ontologyUriOverride, String versionDate, boolean includeFSNs, InputStreamSet snomedRf2SnapshotArchives,
 			OptionalFileInputStream deltaStream, OutputStream owlFileOutputStream) throws ConversionException {
@@ -53,20 +54,20 @@ public class RF2ToOWLService {
 			ontologyUri = ontologyUriOverride;
 		} else {
 			Collection<String> ontologyHeaders = snomedTaxonomy.getOntologyHeader().values();
+			String ontologyHeader;
 			if (ontologyHeaders.size() > 1) {
 				throw new ConversionException("Multiple active Ontology identifiers found. " +
 						"An extension should make other Ontology identifier records inactive when adding its own. " + ontologyHeaders.toString());
 			} else if (ontologyHeaders.isEmpty()) {
 				logger.warn("No Ontology identifier found. Using default identifier {}", OntologyService.SNOMED_INTERNATIONAL_EDITION_URI);
-				ontologyHeaders.add(OntologyService.SNOMED_INTERNATIONAL_EDITION_URI);
+				ontologyHeader = HEADER_PREFIX + OntologyService.SNOMED_INTERNATIONAL_EDITION_URI + HEADER_SUFFIX;
+			} else {
+				ontologyHeader = ontologyHeaders.iterator().next();
 			}
-			String ontologyHeader = ontologyHeaders.iterator().next();
-			String prefix = "Ontology(<";
-			String suffix = ">)";
-			if (!ontologyHeader.startsWith(prefix) || !ontologyHeader.endsWith(suffix)) {
-				throw new ConversionException(String.format("Ontology header should start with '%s' and end with '%s' but this found '%s'", prefix, suffix, ontologyHeader));
+			if (!ontologyHeader.startsWith(HEADER_PREFIX) || !ontologyHeader.endsWith(HEADER_SUFFIX)) {
+				throw new ConversionException(String.format("Ontology header should start with '%s' and end with '%s' but this found '%s'", HEADER_PREFIX, HEADER_SUFFIX, ontologyHeader));
 			}
-			ontologyUri = ontologyHeader.substring(prefix.length(), ontologyHeader.length() - 2);
+			ontologyUri = ontologyHeader.substring(HEADER_PREFIX.length(), ontologyHeader.length() - 2);
 		}
 
 		// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
