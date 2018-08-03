@@ -15,6 +15,17 @@
  */
 package org.snomed.otf.owltoolkit.service.classification;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.snomed.otf.owltoolkit.service.SnomedReasonerService.ELK_REASONER_FACTORY;
+import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.readEquivalentConceptLinesTrim;
+import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.readInferredRelationshipLinesTrim;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,15 +36,6 @@ import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
-import static org.junit.Assert.*;
-import static org.snomed.otf.owltoolkit.service.SnomedReasonerService.ELK_REASONER_FACTORY;
-import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.readEquivalentConceptLinesTrim;
-import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.readInferredRelationshipLinesTrim;
 
 public class SimpleClassificationIntegrationTest {
 
@@ -83,7 +85,7 @@ public class SimpleClassificationIntegrationTest {
 	
 	@Test
 	public void testClassifyConceptInactivation() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
-		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Concept_Inactivation_snapshot");
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Concept_Inactivation_delta");
 		assertNotNull(snomedReasonerService);
 
@@ -93,10 +95,10 @@ public class SimpleClassificationIntegrationTest {
 
 		// Assert results
 		List<String> lines = readInferredRelationshipLinesTrim(results);
-		assertEquals(3, lines.size());
+		assertEquals(4, lines.size());
 		assertTrue(lines.contains("200009001\t\t0\t\t362969004\t404684003\t0\t116680003\t900000000000011006\t900000000000451002"));
 		assertTrue(lines.contains("200010001\t\t0\t\t362969004\t113331007\t0\t363698007\t900000000000011006\t900000000000451002"));
-		
+		assertTrue(lines.contains("200008001\t\t0\t\t404684003\t138875005\t0\t116680003\t900000000000011006\t900000000000451002"));
 		List<String> equivalence = readEquivalentConceptLinesTrim(results);
 		assertEquals(1, equivalence.size());
 	}

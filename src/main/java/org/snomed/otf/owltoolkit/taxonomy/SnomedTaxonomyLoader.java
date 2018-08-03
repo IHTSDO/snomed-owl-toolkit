@@ -15,26 +15,30 @@
  */
 package org.snomed.otf.owltoolkit.taxonomy;
 
-import com.google.common.base.Strings;
-import org.ihtsdo.otf.snomedboot.ReleaseImportException;
-import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
-import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.io.StringDocumentSource;
-import org.semanticweb.owlapi.model.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.snomed.otf.owltoolkit.constants.Concepts;
-import org.snomed.otf.owltoolkit.domain.Relationship;
-import org.snomed.otf.owltoolkit.ontology.OntologyService;
+import static java.lang.Long.parseLong;
+import static org.snomed.otf.owltoolkit.constants.Concepts.ADDITIONAL_RELATIONSHIP;
+import static org.snomed.otf.owltoolkit.constants.Concepts.STATED_RELATIONSHIP;
+import static org.snomed.otf.owltoolkit.constants.Concepts.UNIVERSAL_RESTRICTION_MODIFIER;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
 
-import static java.lang.Long.parseLong;
-import static org.snomed.otf.owltoolkit.constants.Concepts.ADDITIONAL_RELATIONSHIP;
-import static org.snomed.otf.owltoolkit.constants.Concepts.STATED_RELATIONSHIP;
-import static org.snomed.otf.owltoolkit.constants.Concepts.UNIVERSAL_RESTRICTION_MODIFIER;
+import org.ihtsdo.otf.snomedboot.ReleaseImportException;
+import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.io.StringDocumentSource;
+import org.semanticweb.owlapi.model.OWLAxiom;
+import org.semanticweb.owlapi.model.OWLException;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLRuntimeException;
+import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.domain.Relationship;
+import org.snomed.otf.owltoolkit.ontology.OntologyService;
+
+import com.google.common.base.Strings;
 
 public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
@@ -65,12 +69,14 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			} else {
 				snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
 			}
-		} else if (loadingDelta) {
-			// Inactive concepts in the delta should be removed from the snapshot view
+		} else {
 			long id = parseLong(conceptId);
-			snomedTaxonomy.getAllConceptIds().remove(id);
-			snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
 			snomedTaxonomy.getInactivatedConcepts().add(id);
+			if (loadingDelta) {
+				// Inactive concepts in the delta should be removed from the snapshot view
+				snomedTaxonomy.getAllConceptIds().remove(id);
+				snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
+			}
 		}
 	}
 

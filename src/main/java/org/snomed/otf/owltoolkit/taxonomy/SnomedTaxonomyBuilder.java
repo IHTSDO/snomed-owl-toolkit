@@ -15,6 +15,11 @@
  */
 package org.snomed.otf.owltoolkit.taxonomy;
 
+import static org.snomed.otf.owltoolkit.constants.Concepts.MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET;
+import static org.snomed.otf.owltoolkit.constants.Concepts.OWL_AXIOM_REFERENCE_SET;
+
+import java.io.InputStream;
+
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.ihtsdo.otf.snomedboot.ReleaseImporter;
 import org.ihtsdo.otf.snomedboot.factory.LoadingProfile;
@@ -23,17 +28,13 @@ import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.springframework.util.StopWatch;
 
-import java.io.InputStream;
-
-import static org.snomed.otf.owltoolkit.constants.Concepts.MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET;
-import static org.snomed.otf.owltoolkit.constants.Concepts.OWL_AXIOM_REFERENCE_SET;
-
 public class SnomedTaxonomyBuilder {
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
 			.withStatedRelationships()
+			.withInactiveConcepts() 
 			.withFullRelationshipObjects()
 			.withRefset(OWL_AXIOM_REFERENCE_SET)
 			.withRefset(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)
@@ -47,7 +48,6 @@ public class SnomedTaxonomyBuilder {
 	}
 
 	private static final LoadingProfile DELTA_LOADING_PROFILE = SNAPSHOT_LOADING_PROFILE
-			.withInactiveConcepts() // The delta needs to be able to inactivate previously active components
 			.withInactiveRelationships()
 			.withInactiveRefsetMembers();
 
