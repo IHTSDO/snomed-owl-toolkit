@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+
+# Disorder of endocrine system - is a - Clinical finding
+100009001	20170731	0	900000000000207008	362969004	404684003	0	116680003	900000000000010007	900000000000451002

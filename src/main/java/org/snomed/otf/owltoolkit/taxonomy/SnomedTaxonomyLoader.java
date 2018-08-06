@@ -69,8 +69,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			} else {
 				snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
 			}
+			if (loadingDelta) {
+				// This will make sure that concepts active in the delta will be removed from the list if previously inactive in the snapshot
+				snomedTaxonomy.getInactivatedConcepts().remove(id);
+			}
 		} else {
 			long id = parseLong(conceptId);
+			// This will take inactive concepts from both snapshot and delta
 			snomedTaxonomy.getInactivatedConcepts().add(id);
 			if (loadingDelta) {
 				// Inactive concepts in the delta should be removed from the snapshot view
