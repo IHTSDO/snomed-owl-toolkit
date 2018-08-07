@@ -24,8 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -98,22 +96,21 @@ public class SnomedTaxonomy {
 		}
 	}
 
-	// TODO: Replace this - just collect the attributes used in active relationships
-	public Set<Long> getAttributeConceptIds() {
-		Set<Long> attributeIds = new HashSet<>();
+	public Set<Long> getDescendants(Long ancestor) {
+		Set<Long> descendants = new HashSet<>();
 		for (Long conceptId : allConceptIds) {
-			if (conceptHasAncestor(conceptId, Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG)) {
-				attributeIds.add(conceptId);
+			if (conceptHasAncestor(conceptId, ancestor)) {
+				descendants.add(conceptId);
 			}
 		}
-		return attributeIds;
+		return descendants;
 	}
-	
-	public boolean conceptHasAncestor(long conceptId, long ancestor) {
+
+	private boolean conceptHasAncestor(long conceptId, long ancestor) {
 		return conceptHasAncestor(conceptId, ancestor, 0);
 	}
 
-	public boolean conceptHasAncestor(long conceptId, long ancestor, long depth) {
+	private boolean conceptHasAncestor(long conceptId, long ancestor, long depth) {
 		if (conceptId == Concepts.ROOT_LONG) {
 			return false;
 		}
@@ -153,19 +150,6 @@ public class SnomedTaxonomy {
 	public Set<Long> getSubTypeIds(long conceptId) {
 		Set<Long> longs = statedSubTypesMap.get(conceptId);
 		return longs != null ? longs : Collections.emptySet();
-	}
-
-	public Set<Long> getDescendants(long conceptId) {
-		return getDescendants(conceptId, new LongOpenHashSet());
-	}
-
-	private Set<Long> getDescendants(long conceptId, Set<Long> ids) {
-		Set<Long> subTypeIds = getSubTypeIds(conceptId);
-		ids.addAll(subTypeIds);
-		for (Long subTypeId : subTypeIds) {
-			getDescendants(subTypeId, ids);
-		}
-		return ids;
 	}
 
 	public boolean isExhaustive(long conceptId) {
@@ -279,37 +263,6 @@ public class SnomedTaxonomy {
 
 	public Map<Long, Set<OWLAxiom>> getConceptAxiomMap() {
 		return conceptAxiomMap;
-	}
-
-	private void saveRelationshipsToDisk(Map<Long, Set<Relationship>> relationshipMap, File outputFile) throws IOException {
-		String TSV_FIELD_DELIMITER = "\t";
-		String LINE_DELIMITER = "\r\n";
-		try(	OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(outputFile, true), StandardCharsets.UTF_8);
-				BufferedWriter bw = new BufferedWriter(osw);
-				PrintWriter out = new PrintWriter(bw))
-		{
-			String header = "id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId";
-			out.print(header + LINE_DELIMITER);
-
-			StringBuilder line = new StringBuilder();
-			for (Map.Entry<Long, Set<Relationship>> fragSetEntry : relationshipMap.entrySet()) {
-
-				for (Relationship relationship : fragSetEntry.getValue()) {
-					line.setLength(0);
-					line.append(relationship.getRelationshipId()).append(TSV_FIELD_DELIMITER)
-							.append(relationship.getEffectiveTime()).append(TSV_FIELD_DELIMITER)
-							.append("1").append(TSV_FIELD_DELIMITER)
-							.append(relationship.getModuleId()).append(TSV_FIELD_DELIMITER)
-							.append(fragSetEntry.getKey()).append(TSV_FIELD_DELIMITER)
-							.append(relationship.getDestinationId()).append(TSV_FIELD_DELIMITER)
-							.append(relationship.getGroup()).append(TSV_FIELD_DELIMITER)
-							.append(relationship.getTypeId()).append(TSV_FIELD_DELIMITER)
-							.append(relationship.getCharacteristicTypeId()).append(TSV_FIELD_DELIMITER)
-							.append(Concepts.EXISTENTIAL_RESTRICTION_MODIFIER);
-					out.print(line.toString() + LINE_DELIMITER);
-				}
-			}
-		}
 	}
 
 	public Set<Long> getInactivatedConcepts() {

@@ -16,6 +16,7 @@
 package org.snomed.otf.owltoolkit.ontology;
 
 import com.google.common.base.Strings;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
 import org.semanticweb.owlapi.model.*;
@@ -26,7 +27,6 @@ import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.ontology.render.SnomedFunctionalSyntaxDocumentFormat;
 import org.snomed.otf.owltoolkit.ontology.render.SnomedFunctionalSyntaxStorerFactory;
 import org.snomed.otf.owltoolkit.ontology.render.SnomedPrefixManager;
-import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceRuntimeException;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
@@ -69,43 +69,18 @@ public class OntologyService {
 
 	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy, String ontologyUri, String versionDate) throws OWLOntologyCreationException {
 
+		Map<Long, Set<OWLAxiom>> axiomsFromStatedRelationships = createAxiomsFromStatedRelationships(snomedTaxonomy);
+
 		Set<OWLAxiom> axioms = new HashSet<>();
-
-		// Create Axioms of Snomed attributes
-		Set<Long> attributeConceptIds = snomedTaxonomy.getAttributeConceptIds();
-		for (Long attributeConceptId : attributeConceptIds) {
-			OWLObjectProperty owlObjectProperty = getOwlObjectProperty(attributeConceptId);
-			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(attributeConceptId)) {
-				if (relationship.getTypeId() == Concepts.IS_A_LONG && relationship.getDestinationId() != Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG) {
-					axioms.add(factory.getOWLSubObjectPropertyOfAxiom(owlObjectProperty, getOwlObjectProperty(relationship.getDestinationId())));
-				}
-			}
-			addFSNAnnotation(attributeConceptId, snomedTaxonomy, axioms);
-		}
-
-		// Create Axioms of all other Snomed concepts
 		for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
 
-			boolean primitive = snomedTaxonomy.isPrimitive(conceptId);
-			Collection<Relationship> statedRelationships = snomedTaxonomy.getStatedRelationships(conceptId);
-
-			AxiomRepresentation representation = new AxiomRepresentation();
-			representation.setPrimitive(primitive);
-			representation.setLeftHandSideNamedConcept(conceptId);
-			Map<Integer, List<Relationship>> relationshipMap = new HashMap<>();
-			for (Relationship statedRelationship : statedRelationships) {
-				relationshipMap.computeIfAbsent(statedRelationship.getGroup(), g -> new ArrayList<>()).add(statedRelationship);
-			}
-			representation.setRightHandSideRelationships(relationshipMap);
-			OWLClassAxiom conceptAxiom = createOwlClassAxiom(representation);
-			axioms.add(conceptAxiom);
-
 			// Add raw axioms from the axiom reference set file
-			Set<OWLAxiom> conceptAxioms = snomedTaxonomy.getConceptAxiomMap().get(conceptId);
-			if (conceptAxioms != null) {
-				axioms.addAll(conceptAxioms);
-			}
+			axioms.addAll(snomedTaxonomy.getConceptAxiomMap().getOrDefault(conceptId, Collections.emptySet()));
 
+			// Add axioms generated from stated relationships
+			axioms.addAll(axiomsFromStatedRelationships.getOrDefault(conceptId, Collections.emptySet()));
+
+			// Add FSN annotation
 			addFSNAnnotation(conceptId, snomedTaxonomy, axioms);
 		}
 
@@ -122,17 +97,70 @@ public class OntologyService {
 		}
 
 		manager.addAxioms(ontology, axioms);
+		manager.setOntologyFormat(ontology, getFunctionalSyntaxDocumentFormat());
 		return ontology;
+	}
+
+	public Map<Long, Set<OWLAxiom>> createAxiomsFromStatedRelationships(SnomedTaxonomy snomedTaxonomy) {
+		Map<Long, Set<OWLAxiom>> axiomsMap = new Long2ObjectOpenHashMap<>();
+
+		// Create axioms of concept model attributes
+		// The Concept Model Object Attribute concept is fairly new - use the parent if it doesn't exist
+		Long conceptModelObjectAttribute = snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG) ?
+				Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG : Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG;
+
+		for (Long attributeConceptId : snomedTaxonomy.getDescendants(conceptModelObjectAttribute)) {
+			OWLObjectProperty owlObjectProperty = getOwlObjectProperty(attributeConceptId);
+			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(attributeConceptId)) {
+				if (relationship.getTypeId() == Concepts.IS_A_LONG && relationship.getDestinationId() != conceptModelObjectAttribute) {
+					axiomsMap.computeIfAbsent(attributeConceptId, (id) -> new HashSet<>())
+							.add(factory.getOWLSubObjectPropertyOfAxiom(owlObjectProperty, getOwlObjectProperty(relationship.getDestinationId())));
+				}
+			}
+		}
+
+		// Create axioms of all other Snomed concepts
+		for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
+
+			// Convert any stated relationships to axioms
+			boolean primitive = snomedTaxonomy.isPrimitive(conceptId);
+			Collection<Relationship> statedRelationships = snomedTaxonomy.getStatedRelationships(conceptId);
+
+			AxiomRepresentation representation = new AxiomRepresentation();
+			representation.setPrimitive(primitive);
+			representation.setLeftHandSideNamedConcept(conceptId);
+			Map<Integer, List<Relationship>> relationshipMap = new HashMap<>();
+			for (Relationship statedRelationship : statedRelationships) {
+				relationshipMap.computeIfAbsent(statedRelationship.getGroup(), g -> new ArrayList<>()).add(statedRelationship);
+			}
+			representation.setRightHandSideRelationships(relationshipMap);
+			OWLClassAxiom conceptAxiom = createOwlClassAxiom(representation);
+			axiomsMap.computeIfAbsent(conceptId, (id) -> new HashSet<>())
+					.add(conceptAxiom);
+		}
+		return axiomsMap;
 	}
 
 	public void saveOntology(OWLOntology ontology, OutputStream outputStream) throws OWLOntologyStorageException {
 		manager.getOntologyStorers().add(new SnomedFunctionalSyntaxStorerFactory());
 
-		FunctionalSyntaxDocumentFormat owlDocumentFormat = new SnomedFunctionalSyntaxDocumentFormat();
-		owlDocumentFormat.setPrefixManager(new SnomedPrefixManager());
-		owlDocumentFormat.setDefaultPrefix("http://snomed.info/id/");
+		FunctionalSyntaxDocumentFormat owlDocumentFormat = getFunctionalSyntaxDocumentFormat();
 		ontology.getOWLOntologyManager().setOntologyFormat(ontology, owlDocumentFormat);
 		ontology.saveOntology(owlDocumentFormat, outputStream);
+	}
+
+	public FunctionalSyntaxDocumentFormat getFunctionalSyntaxDocumentFormat() {
+		FunctionalSyntaxDocumentFormat owlDocumentFormat = new SnomedFunctionalSyntaxDocumentFormat();
+		SnomedPrefixManager prefixManager = getSnomedPrefixManager();
+		owlDocumentFormat.setPrefixManager(prefixManager);
+		owlDocumentFormat.setDefaultPrefix(SNOMED_CORE_COMPONENTS_URI);
+		return owlDocumentFormat;
+	}
+
+	public SnomedPrefixManager getSnomedPrefixManager() {
+		SnomedPrefixManager prefixManager = new SnomedPrefixManager();
+		prefixManager.setDefaultPrefix(SNOMED_CORE_COMPONENTS_URI);
+		return prefixManager;
 	}
 
 	public OWLClassAxiom createOwlClassAxiom(AxiomRepresentation axiomRepresentation) {

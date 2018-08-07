@@ -22,6 +22,7 @@ public class Concepts {
 	public static final String ROOT = "138875005";
 	public static final Long ROOT_LONG = parseLong(ROOT);
 	public static final String SNOMED_CT_CORE_MODULE = "900000000000207008";
+	public static final String SNOMED_CT_MODEL_COMPONENT_MODULE = "900000000000012004";
 	public static final String IS_A = "116680003";
 	public static final Long IS_A_LONG = parseLong(IS_A);
 
@@ -49,6 +50,10 @@ public class Concepts {
 	// Concepts that require special care when classifying
 	public static final String CONCEPT_MODEL_ATTRIBUTE = "410662002";
 	public static final Long CONCEPT_MODEL_ATTRIBUTE_LONG = parseLong(CONCEPT_MODEL_ATTRIBUTE);
+	public static final String CONCEPT_MODEL_OBJECT_ATTRIBUTE = "762705008";
+	public static final Long CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG = parseLong(CONCEPT_MODEL_OBJECT_ATTRIBUTE);
+	public static final String CONCEPT_MODEL_DATA_ATTRIBUTE = "762706009";
+	public static final Long CONCEPT_MODEL_DATA_ATTRIBUTE_LONG = parseLong(CONCEPT_MODEL_DATA_ATTRIBUTE);
 	public static final String ALL_OR_PART_OF = "733928003";
 	public static final String PART_OF = "123005000";
 	public static final String LATERALITY = "272741003";
