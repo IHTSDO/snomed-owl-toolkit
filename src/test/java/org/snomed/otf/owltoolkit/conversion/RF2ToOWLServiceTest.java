@@ -146,19 +146,28 @@ public class RF2ToOWLServiceTest {
 						"\n" +
 						"Declaration(Class(:113331007))\n" +
 						"Declaration(Class(:116680003))\n" +
+						"Declaration(Class(:12481008))\n" +
+						"Declaration(Class(:129287005))\n" +
 						"Declaration(Class(:138875005))\n" +
+						"Declaration(Class(:18736003))\n" +
+						"Declaration(Class(:25342003))\n" +
+						"Declaration(Class(:281615006))\n" +
 						"Declaration(Class(:362969004))\n" +
 						"Declaration(Class(:363698007))\n" +
 						"Declaration(Class(:404684003))\n" +
 						"Declaration(Class(:410662002))\n" +
 						"Declaration(Class(:723594008))\n" +
 						"Declaration(Class(:723596005))\n" +
+						"Declaration(Class(:76145000))\n" +
+						"Declaration(Class(:84301002))\n" +
 						"Declaration(Class(:900000000000441003))\n" +
 
 				// Additional Extension class declaration
 						"Declaration(Class(:900101001))\n" +
 
+						"Declaration(ObjectProperty(:260686004))\n" +
 						"Declaration(ObjectProperty(:363698007))\n" +
+						"Declaration(ObjectProperty(:405813007))\n" +
 						"Declaration(ObjectProperty(:609096000))\n" +
 						"\n" +
 						"############################\n" +
@@ -190,6 +199,48 @@ public class RF2ToOWLServiceTest {
 						"AnnotationAssertion(rdfs:label :138875005 \"SNOMED CT Concept (SNOMED RT+CTV3)\"^^xsd:string)\n" +
 						"SubClassOf(:138875005 owl:Thing)\n" +
 						"\n" +
+
+						"# Class: <http://snomed.info/id/18736003> (Middle ear exploration through ear canal incision (procedure))\n" +
+						"\n" +
+						"AnnotationAssertion(rdfs:label :18736003 \"Middle ear exploration through ear canal incision (procedure)\"^^xsd:string)\n" +
+						// Class with multiple parents and multiple role groups to test sorting
+						"SubClassOf(" +
+							":18736003 " +
+							"ObjectIntersectionOf(" +
+								// Bytes: 49,50,52,56,49,48,48,56
+								":12481008 " +
+								// Bytes: 55,54,49,52,53,48,48,48
+								":76145000 " +
+								"ObjectSomeValuesFrom(" +
+									// Bytes: 54,48,57,48,57,54,48,48,48
+									":609096000 " +
+									"ObjectIntersectionOf(" +
+										"ObjectSomeValuesFrom(" +
+											// Bytes: 50,54,48,54,56,54,48,48,52
+											":260686004 " +
+											// Bytes: 49,50,57,50,56,55,48,48,53
+											":129287005) " +
+										"ObjectSomeValuesFrom(" +
+											// Bytes: 52,48,53,56,49,51,48,48,55
+											":405813007 " +
+											// Bytes: 56,52,51,48,49,48,48,50
+											":84301002))) " +
+								"ObjectSomeValuesFrom(" +
+									// Bytes: 54,48,57,48,57,54,48,48,48
+									":609096000 " +
+									"ObjectIntersectionOf(" +
+										"ObjectSomeValuesFrom(" +
+											// Bytes: 50,54,48,54,56,54,48,48,52
+											":260686004 " +
+											// Bytes: 50,56,49,54,49,53,48,48,54
+											":281615006) " +
+										"ObjectSomeValuesFrom(" +
+											// Bytes: 52,48,53,56,49,51,48,48,55
+											":405813007 " +
+											// Bytes: 50,53,51,52,50,48,48,51
+											":25342003)))))\n" +
+						"\n" +
+
 						"# Class: <http://snomed.info/id/362969004> (Disorder of endocrine system (disorder))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :362969004 \"Disorder of endocrine system (disorder)\"^^xsd:string)\n" +
@@ -235,6 +286,5 @@ public class RF2ToOWLServiceTest {
 						")",
 				byteArrayOutputStream.toString());
 	}
-
 
 }

@@ -44,7 +44,7 @@ public class SimpleExtensionClassificationIntegrationTest {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	@Test
-	public void testClassifyBaseWithAnthrax() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
+	public void testClassifyBaseWithAnthrax() throws IOException, ReasonerServiceException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_with_Anthrax_snapshot");
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Empty_delta");
 		assertNotNull(snomedReasonerService);
@@ -59,7 +59,7 @@ public class SimpleExtensionClassificationIntegrationTest {
 	}
 
 	@Test
-	public void testClassifyExtensionWithRedundantRelationships() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
+	public void testClassifyExtensionWithRedundantRelationships() throws IOException, ReasonerServiceException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_with_Anthrax_snapshot");
 		File extensionRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Extension_snapshot");
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Empty_delta");
@@ -78,7 +78,7 @@ public class SimpleExtensionClassificationIntegrationTest {
 
 		// Assert results
 		List<String> lines = readInferredRelationshipLinesTrim(results);
-		assertEquals(3, lines.size());
+		assertEquals(9, lines.size());
 
 		assertTrue("Logically equal inferred relationship in extension is made redundant.",
 				lines.contains("600202001\t\t0\t\t409498004\t21927003\t2\t246075003\t900000000000011006\t900000000000451002"));

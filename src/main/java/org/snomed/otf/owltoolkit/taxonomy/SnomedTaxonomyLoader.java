@@ -34,6 +34,8 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLRuntimeException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
@@ -51,7 +53,6 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	private int effectiveTimeNow = Integer.parseInt(new SimpleDateFormat("yyyyMMdd").format(new Date()));
 	private final OWLOntologyManager owlOntologyManager;
 
-	private boolean stop = false;
 	private Exception owlParsingExceptionThrown;
 	private String owlParsingExceptionMemberId;
 
