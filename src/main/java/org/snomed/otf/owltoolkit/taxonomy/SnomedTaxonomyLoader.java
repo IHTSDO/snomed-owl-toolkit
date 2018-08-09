@@ -55,6 +55,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	private Exception owlParsingExceptionThrown;
 	private String owlParsingExceptionMemberId;
+	private long timeTakenDeserialisingAxioms = 0;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomyLoader.class);
 
@@ -201,6 +202,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	}
 
 	public OWLAxiom deserialiseAxiom(String axiomString, String axiomIdentifier) throws OWLOntologyCreationException {
+		long start = new Date().getTime();
 		OWLOntology owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(
 				new StringDocumentSource(ontologyDocStart + axiomString + ontologyDocEnd));
 		Set<OWLAxiom> axioms = owlOntology.getAxioms();
@@ -209,6 +211,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 					"found " + axioms.size() + " for axiom id " + axiomIdentifier);
 		}
 		owlOntologyManager.removeOntology(owlOntology);
+		timeTakenDeserialisingAxioms += new Date().getTime() - start;
 		return axioms.iterator().next();
 	}
 
@@ -218,5 +221,10 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	public void startLoadingDelta() {
 		loadingDelta = true;
+		timeTakenDeserialisingAxioms = 0;
+	}
+
+	public long getTimeTakenDeserialisingAxioms() {
+		return timeTakenDeserialisingAxioms;
 	}
 }

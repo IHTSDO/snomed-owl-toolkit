@@ -74,6 +74,7 @@ public class SnomedTaxonomyBuilder {
 				snomedTaxonomyLoader);
 		snomedTaxonomyLoader.reportErrors();
 		logger.info("Loaded release snapshot");
+		logger.info("Time taken deserialising axioms {}s", (snomedTaxonomyLoader.getTimeTakenDeserialisingAxioms() / 1000));
 
 		if (currentReleaseRf2DeltaArchive != null) {
 			snomedTaxonomyLoader.startLoadingDelta();
@@ -84,6 +85,7 @@ public class SnomedTaxonomyBuilder {
 					snomedTaxonomyLoader);
 			snomedTaxonomyLoader.reportErrors();
 			logger.info("Loaded delta");
+			logger.info("Time taken deserialising axioms {}s", (snomedTaxonomyLoader.getTimeTakenDeserialisingAxioms() / 1000));
 		}
 
 		stopWatch.stop();
