@@ -1,17 +1,25 @@
 package org.snomed.otf.owltoolkit;
 
 import com.google.common.collect.Lists;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.conversion.RF2ToOWLService;
+import org.snomed.otf.owltoolkit.conversion.StatedRelationshipToOwlRefsetService;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Command line application for RF2 to OWL file conversion.
@@ -22,17 +30,19 @@ public class Application {
 	private static final String ARG_DEBUG = "-debug";
 	private static final String ARG_RF2_TO_OWL = "-rf2-to-owl";
 	private static final String ARG_CLASSIFY = "-classify";
+	private static final String ARG_RF2_STATED_TO_COMPLETE_OWL = "-rf2-stated-to-complete-owl";
 	private static final String ARG_RF2_SNAPSHOT_ARCHIVES = "-rf2-snapshot-archives";
 	private static final String ARG_RF2_AUTHORING_DELTA_ARCHIVE = "-rf2-authoring-delta-archive";
 	private static final String ARG_URI = "-uri";
 	private static final String ARG_VERSION = "-version";
 	private static final String ARG_WITHOUT_ANNOTATIONS = "-without-annotations";
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+	private static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
 
 	private boolean deleteOntologyFileOnExit;
 	private static boolean debugOutput;
 
-	public static void main(String[] argsArray) throws FileNotFoundException, ConversionException {
+	public static void main(String[] argsArray) {
 		try {
 			new Application().run(argsArray);
 		} catch (Exception e) {
@@ -44,7 +54,7 @@ public class Application {
 		System.exit(0);
 	}
 
-	public void run(String[] argsArray) throws IOException, ConversionException, ReasonerServiceException {
+	public void run(String[] argsArray) throws IOException, ConversionException, ReasonerServiceException, OWLOntologyCreationException {
 		List<String> args = Lists.newArrayList(argsArray);
 
 		debugOutput = args.contains(ARG_DEBUG);
@@ -57,6 +67,9 @@ public class Application {
 		} else if (args.contains(ARG_CLASSIFY)) {
 			modeFound = true;
 			classify(args);
+		} else if (args.contains(ARG_RF2_STATED_TO_COMPLETE_OWL)) {
+			modeFound = true;
+			statedRelationshipsToOwlReferenceSet(args);
 		}
 		if (!modeFound || args.contains(ARG_RF2_TO_OWL)) {
 			rf2ToOwl(args);
@@ -67,7 +80,7 @@ public class Application {
 		Set<File> snapshotFiles = getSnapshotFiles(args);
 		File deltaFile = getDeltaFiles(args);
 
-		File resultsFile = new File("classification-results-" + DATE_FORMAT.format(new Date()) + ".zip");
+		File resultsFile = new File("classification-results-" + DATETIME_FORMAT.format(new Date()) + ".zip");
 		new SnomedReasonerService().classify(
 				"command-line",
 				snapshotFiles,
@@ -108,7 +121,7 @@ public class Application {
 		System.out.println();
 
 		// Conversion
-		String outputFilePath = "ontology-" + DATE_FORMAT.format(new Date()) + ".owl";
+		String outputFilePath = "ontology-" + DATETIME_FORMAT.format(new Date()) + ".owl";
 		File ontologyOutputFile = new File(outputFilePath);
 		if (deleteOntologyFileOnExit) {
 			ontologyOutputFile.deleteOnExit();
@@ -126,6 +139,38 @@ public class Application {
 		System.out.println("OWL Ontology file written to - " + outputFilePath);
 	}
 
+	private void statedRelationshipsToOwlReferenceSet(List<String> args) throws IOException, OWLOntologyCreationException, ConversionException {
+		// Parameter validation
+		Set<File> snapshotFiles = getSnapshotFiles(args);
+		assertTrue("Expecting one snapshot RF2 file.", snapshotFiles.size() == 1);
+		File deltaFile = getDeltaFiles(args);
+
+		String outputFilePath = "sct2_sRefset_OWLAxiomDelta_Additional_" + DATE_FORMAT.format(new Date()) + ".txt";
+		File ontologyOutputFile = new File(outputFilePath);
+
+		try {
+			try (FileInputStream snapshotStream = new FileInputStream(snapshotFiles.iterator().next());
+				 OptionalFileInputStream deltaStream = new OptionalFileInputStream(deltaFile);
+				 FileOutputStream outputStream = new FileOutputStream(ontologyOutputFile)) {
+
+				new StatedRelationshipToOwlRefsetService().convertStatedRelationshipsToOwlRefset(
+						snapshotStream,
+						deltaStream,
+						outputStream
+				);
+			} catch (ConversionException | OWLOntologyCreationException e) {
+				System.out.println("Failed to convert stated relationships to OWL Axioms");
+				e.printStackTrace();
+				throw e;
+			}
+			System.out.println("Additional OWL Axioms created from Stated Relationships successfully written to " + outputFilePath);
+		} catch (IOException e) {
+			System.err.println("Failed to read from or write to files.");
+			e.printStackTrace();
+			throw e;
+		}
+	}
+
 	private void printHelp() {
 		System.out.println(
 				"Usage:\n" +
@@ -141,6 +186,13 @@ public class Application {
 						pad(ARG_RF2_TO_OWL) +
 						"(Default mode) Convert RF2 to OWL Functional Syntax.\n" +
 						pad("") + "Results are written to an .owl file.\n" +
+						"\n" +
+
+						pad(ARG_RF2_STATED_TO_COMPLETE_OWL) +
+						"Convert RF2 stated relationships to complete OWL Axiom reference set preview.\n" +
+						pad("") + "Stated relationships are converted to OWL Axiom reference set entries.\n" +
+						pad("") + "Existing stated relationships are marked as inactive.\n" +
+						pad("") + "Results are written to an OWL Axiom reference set. All stated relationships should be marked as inactive at this point.\n" +
 						"\n" +
 
 						pad(ARG_RF2_SNAPSHOT_ARCHIVES + " <path>") +

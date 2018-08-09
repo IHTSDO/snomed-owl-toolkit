@@ -2,6 +2,7 @@ package org.snomed.otf.owltoolkit;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
@@ -24,6 +25,11 @@ public class ApplicationTest {
 			"\n" +
 			" -rf2-to-owl                            (Default mode) Convert RF2 to OWL Functional Syntax.\n" +
 			"                                        Results are written to an .owl file.\n" +
+			"\n" +
+			" -rf2-stated-to-complete-owl            Convert RF2 stated relationships to complete OWL Axiom reference set preview.\n" +
+			"                                        Stated relationships are converted to OWL Axiom reference set entries.\n" +
+			"                                        Existing stated relationships are marked as inactive.\n" +
+			"                                        Results are written to an OWL Axiom reference set. All stated relationships should be marked as inactive at this point.\n" +
 			"\n" +
 			" -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. \n" +
 			"                                        At least one Snapshot archive is required.\n" +
@@ -110,7 +116,7 @@ public class ApplicationTest {
 			Application application = new Application();
 			application.deleteOntologyFileOnExit();// Automatic file cleanup
 			application.run(args);
-		} catch (ConversionException | IOException | IllegalArgumentException | ReasonerServiceException e) {
+		} catch (ConversionException | IOException | IllegalArgumentException | ReasonerServiceException | OWLOntologyCreationException e) {
 			// Swallow all
 		} finally {
 			System.setErr(originalErrorStream);
