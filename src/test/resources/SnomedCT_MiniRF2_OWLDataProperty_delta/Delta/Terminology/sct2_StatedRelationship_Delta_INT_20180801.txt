@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+
+# Fictitious data attribute - is a - Concept model data attribute
+99001021	20180801	1	900000000000207008	99001001	762706009	0	116680003	900000000000010007	900000000000451002

@@ -105,16 +105,29 @@ public class OntologyService {
 		Map<Long, Set<OWLAxiom>> axiomsMap = new Long2ObjectOpenHashMap<>();
 
 		// Create axioms of concept model attributes
-		// The Concept Model Object Attribute concept is fairly new - use the parent if it doesn't exist
-		Long conceptModelObjectAttribute = snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG) ?
+		// The Concept Model Object Attribute concept did not always exist - use the parent if it doesn't exist
+		boolean conceptModelObjectAttributePresent = snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG);
+		Long conceptModelObjectAttribute = conceptModelObjectAttributePresent ?
 				Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG : Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG;
 
-		for (Long attributeConceptId : snomedTaxonomy.getDescendants(conceptModelObjectAttribute)) {
-			OWLObjectProperty owlObjectProperty = getOwlObjectProperty(attributeConceptId);
-			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(attributeConceptId)) {
-				if (relationship.getTypeId() == Concepts.IS_A_LONG && relationship.getDestinationId() != conceptModelObjectAttribute) {
-					axiomsMap.computeIfAbsent(attributeConceptId, (id) -> new HashSet<>())
+		for (Long objectAttributeId : snomedTaxonomy.getDescendants(conceptModelObjectAttribute)) {
+			OWLObjectProperty owlObjectProperty = getOwlObjectProperty(objectAttributeId);
+			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(objectAttributeId)) {
+				if (relationship.getTypeId() == Concepts.IS_A_LONG && relationship.getDestinationId() != Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG) {
+					axiomsMap.computeIfAbsent(objectAttributeId, (id) -> new HashSet<>())
 							.add(factory.getOWLSubObjectPropertyOfAxiom(owlObjectProperty, getOwlObjectProperty(relationship.getDestinationId())));
+				}
+			}
+		}
+
+		if (snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG)) {
+			for (Long dataAttributeId : snomedTaxonomy.getDescendants(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG)) {
+				OWLDataProperty owlDataProperty = getOwlDataProperty(dataAttributeId);
+				for (Relationship relationship : snomedTaxonomy.getStatedRelationships(dataAttributeId)) {
+					if (relationship.getTypeId() == Concepts.IS_A_LONG) {
+						axiomsMap.computeIfAbsent(dataAttributeId, (id) -> new HashSet<>())
+								.add(factory.getOWLSubDataPropertyOfAxiom(owlDataProperty, getOwlDataProperty(relationship.getDestinationId())));
+					}
 				}
 			}
 		}
@@ -269,6 +282,10 @@ public class OntologyService {
 
 	private OWLObjectProperty getOwlObjectProperty(long typeId) {
 		return factory.getOWLObjectProperty(COLON + typeId, prefixManager);
+	}
+
+	private OWLDataProperty getOwlDataProperty(long typeId) {
+		return factory.getOWLDataProperty(COLON + typeId, prefixManager);
 	}
 
 	private OWLClass getOwlClass(Long conceptId) {

@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# Fictitious data attribute (attribute)
+99001001	20180801	1	900000000000207008	900000000000074008
