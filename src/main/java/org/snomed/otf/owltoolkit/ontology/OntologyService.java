@@ -139,17 +139,19 @@ public class OntologyService {
 			boolean primitive = snomedTaxonomy.isPrimitive(conceptId);
 			Collection<Relationship> statedRelationships = snomedTaxonomy.getStatedRelationships(conceptId);
 
-			AxiomRepresentation representation = new AxiomRepresentation();
-			representation.setPrimitive(primitive);
-			representation.setLeftHandSideNamedConcept(conceptId);
-			Map<Integer, List<Relationship>> relationshipMap = new HashMap<>();
-			for (Relationship statedRelationship : statedRelationships) {
-				relationshipMap.computeIfAbsent(statedRelationship.getGroup(), g -> new ArrayList<>()).add(statedRelationship);
+			if (conceptId.equals(Concepts.ROOT_LONG) || !statedRelationships.isEmpty()) {
+				AxiomRepresentation representation = new AxiomRepresentation();
+				representation.setPrimitive(primitive);
+				representation.setLeftHandSideNamedConcept(conceptId);
+				Map<Integer, List<Relationship>> relationshipMap = new HashMap<>();
+				for (Relationship statedRelationship : statedRelationships) {
+					relationshipMap.computeIfAbsent(statedRelationship.getGroup(), g -> new ArrayList<>()).add(statedRelationship);
+				}
+				representation.setRightHandSideRelationships(relationshipMap);
+				OWLClassAxiom conceptAxiom = createOwlClassAxiom(representation);
+				axiomsMap.computeIfAbsent(conceptId, (id) -> new HashSet<>())
+						.add(conceptAxiom);
 			}
-			representation.setRightHandSideRelationships(relationshipMap);
-			OWLClassAxiom conceptAxiom = createOwlClassAxiom(representation);
-			axiomsMap.computeIfAbsent(conceptId, (id) -> new HashSet<>())
-					.add(conceptAxiom);
 		}
 		return axiomsMap;
 	}
