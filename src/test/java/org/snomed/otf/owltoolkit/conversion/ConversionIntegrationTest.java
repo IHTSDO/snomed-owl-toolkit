@@ -3,6 +3,7 @@ package org.snomed.otf.owltoolkit.conversion;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
@@ -52,7 +53,8 @@ public class ConversionIntegrationTest {
 			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(null);
 			 FileOutputStream outputStream = new FileOutputStream(additionalOwlAxioms)) {
 
-			statedRelationshipToOwlRefsetService.convertStatedRelationshipsToOwlRefset(snapshotStream, deltaStream, outputStream);
+			SnomedTaxonomy snomedTaxonomy = statedRelationshipToOwlRefsetService.getSnomedTaxonomy(snapshotStream, deltaStream);
+			statedRelationshipToOwlRefsetService.convertStatedRelationshipsToOwlRefset(snomedTaxonomy, outputStream);
 		}
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		Files.copy(additionalOwlAxioms.toPath(), out);

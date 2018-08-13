@@ -26,10 +26,12 @@ public class ApplicationTest {
 			" -rf2-to-owl                            (Default mode) Convert RF2 to OWL Functional Syntax.\n" +
 			"                                        Results are written to an .owl file.\n" +
 			"\n" +
-			" -rf2-stated-to-complete-owl            Convert RF2 stated relationships to complete OWL Axiom reference set preview.\n" +
+			" -rf2-stated-to-complete-owl            Convert RF2 snapshot stated relationships to complete OWL Axiom reference set preview.\n" +
 			"                                        Stated relationships are converted to OWL Axiom reference set entries.\n" +
 			"                                        Existing stated relationships are marked as inactive.\n" +
-			"                                        Results are written to an OWL Axiom reference set. All stated relationships should be marked as inactive at this point.\n" +
+			"                                        Results are written to a zip file containing:\n" +
+			"                                         - OWL Axiom reference set delta of all axioms which were previously stated relationships\n" +
+			"                                         - Stated relationship delta with all relationships which were previously active marked as inactive.\n" +
 			"\n" +
 			" -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. \n" +
 			"                                        At least one Snapshot archive is required.\n" +

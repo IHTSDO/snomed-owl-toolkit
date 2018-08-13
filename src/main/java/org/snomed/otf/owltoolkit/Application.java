@@ -20,6 +20,8 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * Command line application for RF2 to OWL file conversion.
@@ -104,10 +106,7 @@ public class Application {
 			ontologyUri = OntologyService.SNOMED_INTERNATIONAL_EDITION_URI;
 		}
 
-		String versionDate = getParameterValue(ARG_VERSION, args);
-		if (versionDate == null) {
-			versionDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
-		}
+		String versionDate = getEffectiveDate(args);
 
 		boolean includeFSNs = !args.contains(ARG_WITHOUT_ANNOTATIONS);
 
@@ -145,25 +144,27 @@ public class Application {
 		assertTrue("Expecting one snapshot RF2 file.", snapshotFiles.size() == 1);
 		File deltaFile = getDeltaFiles(args);
 
-		String outputFilePath = "sct2_sRefset_OWLAxiomDelta_Additional_" + DATE_FORMAT.format(new Date()) + ".txt";
-		File ontologyOutputFile = new File(outputFilePath);
+		String effectiveDate = getEffectiveDate(args);
+		String outputFilePath = "complete-owl-axiom-delta-" + effectiveDate + ".zip";
+		File completeOwlDeltaZip = new File(outputFilePath);
 
-		try {
-			try (FileInputStream snapshotStream = new FileInputStream(snapshotFiles.iterator().next());
-				 OptionalFileInputStream deltaStream = new OptionalFileInputStream(deltaFile);
-				 FileOutputStream outputStream = new FileOutputStream(ontologyOutputFile)) {
+		// Create zip stream
+		try (FileInputStream snapshotStream = new FileInputStream(snapshotFiles.iterator().next());
+			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(deltaFile);
+			 FileOutputStream archiveOutputStream = new FileOutputStream(completeOwlDeltaZip)) {
 
-				new StatedRelationshipToOwlRefsetService().convertStatedRelationshipsToOwlRefset(
-						snapshotStream,
-						deltaStream,
-						outputStream
-				);
-			} catch (ConversionException | OWLOntologyCreationException e) {
-				System.out.println("Failed to convert stated relationships to OWL Axioms");
-				e.printStackTrace();
-				throw e;
-			}
-			System.out.println("Additional OWL Axioms created from Stated Relationships successfully written to " + outputFilePath);
+			new StatedRelationshipToOwlRefsetService().convertStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(
+					snapshotStream,
+					deltaStream,
+					archiveOutputStream,
+					effectiveDate
+			);
+			System.out.println("Delta archive successfully written to " + outputFilePath);
+
+		} catch (ConversionException | OWLOntologyCreationException e) {
+			System.out.println("Failed to convert stated relationships to OWL Axioms");
+			e.printStackTrace();
+			throw e;
 		} catch (IOException e) {
 			System.err.println("Failed to read from or write to files.");
 			e.printStackTrace();
@@ -189,10 +190,12 @@ public class Application {
 						"\n" +
 
 						pad(ARG_RF2_STATED_TO_COMPLETE_OWL) +
-						"Convert RF2 stated relationships to complete OWL Axiom reference set preview.\n" +
+						"Convert RF2 snapshot stated relationships to complete OWL Axiom reference set preview.\n" +
 						pad("") + "Stated relationships are converted to OWL Axiom reference set entries.\n" +
 						pad("") + "Existing stated relationships are marked as inactive.\n" +
-						pad("") + "Results are written to an OWL Axiom reference set. All stated relationships should be marked as inactive at this point.\n" +
+						pad("") + "Results are written to a zip file containing:\n" +
+						pad("") + " - OWL Axiom reference set delta of all axioms which were previously stated relationships\n" +
+						pad("") + " - Stated relationship delta with all relationships which were previously active marked as inactive.\n" +
 						"\n" +
 
 						pad(ARG_RF2_SNAPSHOT_ARCHIVES + " <path>") +
@@ -226,6 +229,14 @@ public class Application {
 						"\n" +
 
 						"");
+	}
+
+	private String getEffectiveDate(List<String> args) {
+		String versionDate = getParameterValue(ARG_VERSION, args);
+		if (versionDate == null) {
+			versionDate = DATE_FORMAT.format(new Date());
+		}
+		return versionDate;
 	}
 
 	private String getParameterValue(String paramName, List<String> args) {
