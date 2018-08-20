@@ -147,7 +147,7 @@ public class SnomedReasonerService {
 		timer.checkpoint("Inference computation");
 
 		logger.info("Extract ReasonerTaxonomy");
-		ReasonerTaxonomyWalker walker = new ReasonerTaxonomyWalker(reasoner, new ReasonerTaxonomy(), ontologyService.getPrefixManager());
+		ReasonerTaxonomyWalker walker = new ReasonerTaxonomyWalker(reasoner, snomedTaxonomy, new ReasonerTaxonomy(), ontologyService.getPrefixManager());
 		ReasonerTaxonomy reasonerTaxonomy = walker.walk();
 		reasoner.dispose();
 		timer.checkpoint("Extract ReasonerTaxonomy");

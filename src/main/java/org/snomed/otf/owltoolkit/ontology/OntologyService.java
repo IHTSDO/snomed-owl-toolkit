@@ -133,13 +133,14 @@ public class OntologyService {
 		}
 
 		// Create axioms of all other Snomed concepts
+		Set<Long> attributeIds = snomedTaxonomy.getDescendants(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG);
 		for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
 
 			// Convert any stated relationships to axioms
 			boolean primitive = snomedTaxonomy.isPrimitive(conceptId);
 			Collection<Relationship> statedRelationships = snomedTaxonomy.getStatedRelationships(conceptId);
 
-			if (conceptId.equals(Concepts.ROOT_LONG) || !statedRelationships.isEmpty()) {
+			if ((conceptId.equals(Concepts.ROOT_LONG) || !statedRelationships.isEmpty()) && !attributeIds.contains(conceptId)) {
 				AxiomRepresentation representation = new AxiomRepresentation();
 				representation.setPrimitive(primitive);
 				representation.setLeftHandSideNamedConcept(conceptId);

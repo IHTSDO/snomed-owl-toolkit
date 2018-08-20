@@ -18,6 +18,7 @@ package org.snomed.otf.owltoolkit.classification;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
@@ -25,11 +26,14 @@ import org.semanticweb.owlapi.reasoner.impl.OWLClassNodeSet;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
+import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ReasonerTaxonomyWalker {
 
@@ -38,6 +42,7 @@ public class ReasonerTaxonomyWalker {
 	private final OWLReasoner reasoner;
 
 	private final ReasonerTaxonomy taxonomy;
+	private final SnomedTaxonomy snomedTaxonomy;
 
 	private Set<Long> processedConceptIds;
 
@@ -47,8 +52,9 @@ public class ReasonerTaxonomyWalker {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReasonerTaxonomyWalker.class);
 
-	public ReasonerTaxonomyWalker(final OWLReasoner reasoner, final ReasonerTaxonomy changeSet, DefaultPrefixManager prefixManager) {
+	public ReasonerTaxonomyWalker(final OWLReasoner reasoner, SnomedTaxonomy snomedTaxonomy, final ReasonerTaxonomy changeSet, DefaultPrefixManager prefixManager) {
 		this.reasoner = reasoner;
+		this.snomedTaxonomy = snomedTaxonomy;
 		this.taxonomy = changeSet;
 		this.prefixManager = prefixManager;
 		this.processedConceptIds = new LongOpenHashSet(600000);
@@ -56,6 +62,21 @@ public class ReasonerTaxonomyWalker {
 
 	public ReasonerTaxonomy walk() {
 		LOGGER.info(">>> SnomedTaxonomy extraction");
+
+		// Extract of object properties
+		Set<Long> objectProperties = snomedTaxonomy.getDescendants(snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG)
+				? Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG : Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG);
+		for (Long childProperty : objectProperties) {
+			walkProperties(childProperty);
+		}
+
+		// Extract of data properties
+		Set<Long> dataProperties = snomedTaxonomy.getDescendants(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG);
+		for (Long childProperty : dataProperties) {
+			walkProperties(childProperty);
+		}
+
+		taxonomy.getConceptIds().clear();
 
 		final Deque<Node<OWLClass>> nodesToProcess = new LinkedList<>();
 		nodesToProcess.add(reasoner.getTopClassNode());
@@ -77,6 +98,13 @@ public class ReasonerTaxonomyWalker {
 
 		LOGGER.info("<<< taxonomy extraction");
 		return taxonomy;
+	}
+
+	private void walkProperties(Long propertyId) {
+		taxonomy.addEntry(new ReasonerTaxonomyEntry(propertyId, snomedTaxonomy.getSuperTypeIds(propertyId)));
+		for (Long subTypeId : snomedTaxonomy.getSubTypeIds(propertyId)) {
+			walkProperties(subTypeId);
+		}
 	}
 
 	private NodeSet<OWLClass> walk(final Node<OWLClass> node) {

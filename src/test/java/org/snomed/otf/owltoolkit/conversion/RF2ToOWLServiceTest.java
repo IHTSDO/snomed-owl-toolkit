@@ -40,13 +40,10 @@ public class RF2ToOWLServiceTest {
 						"Declaration(Class(:116680003))\n" +
 						"Declaration(Class(:138875005))\n" +
 						"Declaration(Class(:362969004))\n" +
-						"Declaration(Class(:363698007))\n" +
 						"Declaration(Class(:404684003))\n" +
 						"Declaration(Class(:410662002))\n" +
 						"Declaration(Class(:723594008))\n" +
 						"Declaration(Class(:723596005))\n" +
-						"Declaration(Class(:762705008))\n" +
-						"Declaration(Class(:762706009))\n" +
 						"Declaration(Class(:900000000000441003))\n" +
 						"Declaration(ObjectProperty(:363698007))\n" +
 						"Declaration(ObjectProperty(:609096000))\n" +
@@ -87,10 +84,6 @@ public class RF2ToOWLServiceTest {
 						"AnnotationAssertion(rdfs:label :362969004 \"Disorder of endocrine system (disorder)\"^^xsd:string)\n" +
 						"EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/363698007> (Finding site (attribute))\n" +
-						"\n" +
-						"SubClassOf(:363698007 :762705008)\n" +
-						"\n" +
 						"# Class: <http://snomed.info/id/404684003> (Clinical finding (finding))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :404684003 \"Clinical finding (finding)\"^^xsd:string)\n" +
@@ -110,14 +103,6 @@ public class RF2ToOWLServiceTest {
 						"\n" +
 						"AnnotationAssertion(rdfs:label :723596005 \"All SNOMED CT content (foundation metadata concept)\"^^xsd:string)\n" +
 						"SubClassOf(:723596005 :723594008)\n" +
-						"\n" +
-						"# Class: <http://snomed.info/id/762705008> (<http://snomed.info/id/762705008>)\n" +
-						"\n" +
-						"SubClassOf(:762705008 :410662002)\n" +
-						"\n" +
-						"# Class: <http://snomed.info/id/762706009> (<http://snomed.info/id/762706009>)\n" +
-						"\n" +
-						"SubClassOf(:762706009 :410662002)\n" +
 						"\n" +
 						"# Class: <http://snomed.info/id/900000000000441003> (SNOMED CT Model Component (metadata))\n" +
 						"\n" +
@@ -161,15 +146,11 @@ public class RF2ToOWLServiceTest {
 						"Declaration(Class(:116680003))\n" +
 						"Declaration(Class(:138875005))\n" +
 						"Declaration(Class(:362969004))\n" +
-						"Declaration(Class(:363698007))\n" +
 						"Declaration(Class(:404684003))\n" +
 						"Declaration(Class(:410662002))\n" +
 						"Declaration(Class(:723594008))\n" +
 						"Declaration(Class(:723596005))\n" +
-						"Declaration(Class(:762705008))\n" +
-						"Declaration(Class(:762706009))\n" +
 						"Declaration(Class(:900000000000441003))\n" +
-						"Declaration(Class(:99001001))\n" +
 						"Declaration(ObjectProperty(:363698007))\n" +
 						"Declaration(ObjectProperty(:609096000))\n" +
 						"Declaration(ObjectProperty(:762705008))\n" +
@@ -220,10 +201,6 @@ public class RF2ToOWLServiceTest {
 						"AnnotationAssertion(rdfs:label :362969004 \"Disorder of endocrine system (disorder)\"^^xsd:string)\n" +
 						"EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/363698007> (Finding site (attribute))\n" +
-						"\n" +
-						"SubClassOf(:363698007 :762705008)\n" +
-						"\n" +
 						"# Class: <http://snomed.info/id/404684003> (Clinical finding (finding))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :404684003 \"Clinical finding (finding)\"^^xsd:string)\n" +
@@ -244,22 +221,10 @@ public class RF2ToOWLServiceTest {
 						"AnnotationAssertion(rdfs:label :723596005 \"All SNOMED CT content (foundation metadata concept)\"^^xsd:string)\n" +
 						"SubClassOf(:723596005 :723594008)\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/762705008> (<http://snomed.info/id/762705008>)\n" +
-						"\n" +
-						"SubClassOf(:762705008 :410662002)\n" +
-						"\n" +
-						"# Class: <http://snomed.info/id/762706009> (<http://snomed.info/id/762706009>)\n" +
-						"\n" +
-						"SubClassOf(:762706009 :410662002)\n" +
-						"\n" +
 						"# Class: <http://snomed.info/id/900000000000441003> (SNOMED CT Model Component (metadata))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :900000000000441003 \"SNOMED CT Model Component (metadata)\"^^xsd:string)\n" +
 						"SubClassOf(:900000000000441003 :138875005)\n" +
-						"\n" +
-						"# Class: <http://snomed.info/id/99001001> (<http://snomed.info/id/99001001>)\n" +
-						"\n" +
-						"SubClassOf(:99001001 :762706009)\n" +
 						"\n" +
 						"\n" +
 						")",
@@ -301,14 +266,11 @@ public class RF2ToOWLServiceTest {
 						"Declaration(Class(:25342003))\n" +
 						"Declaration(Class(:281615006))\n" +
 						"Declaration(Class(:362969004))\n" +
-						"Declaration(Class(:363698007))\n" +
 						"Declaration(Class(:404684003))\n" +
 						"Declaration(Class(:410662002))\n" +
 						"Declaration(Class(:723594008))\n" +
 						"Declaration(Class(:723596005))\n" +
 						"Declaration(Class(:76145000))\n" +
-						"Declaration(Class(:762705008))\n" +
-						"Declaration(Class(:762706009))\n" +
 						"Declaration(Class(:84301002))\n" +
 						"Declaration(Class(:900000000000441003))\n" +
 
@@ -398,10 +360,6 @@ public class RF2ToOWLServiceTest {
 						"AnnotationAssertion(rdfs:label :362969004 \"Disorder of endocrine system (disorder)\"^^xsd:string)\n" +
 						"EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
 						"\n" +
-						"# Class: <http://snomed.info/id/363698007> (Finding site (attribute))\n" +
-						"\n" +
-						"SubClassOf(:363698007 :762705008)\n" +
-						"\n" +
 						"# Class: <http://snomed.info/id/404684003> (Clinical finding (finding))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :404684003 \"Clinical finding (finding)\"^^xsd:string)\n" +
@@ -421,14 +379,6 @@ public class RF2ToOWLServiceTest {
 						"\n" +
 						"AnnotationAssertion(rdfs:label :723596005 \"All SNOMED CT content (foundation metadata concept)\"^^xsd:string)\n" +
 						"SubClassOf(:723596005 :723594008)\n" +
-						"\n" +
-						"# Class: <http://snomed.info/id/762705008> (<http://snomed.info/id/762705008>)\n" +
-						"\n" +
-						"SubClassOf(:762705008 :410662002)\n" +
-						"\n" +
-						"# Class: <http://snomed.info/id/762706009> (<http://snomed.info/id/762706009>)\n" +
-						"\n" +
-						"SubClassOf(:762706009 :410662002)\n" +
 						"\n" +
 						"# Class: <http://snomed.info/id/900000000000441003> (SNOMED CT Model Component (metadata))\n" +
 						"\n" +
