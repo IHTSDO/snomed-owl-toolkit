@@ -44,7 +44,8 @@ public class ApplicationTest {
 			"\n" +
 			"Optional parameters for OWL conversion:\n" +
 			" -uri <uri>                             (Optional) URI for the ontology identifier.\n" +
-			"                                        Defaults to http://snomed.info/sct/900000000000207008.\n" +
+			"                                        Defaults to the id within the header entry of the OWL Ontology reference set.\n" +
+			"                                        If no entry found defaults to http://snomed.info/sct/900000000000207008.\n" +
 			"\n" +
 			" -version <version>                     (Optional) Date for the ontology version e.g. 20180731.\n" +
 			"                                        Defaults to today's date.\n" +

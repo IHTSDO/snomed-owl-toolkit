@@ -215,7 +215,8 @@ public class Application {
 
 						pad(ARG_URI + " <uri>") +
 						"(Optional) URI for the ontology identifier.\n" +
-						pad("") + "Defaults to " + OntologyService.SNOMED_INTERNATIONAL_EDITION_URI + ".\n" +
+						pad("") + "Defaults to the id within the header entry of the OWL Ontology reference set.\n" +
+						pad("") + "If no entry found defaults to " + OntologyService.SNOMED_INTERNATIONAL_EDITION_URI + ".\n" +
 						"\n" +
 
 						pad(ARG_VERSION + " <version>") +
