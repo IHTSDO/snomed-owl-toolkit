@@ -25,6 +25,20 @@ A classification REST API using this toolkit is available, see the [Classificati
   - Convert axioms to relationships
   - Support for General Concept Axioms
   - *See AxiomRelationshipConversionService.java*
+  
+### Stated Relationships and Axioms
+The toolkit is capable of working with stated relationships and/or axioms from the OWL Axiom reference set. 
+
+_These should only be used when modeling concepts.
+The inferred relationships should nearly always be used in SNOMED CT implementations. The inferred relationships contain the attributes of any stated relationships or axioms present._ 
+
+Concept model information will be loaded from all active relationships and all active axioms. Either format can be used or both in combination. 
+All the stated relationships of a single concept will form a single new axiom. If there are any axioms in the reference set for the same concept these will be treated as additional axioms. 
+Stated relationships are never merged into an axiom from the reference set.
+
+If there are only axioms in the International Edition and only stated relationships in an extension then classification or conversion to the OWL file will still work. 
+The extension can add modeling for its own concepts using stated relationships or axioms. If the extension wants to override the modeling of an International Axiom then a new 
+state of that entire axiom must be in the extension using the same OWL Axiom reference set member id.
 
 ## Documentation
 * [Calculating the Necessary Normal Form](documentation/calculating-necessary-normal-form.md)
