@@ -26,6 +26,8 @@ import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static java.lang.Long.parseLong;
+
 /**
  * Used to convert stated relationships within the international edition to a complete OWL Axiom reference set.
  */
@@ -117,7 +119,7 @@ public class StatedRelationshipToOwlRefsetService {
 	void convertStatedRelationshipsToOwlRefset(SnomedTaxonomy snomedTaxonomy, OutputStream outputStream) throws OWLOntologyCreationException, ConversionException {
 
 		// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
-		Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(Long.parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
+		Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
 
 		OntologyService ontologyService = new OntologyService(neverGroupedRoles);
 		OWLOntology ontology = ontologyService.createOntology(snomedTaxonomy);
@@ -135,6 +137,10 @@ public class StatedRelationshipToOwlRefsetService {
 			FunctionalSyntaxObjectRenderer functionalSyntaxObjectRenderer = new FunctionalSyntaxObjectRenderer(ontology, functionalSyntaxWriter);
 			functionalSyntaxObjectRenderer.setPrefixManager(ontologyService.getSnomedPrefixManager());
 
+			Set<Long> modelComponentIds = snomedTaxonomy.getDescendants(parseLong(Concepts.SNOMED_CT_MODEL_COMPONENT));
+			modelComponentIds.add(parseLong(Concepts.SNOMED_CT_MODEL_COMPONENT));
+			modelComponentIds.add(Concepts.ROOT_LONG);
+
 			for (Long conceptId : axiomsFromStatedRelationships.keySet()) {
 				for (OWLAxiom owlAxiom : axiomsFromStatedRelationships.get(conceptId)) {
 					// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
@@ -150,9 +156,8 @@ public class StatedRelationshipToOwlRefsetService {
 					writer.write("1");
 					writer.write(TAB);
 
-					// Module - take from a stated relationship
-					Iterator<Relationship> statedRelationshipIterator = snomedTaxonomy.getStatedRelationships(conceptId).iterator();
-					writer.write(statedRelationshipIterator.hasNext() ? statedRelationshipIterator.next().getModuleId() + "" : Concepts.SNOMED_CT_MODEL_COMPONENT_MODULE);
+					// Module
+					writer.write(modelComponentIds.contains(conceptId) ? Concepts.SNOMED_CT_MODEL_COMPONENT_MODULE : Concepts.SNOMED_CT_CORE_MODULE);
 					writer.write(TAB);
 
 					// RefsetId
