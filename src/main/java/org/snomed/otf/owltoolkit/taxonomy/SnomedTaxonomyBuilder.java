@@ -93,6 +93,8 @@ public class SnomedTaxonomyBuilder {
 
 		SnomedTaxonomy snomedTaxonomy = snomedTaxonomyLoader.getSnomedTaxonomy();
 		logger.info("{} concepts loaded", snomedTaxonomy.getAllConceptIds().size());
+		logger.info("{} active stated relationships loaded", snomedTaxonomy.getStatedRelationships().size());
+		logger.info("{} active axioms loaded", snomedTaxonomy.getAxiomCount());
 		return snomedTaxonomy;
 	}
 }

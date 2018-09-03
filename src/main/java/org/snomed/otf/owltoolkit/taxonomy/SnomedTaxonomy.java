@@ -25,6 +25,7 @@ import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static java.lang.Long.parseLong;
@@ -267,5 +268,15 @@ public class SnomedTaxonomy {
 
 	public Set<Long> getInactivatedConcepts() {
 		return inactivatedConcepts;
+	}
+
+	public Map<Long, Relationship> getStatedRelationships() {
+		return statedRelationshipsById;
+	}
+
+	public Long getAxiomCount() {
+		AtomicLong axiomCount = new AtomicLong();
+		conceptAxiomMap.values().forEach(axioms -> axiomCount.addAndGet(axioms.size()));
+		return axiomCount.get();
 	}
 }
