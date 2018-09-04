@@ -67,8 +67,13 @@ public class AxiomRelationshipConversionService {
 	public AxiomRepresentation convertAxiomToRelationships(Long referencedComponentId, OWLAxiom owlAxiom) throws ConversionException {
 		AxiomType<?> axiomType = owlAxiom.getAxiomType();
 
+		if (Concepts.ROOT_LONG.equals(referencedComponentId) && axiomType == AxiomType.SUBCLASS_OF) {
+			LOGGER.debug("Skipping axiom of root concept which we assume points to 'Thing'.");
+			return null;
+		}
+
 		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES) {
-			LOGGER.info("Only SubClassOf and EquivalentClasses can be converted to relationships. " +
+			LOGGER.debug("Only SubClassOf and EquivalentClasses can be converted to relationships. " +
 					"Axiom given is of type " + axiomType.getName() + ". Returning null.");
 			return null;
 		}

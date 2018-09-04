@@ -15,24 +15,12 @@
  */
 package org.snomed.otf.owltoolkit.taxonomy;
 
-import static java.lang.Long.parseLong;
-import static org.snomed.otf.owltoolkit.constants.Concepts.ADDITIONAL_RELATIONSHIP;
-import static org.snomed.otf.owltoolkit.constants.Concepts.STATED_RELATIONSHIP;
-import static org.snomed.otf.owltoolkit.constants.Concepts.UNIVERSAL_RESTRICTION_MODIFIER;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Set;
-
+import com.google.common.base.Strings;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
-import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.io.StringDocumentSource;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLException;
-import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
-import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.model.OWLRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,27 +28,27 @@ import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 
-import com.google.common.base.Strings;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static java.lang.Long.parseLong;
+import static org.snomed.otf.owltoolkit.constants.Concepts.*;
 
 public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	private SnomedTaxonomy snomedTaxonomy = new SnomedTaxonomy();
 	private static final String ACTIVE = "1";
-	private static final String ontologyDocStart = "Prefix(:=<http://snomed.info/id/>) Ontology(";
-	private static final String ontologyDocEnd = ")";
 
 	private boolean loadingDelta;
 	private int effectiveTimeNow = Integer.parseInt(new SimpleDateFormat("yyyyMMdd").format(new Date()));
-	private final OWLOntologyManager owlOntologyManager;
 
 	private Exception owlParsingExceptionThrown;
 	private String owlParsingExceptionMemberId;
-	private long timeTakenDeserialisingAxioms = 0;
-
+	private final AxiomDeserialiser axiomDeserialiser;
 	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomyLoader.class);
 
 	public SnomedTaxonomyLoader() {
-		owlOntologyManager = OWLManager.createOWLOntologyManager();
+		axiomDeserialiser = new AxiomDeserialiser();
 	}
 
 	@Override
@@ -105,8 +93,6 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				unionGroup = 1;
 			}
 
-			// TODO: Destination negated is always false?
-			boolean destinationNegated = false;
 			int effectiveTimeInt = !Strings.isNullOrEmpty(effectiveTime) ? Integer.parseInt(effectiveTime) : effectiveTimeNow;
 			snomedTaxonomy.addOrModifyRelationship(
 					stated,
@@ -117,7 +103,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 							parseLong(moduleId),
 							parseLong(typeId),
 							parseLong(destinationId),
-							destinationNegated,
+							false,// Destination negated is always false
 							Integer.parseInt(relationshipGroup),
 							unionGroup,
 							universal,
@@ -136,7 +122,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			if (ACTIVE.equals(active)) {
 				try {
 					addActiveAxiom(id, referencedComponentId, otherValues[0]);
-				} catch (OWLException | OWLRuntimeException e) {
+				} catch (OWLException | OWLRuntimeException | IllegalArgumentException e) {
 					owlParsingExceptionThrown = e;
 					owlParsingExceptionMemberId = id;
 				}
@@ -179,7 +165,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				// Replace any remaining outdated role group constants
 				.replace(OntologyService.ROLE_GROUP_OUTDATED_CONSTANT, OntologyService.ROLE_GROUP_SCTID);
 
-		OWLAxiom owlAxiom = deserialiseAxiom(owlExpressionString, id);
+		OWLAxiom owlAxiom = axiomDeserialiser.deserialiseAxiom(owlExpressionString, id);
 		snomedTaxonomy.addAxiom(referencedComponentId, id, owlAxiom);
 	}
 
@@ -198,33 +184,19 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	}
 
 	public OWLAxiom deserialiseAxiom(String axiomString) throws OWLOntologyCreationException {
-		return deserialiseAxiom(axiomString, null);
-	}
-
-	public OWLAxiom deserialiseAxiom(String axiomString, String axiomIdentifier) throws OWLOntologyCreationException {
-		long start = new Date().getTime();
-		OWLOntology owlOntology = owlOntologyManager.loadOntologyFromOntologyDocument(
-				new StringDocumentSource(ontologyDocStart + axiomString + ontologyDocEnd));
-		Set<OWLAxiom> axioms = owlOntology.getAxioms();
-		if (axioms.size() != 1) {
-			throw new IllegalArgumentException("OWL Axiom string should contain a single Axiom" +
-					"found " + axioms.size() + " for axiom id " + axiomIdentifier);
-		}
-		owlOntologyManager.removeOntology(owlOntology);
-		timeTakenDeserialisingAxioms += new Date().getTime() - start;
-		return axioms.iterator().next();
+		return axiomDeserialiser.deserialiseAxiom(axiomString, null);
 	}
 
 	public SnomedTaxonomy getSnomedTaxonomy() {
 		return snomedTaxonomy;
 	}
 
-	public void startLoadingDelta() {
+	void startLoadingDelta() {
 		loadingDelta = true;
-		timeTakenDeserialisingAxioms = 0;
+		axiomDeserialiser.clearCounters();
 	}
 
-	public long getTimeTakenDeserialisingAxioms() {
-		return timeTakenDeserialisingAxioms;
+	long getTimeTakenDeserialisingAxioms() {
+		return axiomDeserialiser.getTimeTakenDeserialisingAxioms();
 	}
 }
