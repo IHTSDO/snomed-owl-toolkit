@@ -27,4 +27,4 @@ Calculating the necessary normal form happens in two passes of the hierarchy.
 2. Walk the class hierarchy again in the same order reducing the attributes of each class further.
     1. Compare the attributes and remove those which are found to be redundant because they are less specific in terms of depth in one of the alternate hierarchies.
 
-For fine level detail the best source of information is the Java class _org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator_ which performs the Necessary Normal Form calculation. 
+For fine level detail the best source of information is the Java class [_org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator_](https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/src/main/java/org/snomed/otf/owltoolkit/normalform/RelationshipNormalFormGenerator.java) which performs the Necessary Normal Form calculation. 
