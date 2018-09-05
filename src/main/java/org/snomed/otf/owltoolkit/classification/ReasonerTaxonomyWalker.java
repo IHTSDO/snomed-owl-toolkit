@@ -17,18 +17,14 @@
 package org.snomed.otf.owltoolkit.classification;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
+import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.impl.OWLClassNodeSet;
-import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
-import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -42,42 +38,46 @@ public class ReasonerTaxonomyWalker {
 	private final OWLReasoner reasoner;
 
 	private final ReasonerTaxonomy taxonomy;
-	private final SnomedTaxonomy snomedTaxonomy;
 
 	private Set<Long> processedConceptIds;
-
-	private final DefaultPrefixManager prefixManager;
 
 	private boolean nothingProcessed;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReasonerTaxonomyWalker.class);
 
-	public ReasonerTaxonomyWalker(final OWLReasoner reasoner, SnomedTaxonomy snomedTaxonomy, final ReasonerTaxonomy changeSet, DefaultPrefixManager prefixManager) {
+	public ReasonerTaxonomyWalker(final OWLReasoner reasoner, final ReasonerTaxonomy changeSet) {
 		this.reasoner = reasoner;
-		this.snomedTaxonomy = snomedTaxonomy;
 		this.taxonomy = changeSet;
-		this.prefixManager = prefixManager;
 		this.processedConceptIds = new LongOpenHashSet(600000);
 	}
 
 	public ReasonerTaxonomy walk() {
 		LOGGER.info(">>> SnomedTaxonomy extraction");
 
+		// Some reasoners (ELK v0.4.3) do not support extracting the property hierarchy so we extract them from the stated OWL Ontology
+		OWLOntology owlOntology = reasoner.getRootOntology();
+
 		// Extract of object properties
-		Set<Long> objectProperties = snomedTaxonomy.getDescendants(snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG)
-				? Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG : Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG);
-		for (Long childProperty : objectProperties) {
-			walkProperties(childProperty);
+		for (OWLObjectProperty objectProperty : owlOntology.getObjectPropertiesInSignature()) {
+			long propertyId = OntologyHelper.getConceptId(objectProperty);
+			Set<Long> ancestors = owlOntology.getObjectSubPropertyAxiomsForSubProperty(objectProperty).stream()
+					.map(axiom -> axiom.getSuperProperty().getNamedProperty()).map(OntologyHelper::getConceptId).collect(Collectors.toSet());
+			taxonomy.addEntry(new ReasonerTaxonomyEntry(propertyId, ancestors));
 		}
 
 		// Extract of data properties
-		Set<Long> dataProperties = snomedTaxonomy.getDescendants(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG);
-		for (Long childProperty : dataProperties) {
-			walkProperties(childProperty);
+		for (OWLDataProperty dataProperty : owlOntology.getDataPropertiesInSignature()) {
+			long propertyId = OntologyHelper.getConceptId(dataProperty);
+			Set<Long> ancestors = owlOntology.getDataSubPropertyAxiomsForSubProperty(dataProperty).stream()
+					.map(axiom -> axiom.getSuperProperty().getDataPropertiesInSignature().iterator().next()).map(OntologyHelper::getConceptId).collect(Collectors.toSet());
+			taxonomy.addEntry(new ReasonerTaxonomyEntry(propertyId, ancestors));
 		}
 
+		// The properties extracted are not concepts so we clear them from the list
 		taxonomy.getConceptIds().clear();
 
+
+		// Now process the concepts
 		final Deque<Node<OWLClass>> nodesToProcess = new LinkedList<>();
 		nodesToProcess.add(reasoner.getTopClassNode());
 
@@ -98,13 +98,6 @@ public class ReasonerTaxonomyWalker {
 
 		LOGGER.info("<<< taxonomy extraction");
 		return taxonomy;
-	}
-
-	private void walkProperties(Long propertyId) {
-		taxonomy.addEntry(new ReasonerTaxonomyEntry(propertyId, snomedTaxonomy.getSuperTypeIds(propertyId)));
-		for (Long subTypeId : snomedTaxonomy.getSubTypeIds(propertyId)) {
-			walkProperties(subTypeId);
-		}
 	}
 
 	private NodeSet<OWLClass> walk(final Node<OWLClass> node) {
