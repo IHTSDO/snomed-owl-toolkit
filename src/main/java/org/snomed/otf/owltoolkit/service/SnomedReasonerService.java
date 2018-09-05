@@ -15,7 +15,6 @@
  */
 package org.snomed.otf.owltoolkit.service;
 
-import com.google.common.collect.Sets;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -190,22 +189,6 @@ public class SnomedReasonerService {
 		} catch (InstantiationException | IllegalAccessException e) {
 			throw new ReasonerServiceException(String.format("An instance of requested reasoner '%s' could not be created.", reasonerFactoryClass), e);
 		}
-	}
-
-	// For local testing
-	public static void main(String[] args) throws ReasonerServiceException {
-		Set<File> releases = Sets.newHashSet(
-				new File("/Users/kai/release/SnomedCT_InternationalRF2_PRODUCTION_20180131T120000Z_snapshot.zip"),
-				new File("/Users/kai/release/SnomedCT_USExtensionRF2_PRODUCTION_20180301T120000Z.zip")
-		);
-		new SnomedReasonerService().classify(
-				"local",
-				releases,
-				new File("/Users/kai/release/empty.zip"),
-				new File("us-results.zip"),
-				ELK_REASONER_FACTORY,
-				false
-		);
 	}
 
 }
