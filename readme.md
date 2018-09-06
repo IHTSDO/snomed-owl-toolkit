@@ -25,19 +25,19 @@ A classification REST API using this toolkit is available, see the [Classificati
   - Convert axioms to relationships
   - Support for General Concept Axioms
   - *See AxiomRelationshipConversionService.java*
-  
+
 ### Stated Relationships and Axioms
-The toolkit is capable of working with stated relationships and/or axioms from the OWL Axiom reference set. 
+The toolkit is capable of working with stated relationships and/or axioms from the OWL Axiom reference set.
 
-_These should only be used when modeling concepts.
-The inferred relationships should nearly always be used in SNOMED CT implementations. The inferred relationships contain the attributes of any stated relationships or axioms present._ 
+_These should only be used when modelling concepts.
+The inferred relationships should nearly always be used in SNOMED CT implementations. The inferred relationships contain the attributes of any stated relationships or axioms present._
 
-Concept model information will be loaded from all active relationships and all active axioms. Either format can be used or both in combination. 
-All the stated relationships of a single concept will form a single new axiom. If there are any axioms in the reference set for the same concept these will be treated as additional axioms. 
+Concept model information will be loaded from all active relationships and all active axioms. Either format can be used or both in combination.
+All the stated relationships of a single concept will form a single new axiom. If there are any axioms in the reference set for the same concept these will be treated as additional axioms.
 Stated relationships are never merged into an axiom from the reference set.
 
-If there are only axioms in the International Edition and only stated relationships in an extension then classification or conversion to the OWL file will still work. 
-The extension can add modeling for its own concepts using stated relationships or axioms. If the extension wants to override the modeling of an International Axiom then a new 
+If there are only axioms in the International Edition and only stated relationships in an extension then classification or conversion to the OWL file will still work.
+The extension can add modelling for its own concepts using stated relationships or axioms. If the extension wants to override the modelling of an International Axiom then a new
 state of that entire axiom must be in the extension using the same OWL Axiom reference set member id.
 
 ## Documentation
@@ -45,10 +45,10 @@ state of that entire axiom must be in the extension using the same OWL Axiom ref
 
 ## Command Line Use
 
-This toolkit has been developed for use in other Java applications as a library but some functionality 
+This toolkit has been developed for use in other Java applications as a library but some functionality
 can be used via the command line.
 
-The 'executable' jar file is available on the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases) page for use on the command line. 
+The 'executable' jar file is available on the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases) page for use on the command line.
 
 Command line options:
 ```
@@ -68,10 +68,10 @@ Usage:
                                          - OWL Axiom reference set delta of all axioms which were previously stated relationships
                                          - Stated relationship delta with all relationships which were previously active marked as inactive.
 
- -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. 
+ -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded.
                                         At least one Snapshot archive is required.
 
- -rf2-authoring-delta-archive <path>    (Optional) Path to a zip file containing RF2 Delta files to be applied on top 
+ -rf2-authoring-delta-archive <path>    (Optional) Path to a zip file containing RF2 Delta files to be applied on top
                                         of the Snapshots. This is helpful during an authoring cycle.
 
  -debug                                 Additional output for debugging.
@@ -85,7 +85,7 @@ Optional parameters for OWL conversion:
  -version <version>                     (Optional) Date for the ontology version e.g. 20180731.
                                         Defaults to today's date.
 
- -without-annotations                   (Optional) Flag to omit Fully Specified Name annotations from the ontology 
+ -without-annotations                   (Optional) Flag to omit Fully Specified Name annotations from the ontology
                                         resulting in a smaller file size.
 ```
 
@@ -107,6 +107,6 @@ java -jar snomed-owl-toolkit*executable.jar -classify -rf2-snapshot-archives Sno
 ```
 After about one and a half minutes an RF2 delta archive will be written to `classification-results-xxxx.zip` including a timestamp in the name.
 
-This archive contains a relationship file with active rows for new inferences and inactive rows for redundant relationships. 
+This archive contains a relationship file with active rows for new inferences and inactive rows for redundant relationships.
 
 The archive also has a reference set containing any sets of concepts which the reasoner found to be logically equivalent. This refset should be empty.
