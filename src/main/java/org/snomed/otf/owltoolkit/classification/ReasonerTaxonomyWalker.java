@@ -24,6 +24,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.impl.OWLClassNodeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
 
 import java.util.Deque;
@@ -38,6 +39,7 @@ public class ReasonerTaxonomyWalker {
 	private final OWLReasoner reasoner;
 
 	private final ReasonerTaxonomy taxonomy;
+	private final OWLOntology owlOntology;
 
 	private Set<Long> processedConceptIds;
 
@@ -47,6 +49,7 @@ public class ReasonerTaxonomyWalker {
 
 	public ReasonerTaxonomyWalker(final OWLReasoner reasoner, final ReasonerTaxonomy changeSet) {
 		this.reasoner = reasoner;
+		this.owlOntology = reasoner.getRootOntology();
 		this.taxonomy = changeSet;
 		this.processedConceptIds = new LongOpenHashSet(600000);
 	}
@@ -54,28 +57,7 @@ public class ReasonerTaxonomyWalker {
 	public ReasonerTaxonomy walk() {
 		LOGGER.info(">>> SnomedTaxonomy extraction");
 
-		// Some reasoners (ELK v0.4.3) do not support extracting the property hierarchy so we extract them from the stated OWL Ontology
-		OWLOntology owlOntology = reasoner.getRootOntology();
-
-		// Extract of object properties
-		for (OWLObjectProperty objectProperty : owlOntology.getObjectPropertiesInSignature()) {
-			long propertyId = OntologyHelper.getConceptId(objectProperty);
-			Set<Long> ancestors = owlOntology.getObjectSubPropertyAxiomsForSubProperty(objectProperty).stream()
-					.map(axiom -> axiom.getSuperProperty().getNamedProperty()).map(OntologyHelper::getConceptId).collect(Collectors.toSet());
-			taxonomy.addEntry(new ReasonerTaxonomyEntry(propertyId, ancestors));
-		}
-
-		// Extract of data properties
-		for (OWLDataProperty dataProperty : owlOntology.getDataPropertiesInSignature()) {
-			long propertyId = OntologyHelper.getConceptId(dataProperty);
-			Set<Long> ancestors = owlOntology.getDataSubPropertyAxiomsForSubProperty(dataProperty).stream()
-					.map(axiom -> axiom.getSuperProperty().getDataPropertiesInSignature().iterator().next()).map(OntologyHelper::getConceptId).collect(Collectors.toSet());
-			taxonomy.addEntry(new ReasonerTaxonomyEntry(propertyId, ancestors));
-		}
-
-		// The properties extracted are not concepts so we clear them from the list
-		taxonomy.getConceptIds().clear();
-
+		extractProperties();
 
 		// Now process the concepts
 		final Deque<Node<OWLClass>> nodesToProcess = new LinkedList<>();
@@ -85,7 +67,7 @@ public class ReasonerTaxonomyWalker {
 		while (!nodesToProcess.isEmpty()) {
 
 			final Node<OWLClass> currentNode = nodesToProcess.removeFirst();
-			final NodeSet<OWLClass> nextNodeSet = walk(currentNode);
+			final NodeSet<OWLClass> nextNodeSet = walkClasses(currentNode);
 
 			if (!nextNodeSet.isEmpty()) {
 				nodesToProcess.addAll(nextNodeSet.getNodes());
@@ -100,7 +82,71 @@ public class ReasonerTaxonomyWalker {
 		return taxonomy;
 	}
 
-	private NodeSet<OWLClass> walk(final Node<OWLClass> node) {
+	private void extractProperties() {
+		// Some reasoners (ELK v0.4.3) do not support extracting the property hierarchy so we extract them from the stated OWL Ontology
+
+		// Extract of object properties
+		OWLObjectProperty topLevelObjectProperty = null;
+		// Find top object property
+		for (OWLObjectProperty objectProperty : owlOntology.getObjectPropertiesInSignature()) {
+			long propertyId = OntologyHelper.getConceptId(objectProperty);
+			if (Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG.equals(propertyId)) {
+				topLevelObjectProperty = objectProperty;
+				break;
+			}
+			// The concept model object attribute was not present before Jan 2018 so may need to use the old one
+			if (Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG.equals(propertyId)) {
+				topLevelObjectProperty = objectProperty;
+			}
+		}
+		walkObjectProperties(topLevelObjectProperty);
+
+		// Extract of data properties
+		// Find top data property
+		OWLDataProperty topDataProperty = null;
+		for (OWLDataProperty dataProperty : owlOntology.getDataPropertiesInSignature()) {
+			long propertyId = OntologyHelper.getConceptId(dataProperty);
+			if (Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG.equals(propertyId)) {
+				topDataProperty = dataProperty;
+				break;
+			}
+		}
+		if (topDataProperty != null) {
+			walkDataProperties(topDataProperty);
+		}
+
+		// The properties extracted are not concepts so we clear them from the list
+		taxonomy.getConceptIds().clear();
+	}
+
+	private void walkObjectProperties(OWLObjectProperty objectProperty) {
+		long propertyId = OntologyHelper.getConceptId(objectProperty);
+		Set<OWLSubObjectPropertyOfAxiom> superProperties = owlOntology.getObjectSubPropertyAxiomsForSubProperty(objectProperty);
+		Set<Long> parentIds = superProperties.stream()
+				.map(axiom -> axiom.getSuperProperty().getNamedProperty()).map(OntologyHelper::getConceptId).collect(Collectors.toSet());
+		taxonomy.addEntry(new ReasonerTaxonomyEntry(propertyId, parentIds));
+
+		Set<OWLSubObjectPropertyOfAxiom> subProperties = owlOntology.getObjectSubPropertyAxiomsForSuperProperty(objectProperty);
+		for (OWLSubObjectPropertyOfAxiom subProperty : subProperties) {
+			walkObjectProperties(subProperty.getSubProperty().getNamedProperty());
+		}
+	}
+
+	private void walkDataProperties(OWLDataProperty topDataProperty) {
+		long propertyId = OntologyHelper.getConceptId(topDataProperty);
+		Set<OWLSubDataPropertyOfAxiom> superProperties = owlOntology.getDataSubPropertyAxiomsForSubProperty(topDataProperty);
+		Set<Long> parentIds = superProperties.stream()
+				.map(axiom -> axiom.getSuperProperty().asOWLDataProperty()).map(OntologyHelper::getConceptId).collect(Collectors.toSet());
+		taxonomy.addEntry(new ReasonerTaxonomyEntry(propertyId, parentIds));
+
+		Set<OWLSubDataPropertyOfAxiom> subProperties = owlOntology.getDataSubPropertyAxiomsForSuperProperty(topDataProperty);
+		for (OWLSubDataPropertyOfAxiom subProperty : subProperties) {
+			walkDataProperties(subProperty.getSubProperty().asOWLDataProperty());
+		}
+
+	}
+
+	private NodeSet<OWLClass> walkClasses(final Node<OWLClass> node) {
 
 		if (isNodeProcessed(node)) {
 			return reasoner.getSubClasses(node.getRepresentativeElement(), true);

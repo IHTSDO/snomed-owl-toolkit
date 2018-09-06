@@ -110,10 +110,11 @@ public class OntologyService {
 		Long conceptModelObjectAttribute = conceptModelObjectAttributePresent ?
 				Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG : Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG;
 
-		for (Long objectAttributeId : snomedTaxonomy.getDescendants(conceptModelObjectAttribute)) {
+		Set<Long> descendants = snomedTaxonomy.getDescendants(conceptModelObjectAttribute);
+		for (Long objectAttributeId : descendants) {
 			OWLObjectProperty owlObjectProperty = getOwlObjectProperty(objectAttributeId);
 			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(objectAttributeId)) {
-				if (relationship.getTypeId() == Concepts.IS_A_LONG && relationship.getDestinationId() != Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG) {
+				if (relationship.getTypeId() == Concepts.IS_A_LONG && (relationship.getDestinationId() != Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG) || !conceptModelObjectAttributePresent) {
 					axiomsMap.computeIfAbsent(objectAttributeId, (id) -> new HashSet<>())
 							.add(factory.getOWLSubObjectPropertyOfAxiom(owlObjectProperty, getOwlObjectProperty(relationship.getDestinationId())));
 				}
