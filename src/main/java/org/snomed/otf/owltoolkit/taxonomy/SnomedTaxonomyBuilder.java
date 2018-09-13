@@ -15,19 +15,18 @@
  */
 package org.snomed.otf.owltoolkit.taxonomy;
 
-import static org.snomed.otf.owltoolkit.constants.Concepts.MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET;
-import static org.snomed.otf.owltoolkit.constants.Concepts.OWL_AXIOM_REFERENCE_SET;
-import static org.snomed.otf.owltoolkit.constants.Concepts.OWL_ONTOLOGY_REFERENCE_SET;
-
-import java.io.InputStream;
-
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.ihtsdo.otf.snomedboot.ReleaseImporter;
+import org.ihtsdo.otf.snomedboot.factory.ComponentFactory;
 import org.ihtsdo.otf.snomedboot.factory.LoadingProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.springframework.util.StopWatch;
+
+import java.io.InputStream;
+
+import static org.snomed.otf.owltoolkit.constants.Concepts.*;
 
 public class SnomedTaxonomyBuilder {
 
@@ -62,10 +61,20 @@ public class SnomedTaxonomyBuilder {
 			InputStreamSet snomedRf2SnapshotArchives,
 			InputStream currentReleaseRf2DeltaArchive,
 			boolean includeFSNs) throws ReleaseImportException {
+
+		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, includeFSNs);
+	}
+
+	public SnomedTaxonomy build(
+			InputStreamSet snomedRf2SnapshotArchives,
+			InputStream currentReleaseRf2DeltaArchive,
+			ComponentFactory componentFactoryTap,
+			boolean includeFSNs) throws ReleaseImportException {
+
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
-		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader();
+		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(componentFactoryTap);
 
 		ReleaseImporter releaseImporter = new ReleaseImporter();
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(

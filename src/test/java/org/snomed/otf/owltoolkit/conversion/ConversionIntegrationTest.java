@@ -1,6 +1,7 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import org.apache.commons.io.FileUtils;
+import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
@@ -53,7 +54,7 @@ public class ConversionIntegrationTest {
 			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(null);
 			 FileOutputStream outputStream = new FileOutputStream(additionalOwlAxioms)) {
 
-			SnomedTaxonomy snomedTaxonomy = statedRelationshipToOwlRefsetService.getSnomedTaxonomy(snapshotStream, deltaStream);
+			SnomedTaxonomy snomedTaxonomy = statedRelationshipToOwlRefsetService.readSnomedTaxonomy(snapshotStream, deltaStream, new ImpotentComponentFactory());
 			statedRelationshipToOwlRefsetService.convertStatedRelationshipsToOwlRefset(snomedTaxonomy, outputStream);
 		}
 		ByteArrayOutputStream out = new ByteArrayOutputStream();

@@ -1,6 +1,8 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
+import org.ihtsdo.otf.snomedboot.factory.ComponentFactory;
+import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
 import org.semanticweb.owlapi.functional.renderer.FunctionalSyntaxObjectRenderer;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLOntology;
@@ -18,10 +20,7 @@ import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -43,12 +42,15 @@ public class StatedRelationshipToOwlRefsetService {
 		// Create zip stream
 		try (ZipOutputStream zipOutputStream = new ZipOutputStream(rf2DeltaZipResults)) {
 
-			// Load required parts of RF2 into memory
-			logger.info("Loading RF2 files");
-			SnomedTaxonomy snomedTaxonomy = getSnomedTaxonomy(snomedRf2SnapshotArchive, deltaStream);
-
-			// Write OWL Axiom entry
+			// Start writing OWL Axiom entry
 			zipOutputStream.putNextEntry(new ZipEntry("sct2_sRefset_OWLAxiomDelta_INT_" + effectiveDate + ".txt"));
+
+			// Load required parts of RF2 into memory, copying existing owl axioms to output file
+			logger.info("Loading RF2 files");
+			AxiomCopier axiomCopier = new AxiomCopier(zipOutputStream);
+			SnomedTaxonomy snomedTaxonomy = readSnomedTaxonomy(snomedRf2SnapshotArchive, deltaStream, axiomCopier);
+			axiomCopier.complete();
+
 			convertStatedRelationshipsToOwlRefset(snomedTaxonomy, zipOutputStream);
 			zipOutputStream.closeEntry();
 
@@ -106,10 +108,10 @@ public class StatedRelationshipToOwlRefsetService {
 
 	}
 
-	SnomedTaxonomy getSnomedTaxonomy(InputStream snomedRf2SnapshotArchive, OptionalFileInputStream deltaStream) throws ConversionException {
+	SnomedTaxonomy readSnomedTaxonomy(InputStream snomedRf2SnapshotArchive, OptionalFileInputStream deltaStream, ComponentFactory axiomDeltaCopier) throws ConversionException {
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream.getInputStream().orElse(null), false);
+			snomedTaxonomy = new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream.getInputStream().orElse(null), axiomDeltaCopier, false);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}
@@ -181,6 +183,50 @@ public class StatedRelationshipToOwlRefsetService {
 			writer.flush();
 		} catch (IOException e) {
 			throw new ConversionException("Failed to write to OWL Reference Set output file.", e);
+		}
+	}
+
+	private static class AxiomCopier extends ImpotentComponentFactory {
+
+		private final List<IOException> exceptionsThrown;
+		private final BufferedWriter axiomWriter;
+
+		AxiomCopier(OutputStream zipOutputStream) {
+			exceptionsThrown = new ArrayList<>();
+			axiomWriter = new BufferedWriter(new OutputStreamWriter(zipOutputStream));
+		}
+
+		@Override
+		public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
+			// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+			if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET)) {
+				try {
+					axiomWriter.write(id);
+					axiomWriter.write(TAB);
+					axiomWriter.write(effectiveTime);
+					axiomWriter.write(TAB);
+					axiomWriter.write(active);
+					axiomWriter.write(TAB);
+					axiomWriter.write(moduleId);
+					axiomWriter.write(TAB);
+					axiomWriter.write(refsetId);
+					axiomWriter.write(TAB);
+					axiomWriter.write(referencedComponentId);
+					axiomWriter.write(TAB);
+					axiomWriter.write(otherValues[0]);
+					axiomWriter.newLine();
+				} catch (IOException e) {
+					exceptionsThrown.add(e);
+				}
+			}
+		}
+
+		private void complete() throws IOException {
+			axiomWriter.flush();
+			// Let exceptions from component factory bubble up
+			if (!exceptionsThrown.isEmpty()) {
+				throw exceptionsThrown.get(0);
+			}
 		}
 	}
 

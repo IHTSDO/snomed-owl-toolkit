@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2018 SNOMED International, http://snomed.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.snomed.otf.owltoolkit.taxonomy;
 
 import com.google.common.base.Strings;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
+import org.ihtsdo.otf.snomedboot.factory.ComponentFactory;
 import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLException;
@@ -45,10 +46,20 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	private Exception owlParsingExceptionThrown;
 	private String owlParsingExceptionMemberId;
 	private final AxiomDeserialiser axiomDeserialiser;
+	private ComponentFactory componentFactoryTap;
 	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomyLoader.class);
 
 	public SnomedTaxonomyLoader() {
 		axiomDeserialiser = new AxiomDeserialiser();
+	}
+
+	/**
+	 * New component states are copied to componentFactoryTap.
+	 * @param componentFactoryTap the component factory to copy new states to.
+	 */
+	public SnomedTaxonomyLoader(ComponentFactory componentFactoryTap) {
+		this();
+		this.componentFactoryTap = componentFactoryTap;
 	}
 
 	@Override
@@ -74,6 +85,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				snomedTaxonomy.getAllConceptIds().remove(id);
 				snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
 			}
+		}
+		if (componentFactoryTap != null) {
+			componentFactoryTap.newConceptState(conceptId, effectiveTime, active, moduleId, definitionStatusId);
 		}
 	}
 
@@ -113,6 +127,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		} else if (loadingDelta) {
 			// Inactive relationships in the delta should be removed from the snapshot view
 			snomedTaxonomy.removeRelationship(stated, sourceId, id);
+		}
+		if (componentFactoryTap != null) {
+			componentFactoryTap.newRelationshipState(id, effectiveTime, active, moduleId, sourceId, destinationId, relationshipGroup, typeId, characteristicTypeId, modifierId);
 		}
 	}
 
@@ -158,6 +175,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				snomedTaxonomy.removeUngroupedRole(contentTypeId, attributeId);
 			}
 		}
+		if (componentFactoryTap != null) {
+			componentFactoryTap.newReferenceSetMemberState(fieldNames, id, effectiveTime, active, moduleId, refsetId, referencedComponentId, otherValues);
+		}
 	}
 
 	public void addActiveAxiom(String id, String referencedComponentId, String owlExpression) throws OWLOntologyCreationException {
@@ -173,6 +193,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	public void newDescriptionState(String id, String effectiveTime, String active, String moduleId, String conceptId, String languageCode, String typeId, String term, String caseSignificanceId) {
 		if (ACTIVE.equals(active) && typeId.equals(Concepts.FSN)) {
 			snomedTaxonomy.addFsn(conceptId, term);
+		}
+		if (componentFactoryTap != null) {
+			componentFactoryTap.newDescriptionState(id, effectiveTime, active, moduleId, conceptId, languageCode, typeId, term, caseSignificanceId);
 		}
 	}
 
