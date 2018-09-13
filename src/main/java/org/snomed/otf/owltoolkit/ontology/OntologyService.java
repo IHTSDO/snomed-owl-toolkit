@@ -141,7 +141,7 @@ public class OntologyService {
 			boolean primitive = snomedTaxonomy.isPrimitive(conceptId);
 			Collection<Relationship> statedRelationships = snomedTaxonomy.getStatedRelationships(conceptId);
 
-			if ((conceptId.equals(Concepts.ROOT_LONG) || !statedRelationships.isEmpty()) && !attributeIds.contains(conceptId)) {
+			if (!statedRelationships.isEmpty() && !attributeIds.contains(conceptId)) {
 				AxiomRepresentation representation = new AxiomRepresentation();
 				representation.setPrimitive(primitive);
 				representation.setLeftHandSideNamedConcept(conceptId);

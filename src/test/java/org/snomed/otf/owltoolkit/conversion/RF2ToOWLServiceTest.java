@@ -77,7 +77,6 @@ public class RF2ToOWLServiceTest {
 						"# Class: <http://snomed.info/id/138875005> (SNOMED CT Concept (SNOMED RT+CTV3))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :138875005 \"SNOMED CT Concept (SNOMED RT+CTV3)\"^^xsd:string)\n" +
-						"SubClassOf(:138875005 owl:Thing)\n" +
 						"\n" +
 						"# Class: <http://snomed.info/id/362969004> (Disorder of endocrine system (disorder))\n" +
 						"\n" +
@@ -194,7 +193,6 @@ public class RF2ToOWLServiceTest {
 						"# Class: <http://snomed.info/id/138875005> (SNOMED CT Concept (SNOMED RT+CTV3))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :138875005 \"SNOMED CT Concept (SNOMED RT+CTV3)\"^^xsd:string)\n" +
-						"SubClassOf(:138875005 owl:Thing)\n" +
 						"\n" +
 						"# Class: <http://snomed.info/id/362969004> (Disorder of endocrine system (disorder))\n" +
 						"\n" +
@@ -311,7 +309,6 @@ public class RF2ToOWLServiceTest {
 						"# Class: <http://snomed.info/id/138875005> (SNOMED CT Concept (SNOMED RT+CTV3))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :138875005 \"SNOMED CT Concept (SNOMED RT+CTV3)\"^^xsd:string)\n" +
-						"SubClassOf(:138875005 owl:Thing)\n" +
 						"\n" +
 
 						"# Class: <http://snomed.info/id/18736003> (Middle ear exploration through ear canal incision (procedure))\n" +
