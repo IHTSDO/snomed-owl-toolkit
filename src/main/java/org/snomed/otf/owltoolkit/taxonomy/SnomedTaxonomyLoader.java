@@ -46,7 +46,8 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	private Exception owlParsingExceptionThrown;
 	private String owlParsingExceptionMemberId;
 	private final AxiomDeserialiser axiomDeserialiser;
-	private ComponentFactory componentFactoryTap;
+	private ComponentFactory deltaComponentFactoryTap;
+	private ComponentFactory snapshotComponentFactoryTap;
 	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomyLoader.class);
 
 	public SnomedTaxonomyLoader() {
@@ -55,11 +56,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	/**
 	 * New component states are copied to componentFactoryTap.
-	 * @param componentFactoryTap the component factory to copy new states to.
+	 * @param snapshotComponentFactoryTap the component factory to copy snapshot states to.
+	 * @param deltaComponentFactoryTap the component factory to copy delta states to.
 	 */
-	public SnomedTaxonomyLoader(ComponentFactory componentFactoryTap) {
+	SnomedTaxonomyLoader(ComponentFactory snapshotComponentFactoryTap, ComponentFactory deltaComponentFactoryTap) {
 		this();
-		this.componentFactoryTap = componentFactoryTap;
+		this.snapshotComponentFactoryTap = snapshotComponentFactoryTap;
+		this.deltaComponentFactoryTap = deltaComponentFactoryTap;
 	}
 
 	@Override
@@ -86,6 +89,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
 			}
 		}
+		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
 			componentFactoryTap.newConceptState(conceptId, effectiveTime, active, moduleId, definitionStatusId);
 		}
@@ -128,6 +132,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			// Inactive relationships in the delta should be removed from the snapshot view
 			snomedTaxonomy.removeRelationship(stated, sourceId, id);
 		}
+		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
 			componentFactoryTap.newRelationshipState(id, effectiveTime, active, moduleId, sourceId, destinationId, relationshipGroup, typeId, characteristicTypeId, modifierId);
 		}
@@ -175,6 +180,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				snomedTaxonomy.removeUngroupedRole(contentTypeId, attributeId);
 			}
 		}
+		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
 			componentFactoryTap.newReferenceSetMemberState(fieldNames, id, effectiveTime, active, moduleId, refsetId, referencedComponentId, otherValues);
 		}
@@ -194,9 +200,14 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		if (ACTIVE.equals(active) && typeId.equals(Concepts.FSN)) {
 			snomedTaxonomy.addFsn(conceptId, term);
 		}
+		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
 			componentFactoryTap.newDescriptionState(id, effectiveTime, active, moduleId, conceptId, languageCode, typeId, term, caseSignificanceId);
 		}
+	}
+
+	private ComponentFactory getComponentFactoryTap() {
+		return loadingDelta ? deltaComponentFactoryTap : snapshotComponentFactoryTap;
 	}
 
 	void reportErrors() throws ReleaseImportException {

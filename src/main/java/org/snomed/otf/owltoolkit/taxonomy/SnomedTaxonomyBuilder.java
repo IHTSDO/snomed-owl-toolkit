@@ -62,19 +62,20 @@ public class SnomedTaxonomyBuilder {
 			InputStream currentReleaseRf2DeltaArchive,
 			boolean includeFSNs) throws ReleaseImportException {
 
-		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, includeFSNs);
+		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, null, includeFSNs);
 	}
 
 	public SnomedTaxonomy build(
 			InputStreamSet snomedRf2SnapshotArchives,
 			InputStream currentReleaseRf2DeltaArchive,
-			ComponentFactory componentFactoryTap,
+			ComponentFactory snapshotComponentFactoryTap,
+			ComponentFactory deltaComponentFactoryTap,
 			boolean includeFSNs) throws ReleaseImportException {
 
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
-		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(componentFactoryTap);
+		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snapshotComponentFactoryTap, deltaComponentFactoryTap);
 
 		ReleaseImporter releaseImporter = new ReleaseImporter();
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(

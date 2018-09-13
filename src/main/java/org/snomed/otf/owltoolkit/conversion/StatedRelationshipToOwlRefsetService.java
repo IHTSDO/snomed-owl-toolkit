@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.constants.RF2Headers;
-import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
@@ -42,80 +41,42 @@ public class StatedRelationshipToOwlRefsetService {
 		// Create zip stream
 		try (ZipOutputStream zipOutputStream = new ZipOutputStream(rf2DeltaZipResults)) {
 
-			// Start writing OWL Axiom entry
-			zipOutputStream.putNextEntry(new ZipEntry("sct2_sRefset_OWLAxiomDelta_INT_" + effectiveDate + ".txt"));
-
 			// Load required parts of RF2 into memory, copying existing owl axioms to output file
 			logger.info("Loading RF2 files");
-			AxiomCopier axiomCopier = new AxiomCopier(zipOutputStream);
-			SnomedTaxonomy snomedTaxonomy = readSnomedTaxonomy(snomedRf2SnapshotArchive, deltaStream, axiomCopier);
+
+			// Write inactive stated relationships to output zip during snapshot loading
+			zipOutputStream.putNextEntry(new ZipEntry("sct2_StatedRelationship_Delta_INT_" + effectiveDate + ".txt"));
+			PublishedStatedRelationshipInactivator publishedStatedRelationshipInactivator = new PublishedStatedRelationshipInactivator(zipOutputStream);
+
+			// Write existing axioms to output zip during delta loading
+			AxiomCopier axiomCopier = new AxiomCopier(() -> {
+				try {
+					publishedStatedRelationshipInactivator.complete();
+					zipOutputStream.closeEntry();
+					zipOutputStream.putNextEntry(new ZipEntry("sct2_sRefset_OWLAxiomDelta_INT_" + effectiveDate + ".txt"));
+					return new BufferedWriter(new OutputStreamWriter(zipOutputStream));
+				} catch (IOException e) {
+					logger.error("Failed to start OWL Axiom zip entry", e);
+				}
+				return null;
+			});
+			SnomedTaxonomy snomedTaxonomy = readSnomedTaxonomy(snomedRf2SnapshotArchive, deltaStream, publishedStatedRelationshipInactivator, axiomCopier);
 			axiomCopier.complete();
 
 			convertStatedRelationshipsToOwlRefset(snomedTaxonomy, zipOutputStream);
 			zipOutputStream.closeEntry();
-
-			// Write inactive stated relationships
-			zipOutputStream.putNextEntry(new ZipEntry("sct2_StatedRelationship_Delta_INT_" + effectiveDate + ".txt"));
-			try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream))) {
-				writer.write(RF2Headers.RELATIONSHIP_HEADER);
-				writer.newLine();
-				for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
-					for (Relationship statedRelationship : snomedTaxonomy.getStatedRelationships(conceptId)) {
-						// id
-						writer.write(statedRelationship.getRelationshipId() + "");
-						writer.write(TAB);
-
-						// effectiveTime
-						writer.write(TAB);
-
-						// active
-						writer.write("0");
-						writer.write(TAB);
-
-						// moduleId
-						writer.write(statedRelationship.getModuleId() + "");
-						writer.write(TAB);
-
-						// sourceId
-						writer.write(conceptId.toString());
-						writer.write(TAB);
-
-						// destinationId
-						writer.write(statedRelationship.getDestinationId() + "");
-						writer.write(TAB);
-
-						// relationshipGroup
-						writer.write(statedRelationship.getGroup() + "");
-						writer.write(TAB);
-
-						// typeId
-						writer.write(statedRelationship.getTypeId() + "");
-						writer.write(TAB);
-
-						// characteristicTypeId
-						writer.write(Concepts.STATED_RELATIONSHIP);
-						writer.write(TAB);
-
-						// modifierId
-						writer.write("900000000000451002");
-						writer.newLine();
-					}
-				}
-				writer.flush();
-				zipOutputStream.closeEntry();
-			}
 		}
-
 	}
 
-	SnomedTaxonomy readSnomedTaxonomy(InputStream snomedRf2SnapshotArchive, OptionalFileInputStream deltaStream, ComponentFactory axiomDeltaCopier) throws ConversionException {
-		SnomedTaxonomy snomedTaxonomy;
+	SnomedTaxonomy readSnomedTaxonomy(InputStream snomedRf2SnapshotArchive, OptionalFileInputStream deltaStream,
+			ComponentFactory publishedStatedRelationshipInactivator, ComponentFactory axiomDeltaCopier) throws ConversionException {
+
 		try {
-			snomedTaxonomy = new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream.getInputStream().orElse(null), axiomDeltaCopier, false);
+			return new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream.getInputStream().orElse(null),
+					publishedStatedRelationshipInactivator, axiomDeltaCopier, false);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}
-		return snomedTaxonomy;
 	}
 
 	void convertStatedRelationshipsToOwlRefset(SnomedTaxonomy snomedTaxonomy, OutputStream outputStream) throws OWLOntologyCreationException, ConversionException {
@@ -131,8 +92,6 @@ public class StatedRelationshipToOwlRefsetService {
 		try {
 			// Leave stream open so other entries can be written when used as a zip stream
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
-			writer.write(RF2Headers.OWL_EXPRESSION_REFERENCE_SET_HEADER);
-			writer.newLine();
 
 			ByteArrayOutputStream functionalSyntaxOutputStream = new ByteArrayOutputStream();
 			OutputStreamWriter functionalSyntaxWriter = new OutputStreamWriter(functionalSyntaxOutputStream, Charset.forName("UTF-8"));
@@ -186,14 +145,85 @@ public class StatedRelationshipToOwlRefsetService {
 		}
 	}
 
+	private static class PublishedStatedRelationshipInactivator extends ImpotentComponentFactory {
+
+		private final BufferedWriter writer;
+		private final List<IOException> exceptionsThrown;
+
+		PublishedStatedRelationshipInactivator(ZipOutputStream zipOutputStream) throws IOException {
+			writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream));
+			writer.write(RF2Headers.RELATIONSHIP_HEADER);
+			writer.newLine();
+			exceptionsThrown = new ArrayList<>();
+		}
+
+		@Override
+		public void newRelationshipState(String id, String effectiveTime, String active, String moduleId, String sourceId, String destinationId, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
+			if (active.equals("1") && characteristicTypeId.equals(Concepts.STATED_RELATIONSHIP)) {
+				// Make active stated relationship inactive
+				try {
+					// id
+					writer.write(id);
+					writer.write(TAB);
+
+					// effectiveTime
+					writer.write(TAB);
+
+					// active
+					writer.write("0");
+					writer.write(TAB);
+
+					// moduleId
+					writer.write(moduleId);
+					writer.write(TAB);
+
+					// sourceId
+					writer.write(sourceId);
+					writer.write(TAB);
+
+					// destinationId
+					writer.write(destinationId);
+					writer.write(TAB);
+
+					// relationshipGroup
+					writer.write(relationshipGroup);
+					writer.write(TAB);
+
+					// typeId
+					writer.write(typeId);
+					writer.write(TAB);
+
+					// characteristicTypeId
+					writer.write(Concepts.STATED_RELATIONSHIP);
+					writer.write(TAB);
+
+					// modifierId
+					writer.write("900000000000451002");
+					writer.newLine();
+				} catch (IOException e) {
+					exceptionsThrown.add(e);
+				}
+			}
+		}
+
+		public void complete() throws IOException {
+			writer.flush();
+			if (!exceptionsThrown.isEmpty()) {
+				throw exceptionsThrown.get(0);
+			}
+		}
+	}
+
 	private static class AxiomCopier extends ImpotentComponentFactory {
 
+		private final Supplier<BufferedWriter> startFunction;
+		private boolean entryStarted;
+		private BufferedWriter writer;
 		private final List<IOException> exceptionsThrown;
-		private final BufferedWriter axiomWriter;
 
-		AxiomCopier(OutputStream zipOutputStream) {
+		AxiomCopier(Supplier<BufferedWriter> startFunction) {
 			exceptionsThrown = new ArrayList<>();
-			axiomWriter = new BufferedWriter(new OutputStreamWriter(zipOutputStream));
+			this.startFunction = startFunction;
 		}
 
 		@Override
@@ -201,28 +231,39 @@ public class StatedRelationshipToOwlRefsetService {
 			// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
 			if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET)) {
 				try {
-					axiomWriter.write(id);
-					axiomWriter.write(TAB);
-					axiomWriter.write(effectiveTime);
-					axiomWriter.write(TAB);
-					axiomWriter.write(active);
-					axiomWriter.write(TAB);
-					axiomWriter.write(moduleId);
-					axiomWriter.write(TAB);
-					axiomWriter.write(refsetId);
-					axiomWriter.write(TAB);
-					axiomWriter.write(referencedComponentId);
-					axiomWriter.write(TAB);
-					axiomWriter.write(otherValues[0]);
-					axiomWriter.newLine();
+					startEntry();
+					writer.write(id);
+					writer.write(TAB);
+					writer.write(effectiveTime);
+					writer.write(TAB);
+					writer.write(active);
+					writer.write(TAB);
+					writer.write(moduleId);
+					writer.write(TAB);
+					writer.write(refsetId);
+					writer.write(TAB);
+					writer.write(referencedComponentId);
+					writer.write(TAB);
+					writer.write(otherValues[0]);
+					writer.newLine();
 				} catch (IOException e) {
 					exceptionsThrown.add(e);
 				}
 			}
 		}
 
+		private void startEntry() throws IOException {
+			if (!entryStarted) {
+				writer = startFunction.get();
+				writer.write(RF2Headers.OWL_EXPRESSION_REFERENCE_SET_HEADER);
+				writer.newLine();
+				entryStarted = true;
+			}
+		}
+
 		private void complete() throws IOException {
-			axiomWriter.flush();
+			startEntry();
+			writer.flush();
 			// Let exceptions from component factory bubble up
 			if (!exceptionsThrown.isEmpty()) {
 				throw exceptionsThrown.get(0);

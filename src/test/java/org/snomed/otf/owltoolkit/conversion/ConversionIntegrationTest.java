@@ -4,12 +4,14 @@ import org.apache.commons.io.FileUtils;
 import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.snomed.otf.owltoolkit.constants.RF2Headers;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 import static org.junit.Assert.assertEquals;
@@ -54,7 +56,8 @@ public class ConversionIntegrationTest {
 			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(null);
 			 FileOutputStream outputStream = new FileOutputStream(additionalOwlAxioms)) {
 
-			SnomedTaxonomy snomedTaxonomy = statedRelationshipToOwlRefsetService.readSnomedTaxonomy(snapshotStream, deltaStream, new ImpotentComponentFactory());
+			SnomedTaxonomy snomedTaxonomy = statedRelationshipToOwlRefsetService.readSnomedTaxonomy(snapshotStream, deltaStream, new ImpotentComponentFactory(), new ImpotentComponentFactory());
+			outputStream.write((RF2Headers.OWL_EXPRESSION_REFERENCE_SET_HEADER + "\n").getBytes(StandardCharsets.UTF_8));
 			statedRelationshipToOwlRefsetService.convertStatedRelationshipsToOwlRefset(snomedTaxonomy, outputStream);
 		}
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
