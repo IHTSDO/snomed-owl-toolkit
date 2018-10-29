@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# Add attribute Associated finding (attribute)
+246090004	20110131	1	900000000000012004	900000000000074008

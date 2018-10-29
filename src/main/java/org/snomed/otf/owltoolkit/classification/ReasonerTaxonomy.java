@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2018 SNOMED International, http://snomed.org
  * Copyright 2011-2016 B2i Healthcare Pte Ltd, http://b2i.sg
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,7 @@ public class ReasonerTaxonomy implements Serializable {
 	private final Map<Long, Set<Long>> parentIds = new Long2ObjectOpenHashMap<>();
 	private final Map<Long, Set<Long>> ancestorIds = new Long2ObjectOpenHashMap<>();
 	private final List<Long> insertionOrderedIds = new LongArrayList();
+	private final List<Long> insertionOrderedAttributeIds = new LongArrayList();
 
 	public ReasonerTaxonomy() {
 	}
@@ -90,6 +91,10 @@ public class ReasonerTaxonomy implements Serializable {
 	
 	public List<Long> getConceptIds() {
 		return insertionOrderedIds;
+	}
+
+	public List<Long> getAttributeIds() {
+		return insertionOrderedAttributeIds;
 	}
 
 	public Collection<Relationship> getNonIsAFragments(long conceptId) {

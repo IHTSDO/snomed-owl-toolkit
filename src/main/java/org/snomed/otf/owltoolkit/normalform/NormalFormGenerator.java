@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2018 SNOMED International, http://snomed.org
  * Copyright 2011-2016 B2i Healthcare Pte Ltd, http://b2i.sg
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,7 +22,6 @@ import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2018 SNOMED International, http://snomed.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,6 +114,52 @@ public class SimpleClassificationIntegrationTest {
 		assertEquals(3, lines.size());// We only have 2 inactive concepts now
 		assertTrue(lines.contains("200009001\t\t0\t\t362969004\t404684003\t0\t116680003\t900000000000011006\t900000000000451002"));
 		assertTrue(lines.contains("200010001\t\t0\t\t362969004\t113331007\t0\t363698007\t900000000000011006\t900000000000451002"));
+		List<String> equivalence = readEquivalentConceptLinesTrim(results);
+		assertEquals(1, equivalence.size());
+	}
+
+	@Test
+	/*
+		Assert that is-a relationships are inferred for new attributes
+	 */
+	public void testClassifyNewAttribute() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Add_Attribute_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results - stated relationship also inferred
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		assertEquals(2, lines.size());
+		assertTrue(lines.contains("1\t\t246090004\t762705008\t0\t116680003\t900000000000011006\t900000000000451002"));
+
+		// No equivalent concepts
+		List<String> equivalence = readEquivalentConceptLinesTrim(results);
+		assertEquals(1, equivalence.size());
+	}
+
+	@Test
+	/*
+		Assert that inferred is-a relationships are made redundant for newly inactive attributes
+	 */
+	public void testClassifyInactiveAttribute() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_with_extra_attribute_snapshot");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Inactivate_Attribute_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results - stated relationship also inferred
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		assertEquals(2, lines.size());
+		assertTrue(lines.contains("200016001\t\t0\t\t246112005\t762705008\t0\t116680003\t900000000000011006\t900000000000451002"));
+
+		// No equivalent concepts
 		List<String> equivalence = readEquivalentConceptLinesTrim(results);
 		assertEquals(1, equivalence.size());
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2018 SNOMED International, http://snomed.org
  * Copyright 2011-2017 B2i Healthcare Pte Ltd, http://b2i.sg
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,9 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
 
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ReasonerTaxonomyWalker {
@@ -78,6 +76,13 @@ public class ReasonerTaxonomyWalker {
 		processedConceptIds.clear();
 		processedConceptIds = null;
 
+		// Move attribute ids to after 'Concept model attribute' concept so they are processed in the correct order.
+		List<Long> attributeIds = taxonomy.getAttributeIds();
+		attributeIds.remove(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG);
+		List<Long> conceptIds = taxonomy.getConceptIds();
+		conceptIds.removeAll(attributeIds);
+		conceptIds.addAll(conceptIds.indexOf(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG) + 1, attributeIds);
+
 		LOGGER.info("<<< taxonomy extraction");
 		return taxonomy;
 	}
@@ -92,9 +97,13 @@ public class ReasonerTaxonomyWalker {
 			long propertyId = OntologyHelper.getConceptId(objectProperty);
 			if (Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG.equals(propertyId)) {
 				topLevelObjectProperty = objectProperty;
+
+				// Manually join object attributes to the main SNOMED hierarchy of the reasoner taxonomy to make them navigable
+				taxonomy.addEntry(new ReasonerTaxonomyEntry(Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG, Collections.singleton(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG)));
+
 				break;
 			}
-			// The concept model object attribute was not present before Jan 2018 so may need to use the old one
+			// The 'Concept model *object* attribute' was not present before Jan 2018 so fall back to the 'Concept model attribute' for object properties.
 			if (Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG.equals(propertyId)) {
 				topLevelObjectProperty = objectProperty;
 			}
@@ -108,6 +117,10 @@ public class ReasonerTaxonomyWalker {
 			long propertyId = OntologyHelper.getConceptId(dataProperty);
 			if (Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG.equals(propertyId)) {
 				topDataProperty = dataProperty;
+
+				// Manually join data attributes to the main SNOMED hierarchy of the reasoner taxonomy to make them navigable
+				taxonomy.addEntry(new ReasonerTaxonomyEntry(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG, Collections.singleton(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG)));
+
 				break;
 			}
 		}
@@ -116,6 +129,7 @@ public class ReasonerTaxonomyWalker {
 		}
 
 		// The properties extracted are not concepts so we clear them from the list
+		taxonomy.getAttributeIds().addAll(taxonomy.getConceptIds());
 		taxonomy.getConceptIds().clear();
 	}
 

@@ -1,0 +1,7 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# Inactivate attribute Finding site attribute
+246112005	20170731	0	900000000000012004	900000000000074008

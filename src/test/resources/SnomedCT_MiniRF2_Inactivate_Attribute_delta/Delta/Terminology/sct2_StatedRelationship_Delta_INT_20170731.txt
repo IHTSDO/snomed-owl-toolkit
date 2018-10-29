@@ -1,0 +1,6 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+# Inactivate Severity (attribute) - is a - Concept model object attribute
+100016001	20170731	0	900000000000012004	246112005	762705008	0	116680003	900000000000010007	900000000000451002
