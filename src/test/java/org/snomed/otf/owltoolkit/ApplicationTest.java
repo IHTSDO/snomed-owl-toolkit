@@ -97,6 +97,33 @@ public class ApplicationTest {
 	}
 
 	@Test
+	public void mainArgTwoFilesSeparatedByCommaAndSpace() throws Exception {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File extensionRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Extension_snapshot");
+
+		String arguments = "-rf2-snapshot-archives " + baseRF2SnapshotZip.getAbsolutePath() + ", " + extensionRF2SnapshotZip.getAbsolutePath();
+		runApplication(arguments.split(" "));
+
+		assertEquals("\n\n" + HELP, outStream.toString());
+		assertEquals("When specifying multiple archives please include no whitespace before or after the comma.\n", errorStream.toString());
+	}
+
+	@Test
+	public void mainArgTwoFilesSeparatedByCommaNoSpace() throws Exception {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File extensionRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Extension_snapshot");
+
+		String arguments = "-rf2-snapshot-archives " + baseRF2SnapshotZip.getAbsolutePath() + "," + extensionRF2SnapshotZip.getAbsolutePath();
+		runApplication(arguments.split(" "));
+
+		String out = outStream.toString();
+		assertTrue(out.contains("concepts read from sct2_Concept_Snapshot_INT_20180731.txt"));
+		assertTrue(out.contains("concepts read from sct2_Concept_Snapshot_ExtensionA_20180931.txt"));
+		assertTrue(out.contains("OWL Ontology file written to - ontology-"));
+		assertEquals("", errorStream.toString());
+	}
+
+	@Test
 	public void mainArgsFileAndVersion() throws Exception {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 		runApplication(new String[] {

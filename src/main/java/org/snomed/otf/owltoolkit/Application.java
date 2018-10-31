@@ -64,15 +64,21 @@ public class Application {
 			// Help
 			modeFound = true;
 			printHelp();
-		} else if (args.contains(ARG_CLASSIFY)) {
-			modeFound = true;
-			classify(args);
-		} else if (args.contains(ARG_RF2_STATED_TO_COMPLETE_OWL)) {
-			modeFound = true;
-			statedRelationshipsToOwlReferenceSet(args);
-		}
-		if (!modeFound || args.contains(ARG_RF2_TO_OWL)) {
-			rf2ToOwl(args);
+		} else {
+			for (String arg : args) {
+				assertTrue("When specifying multiple archives please include no whitespace before or after the comma.",
+						!arg.startsWith(",") && !arg.endsWith(","));
+			}
+			if (args.contains(ARG_CLASSIFY)) {
+				modeFound = true;
+				classify(args);
+			} else if (args.contains(ARG_RF2_STATED_TO_COMPLETE_OWL)) {
+				modeFound = true;
+				statedRelationshipsToOwlReferenceSet(args);
+			}
+			if (!modeFound || args.contains(ARG_RF2_TO_OWL)) {
+				rf2ToOwl(args);
+			}
 		}
 	}
 
