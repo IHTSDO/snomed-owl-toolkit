@@ -44,8 +44,7 @@ public class SnomedTaxonomyBuilder {
 
 	static {
 		// Giving reference set filename patterns avoids reading them all
-		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_sRefset_OWLOntology.*");
-		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_sRefset_OWLAxiom.*");
+		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_sRefset_OWL.*");
 		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_cissccRefset_MRCMAttributeDomain.*");
 	}
 
