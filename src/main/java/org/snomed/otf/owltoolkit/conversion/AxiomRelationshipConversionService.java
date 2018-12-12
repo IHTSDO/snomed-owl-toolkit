@@ -72,8 +72,8 @@ public class AxiomRelationshipConversionService {
 			return null;
 		}
 
-		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES) {
-			LOGGER.debug("Only SubClassOf and EquivalentClasses can be converted to relationships. " +
+		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES && axiomType != AxiomType.SUB_OBJECT_PROPERTY) {
+			LOGGER.debug("Only SubClassOf, EquivalentClasses and SubObjectPropertyOf can be converted to relationships. " +
 					"Axiom given is of type " + axiomType.getName() + ". Returning null.");
 			return null;
 		}
@@ -81,7 +81,24 @@ public class AxiomRelationshipConversionService {
 		AxiomRepresentation representation = new AxiomRepresentation();
 		OWLClassExpression leftHandExpression;
 		OWLClassExpression rightHandExpression;
-		if (axiomType == AxiomType.EQUIVALENT_CLASSES) {
+
+		if (axiomType == AxiomType.SUB_OBJECT_PROPERTY) {
+			OWLSubObjectPropertyOfAxiom subObjectPropertyOfAxiom = (OWLSubObjectPropertyOfAxiom) owlAxiom;
+
+			OWLObjectPropertyExpression subProperty = subObjectPropertyOfAxiom.getSubProperty();
+			OWLObjectProperty namedProperty = subProperty.getNamedProperty();
+			long subAttributeConceptId = OntologyHelper.getConceptId(namedProperty);
+
+			OWLObjectPropertyExpression superProperty = subObjectPropertyOfAxiom.getSuperProperty();
+			OWLObjectProperty superPropertyNamedProperty = superProperty.getNamedProperty();
+			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
+
+			representation.setLeftHandSideNamedConcept(subAttributeConceptId);
+			representation.setRightHandSideRelationships(newSingleIsARelationship(superAttributeConceptId));
+
+			return representation;
+
+		} else if (axiomType == AxiomType.EQUIVALENT_CLASSES) {
 			OWLEquivalentClassesAxiom equivalentClassesAxiom = (OWLEquivalentClassesAxiom) owlAxiom;
 			Set<OWLClassExpression> classExpressions = equivalentClassesAxiom.getClassExpressions();
 			if (classExpressions.size() != 2) {
@@ -102,9 +119,7 @@ public class AxiomRelationshipConversionService {
 		if (leftNamedClass != null) {
 			if (referencedComponentId != null && !referencedComponentId.equals(leftNamedClass)) {
 				// Force the named concept which is not the referencedComponentId to be returned as a set of relationships.
-				Map<Integer, List<Relationship>> relationships = new HashMap<>();
-				relationships.put(0, Collections.singletonList(new Relationship(0, Concepts.IS_A_LONG, leftNamedClass)));
-				representation.setLeftHandSideRelationships(relationships);
+				representation.setLeftHandSideRelationships(newSingleIsARelationship(leftNamedClass));
 			} else {
 				representation.setLeftHandSideNamedConcept(leftNamedClass);
 			}
@@ -117,9 +132,7 @@ public class AxiomRelationshipConversionService {
 		if (rightNamedClass != null) {
 			if (referencedComponentId != null && !referencedComponentId.equals(rightNamedClass)) {
 				// Force the named concept which is not the referencedComponentId to be returned as a set of relationships.
-				Map<Integer, List<Relationship>> relationships = new HashMap<>();
-				relationships.put(0, Collections.singletonList(new Relationship(0, Concepts.IS_A_LONG, rightNamedClass)));
-				representation.setRightHandSideRelationships(relationships);
+				representation.setRightHandSideRelationships(newSingleIsARelationship(rightNamedClass));
 			} else {
 				representation.setRightHandSideNamedConcept(rightNamedClass);
 			}
@@ -129,6 +142,12 @@ public class AxiomRelationshipConversionService {
 		}
 
 		return representation;
+	}
+
+	private Map<Integer, List<Relationship>> newSingleIsARelationship(Long leftNamedClass) {
+		Map<Integer, List<Relationship>> relationships = new HashMap<>();
+		relationships.put(0, Collections.singletonList(new Relationship(0, Concepts.IS_A_LONG, leftNamedClass)));
+		return relationships;
 	}
 
 	/**

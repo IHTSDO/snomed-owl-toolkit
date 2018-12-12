@@ -12,8 +12,7 @@ import org.snomed.otf.owltoolkit.domain.Relationship;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class AxiomRelationshipConversionServiceTest {
 
@@ -156,6 +155,30 @@ public class AxiomRelationshipConversionServiceTest {
 		// Test converting relationships back to an axiom
 		String recreatedAxiom = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
 		assertEquals(axiom, recreatedAxiom);
+	}
+
+	@Test
+	public void testAttributeIsARelationship() throws ConversionException {
+		String axiom = "SubObjectPropertyOf(:363698007 :762705008)";
+
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(363698007L, axiom);
+
+		assertNotNull(representation);
+
+		assertEquals(
+				"0 116680003=762705008",
+				toString(representation.getRightHandSideRelationships()));
+
+		assertEquals(363698007, representation.getLeftHandSideNamedConcept().longValue());
+	}
+
+	@Test
+	public void testAttributePropertyChain() throws ConversionException {
+		String axiom = "SubObjectPropertyOf(ObjectPropertyChain(:246093002 :738774007) :246093002)";
+
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(246093002L, axiom);
+
+		assertNull(representation);
 	}
 
 	@Test
