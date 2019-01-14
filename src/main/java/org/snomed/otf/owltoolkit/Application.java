@@ -2,6 +2,8 @@ package org.snomed.otf.owltoolkit;
 
 import com.google.common.collect.Lists;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.constants.DescriptionType;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.conversion.RF2ToOWLService;
 import org.snomed.otf.owltoolkit.conversion.StatedRelationshipToOwlRefsetService;
@@ -36,6 +38,8 @@ public class Application {
 	private static final String ARG_URI = "-uri";
 	private static final String ARG_VERSION = "-version";
 	private static final String ARG_WITHOUT_ANNOTATIONS = "-without-annotations";
+	private static final String ARG_PREFERRED_TERMS = "-preferred-terms";
+	private static final String ARG_LANGUAGE_REFSET = "-language-refset";
 	private static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
 
@@ -112,7 +116,12 @@ public class Application {
 
 		String versionDate = getEffectiveDate(args);
 
-		boolean includeFSNs = !args.contains(ARG_WITHOUT_ANNOTATIONS);
+		boolean withAnnotations = !args.contains(ARG_WITHOUT_ANNOTATIONS);
+		boolean preferredTerms = withAnnotations && args.contains(ARG_DEBUG);
+		String languageRefset = getParameterValue(ARG_LANGUAGE_REFSET, args);
+		if (languageRefset == null) {
+			languageRefset = Concepts.US_LANGUAGE_REFERENCE_SET;
+		}
 
 		System.out.println();
 		System.out.println("Creating Ontology using the following options:");
@@ -120,7 +129,11 @@ public class Application {
 		System.out.println("  Delta archive: " + (deltaFile == null ? "-none-" : deltaFile));
 		System.out.println("  Ontology URI: " + ontologyUri);
 		System.out.println("  Ontology Version: " + versionDate);
-		System.out.println("  Include FSN Annotations: " + includeFSNs);
+		System.out.println("  Annotations: " + withAnnotations);
+		if (withAnnotations) {
+			System.out.println("  Annotation Type: " + (preferredTerms ? "Preferred Terms" : "Fully Specified Names"));
+			System.out.println("  Annotation Language Reference Set: " + languageRefset);
+		}
 		System.out.println();
 
 		// Conversion
@@ -133,7 +146,11 @@ public class Application {
 			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(deltaFile);
 			 FileOutputStream outputStream = new FileOutputStream(ontologyOutputFile)) {
 
-			new RF2ToOWLService().convertRF2ArchiveToOWL(ontologyUri, versionDate, includeFSNs, snapshotStreams, deltaStream, outputStream);
+			DescriptionType descriptionType = !withAnnotations ?
+					DescriptionType.NONE :
+					preferredTerms ? DescriptionType.PT : DescriptionType.FSN;
+
+			new RF2ToOWLService().convertRF2ArchiveToOWL(ontologyUri, versionDate, descriptionType, languageRefset, snapshotStreams, deltaStream, outputStream);
 		} catch (IOException e) {
 			System.err.println("Failed to close input or output stream.");
 			e.printStackTrace();
@@ -229,11 +246,20 @@ public class Application {
 						"\n" +
 
 						pad(ARG_WITHOUT_ANNOTATIONS) +
-						"(Optional) Flag to omit Fully Specified Name annotations from the ontology \n" +
+						"(Optional) Flag to omit annotations from the ontology \n" +
 						pad("") + "resulting in a smaller file size.\n" +
 						"\n" +
 
-						"");
+						pad(ARG_PREFERRED_TERMS) +
+						"(Optional) Flag to use preferred term annotations rather than the default Fully Specified Names.\n" +
+						"\n" +
+
+						pad(ARG_LANGUAGE_REFSET) +
+						"(Optional) The identifier of the language reference set to use when selecting an FSN or PT to include.\n" +
+						pad("") + "Defaults to 900000000000509007 which is the United States of America English language reference set.\n" +
+						"\n" +
+
+		"");
 	}
 
 	private String getEffectiveDate(List<String> args) {

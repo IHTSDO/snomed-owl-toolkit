@@ -26,6 +26,7 @@ import org.semanticweb.owlapi.model.OWLRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.constants.DescriptionType;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 
@@ -48,7 +49,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	private final AxiomDeserialiser axiomDeserialiser;
 	private ComponentFactory deltaComponentFactoryTap;
 	private ComponentFactory snapshotComponentFactoryTap;
+	private DescriptionType descriptionType;
 	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomyLoader.class);
+	private String langRefset;
 
 	public SnomedTaxonomyLoader() {
 		axiomDeserialiser = new AxiomDeserialiser();
@@ -70,7 +73,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		if (ACTIVE.equals(active)) {
 			long id = parseLong(conceptId);
 			snomedTaxonomy.getAllConceptIds().add(id);
-			if (Concepts.FULLY_DEFINED.equals(definitionStatusId)) {
+			if (FULLY_DEFINED.equals(definitionStatusId)) {
 				snomedTaxonomy.getFullyDefinedConceptIds().add(id);
 			} else {
 				snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
@@ -107,7 +110,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			// TODO: is this correct? Is there a better way?
 			// From Snow Owl import logic:
 			// Universal "has active ingredient" relationships should be put into a union group
-			if (Concepts.HAS_ACTIVE_INGREDIENT.equals(typeId) && universal) {
+			if (HAS_ACTIVE_INGREDIENT.equals(typeId) && universal) {
 				unionGroup = 1;
 			}
 
@@ -140,7 +143,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	@Override
 	public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
-		if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && owlParsingExceptionThrown == null) {
+		if (refsetId.equals(OWL_AXIOM_REFERENCE_SET) && owlParsingExceptionThrown == null) {
 			if (ACTIVE.equals(active)) {
 				try {
 					addActiveAxiom(id, referencedComponentId, otherValues[0]);
@@ -153,14 +156,14 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				// Match by id rather than a deserialised representation because the equals method may fail.
 				snomedTaxonomy.removeAxiom(referencedComponentId, id);
 			}
-		} else if (refsetId.equals(Concepts.OWL_ONTOLOGY_REFERENCE_SET)) {
-			if (Concepts.OWL_ONTOLOGY_NAMESPACE.equals(referencedComponentId)) {
+		} else if (refsetId.equals(OWL_ONTOLOGY_REFERENCE_SET)) {
+			if (OWL_ONTOLOGY_NAMESPACE.equals(referencedComponentId)) {
 				if (ACTIVE.equals(active)) {
 					snomedTaxonomy.addOntologyNamespace(id, otherValues[0]);
 				} else {
 					snomedTaxonomy.removeOntologyNamespace(id);
 				}
-			} else if (Concepts.OWL_ONTOLOGY_HEADER.equals(referencedComponentId)) {
+			} else if (OWL_ONTOLOGY_HEADER.equals(referencedComponentId)) {
 				if (ACTIVE.equals(active)) {
 					snomedTaxonomy.addOntologyHeader(id, otherValues[0]);
 				} else {
@@ -168,9 +171,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				}
 			} else {
 				LOGGER.warn("Unrecognised referencedComponentId '{}' in OWL Ontology reference set file. Only {} or {} are expected. Ignoring entry.",
-						referencedComponentId, Concepts.OWL_ONTOLOGY_NAMESPACE, Concepts.OWL_ONTOLOGY_HEADER);
+						referencedComponentId, OWL_ONTOLOGY_NAMESPACE, OWL_ONTOLOGY_HEADER);
 			}
-		} else if (refsetId.equals(Concepts.MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)) {
+		} else if (refsetId.equals(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)) {
 			long attributeId = parseLong(referencedComponentId);
 			boolean ungrouped = otherValues[1].equals("0");
 			Long contentTypeId = parseLong(otherValues[5]);
@@ -179,6 +182,8 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			} else {
 				snomedTaxonomy.removeUngroupedRole(contentTypeId, attributeId);
 			}
+		} else if (refsetId.equals(langRefset) && otherValues[0].equals(Concepts.PREFERRED)) {
+			snomedTaxonomy.markDescriptionPreferred(parseLong(referencedComponentId));
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
@@ -197,8 +202,12 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	@Override
 	public void newDescriptionState(String id, String effectiveTime, String active, String moduleId, String conceptId, String languageCode, String typeId, String term, String caseSignificanceId) {
-		if (ACTIVE.equals(active) && typeId.equals(Concepts.FSN)) {
-			snomedTaxonomy.addFsn(conceptId, term);
+		if (ACTIVE.equals(active)) {
+			if ((descriptionType == DescriptionType.FSN && typeId.equals(FSN)) ||
+					descriptionType == DescriptionType.PT) {
+
+				snomedTaxonomy.addDescription(new Description(parseLong(id), parseLong(conceptId), term));
+			}
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
@@ -233,4 +242,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	long getTimeTakenDeserialisingAxioms() {
 		return axiomDeserialiser.getTimeTakenDeserialisingAxioms();
 	}
+
+	public void setDescriptionType(DescriptionType descriptionType) {
+		this.descriptionType = descriptionType;
+	}
+
+	public void setLangRefset(String langRefset) {
+		this.langRefset = langRefset;
+	}
+
 }

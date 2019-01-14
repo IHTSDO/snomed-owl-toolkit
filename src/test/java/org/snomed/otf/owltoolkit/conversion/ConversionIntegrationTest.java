@@ -4,6 +4,8 @@ import org.apache.commons.io.FileUtils;
 import org.ihtsdo.otf.snomedboot.factory.ImpotentComponentFactory;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.constants.DescriptionType;
 import org.snomed.otf.owltoolkit.constants.RF2Headers;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
@@ -44,7 +46,8 @@ public class ConversionIntegrationTest {
 		try (InputStreamSet snapshotArchives = new InputStreamSet(new FileInputStream(baseRF2SnapshotZip));
 			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(null)) {
 
-			rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180931", true, snapshotArchives, deltaStream, byteArrayOutputStream);
+			rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180931", DescriptionType.FSN, Concepts.US_LANGUAGE_REFERENCE_SET,
+					snapshotArchives, deltaStream, byteArrayOutputStream);
 		}
 		String owlFileFromStatedRelationships = byteArrayOutputStream.toString();
 
@@ -99,7 +102,8 @@ public class ConversionIntegrationTest {
 			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(owlBasedDeltaZip)) {
 
 			byteArrayOutputStream.reset();
-			rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180931", true, snapshotArchives, deltaStream, byteArrayOutputStream);
+			rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180931", DescriptionType.FSN, Concepts.US_LANGUAGE_REFERENCE_SET,
+					snapshotArchives, deltaStream, byteArrayOutputStream);
 		}
 		String owlFileFromOwlBasedRelease = byteArrayOutputStream.toString();
 

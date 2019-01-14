@@ -8,6 +8,7 @@ import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.constants.DescriptionType;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
@@ -37,14 +38,14 @@ public class RF2ToOWLService {
 	public static final String HEADER_PREFIX = "Ontology(<";
 	public static final String HEADER_SUFFIX = ">)";
 
-	public void convertRF2ArchiveToOWL(String ontologyUriOverride, String versionDate, boolean includeFSNs, InputStreamSet snomedRf2SnapshotArchives,
-			OptionalFileInputStream deltaStream, OutputStream owlFileOutputStream) throws ConversionException {
+	public void convertRF2ArchiveToOWL(String ontologyUriOverride, String versionDate, DescriptionType descriptionType,  String languageRefset,
+			InputStreamSet snomedRf2SnapshotArchives, OptionalFileInputStream deltaStream, OutputStream owlFileOutputStream) throws ConversionException {
 
 		// Load required parts of RF2 into memory
 		logger.info("Loading RF2 files");
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = new SnomedTaxonomyBuilder().build(snomedRf2SnapshotArchives, deltaStream.getInputStream().orElse(null), includeFSNs);
+			snomedTaxonomy = new SnomedTaxonomyBuilder().build(snomedRf2SnapshotArchives, deltaStream.getInputStream().orElse(null), descriptionType, languageRefset);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}

@@ -45,7 +45,8 @@ public class SnomedTaxonomy {
 	private Map<Long, Set<Long>> statedSubTypesMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
 	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
-	private Map<Long, String> conceptFsnTermMap = new Long2ObjectOpenHashMap<>();
+	private Map<Long, Set<Description>> conceptDescriptionsMap = new Long2ObjectOpenHashMap<>();
+	private Map<Long, Description> descriptionsMap = new Long2ObjectOpenHashMap<>();
 
 	public static final Set<Long> DEFAULT_NEVER_GROUPED_ROLE_IDS = Collections.unmodifiableSet(Sets.newHashSet(
 			parseLong(Concepts.PART_OF),
@@ -222,12 +223,28 @@ public class SnomedTaxonomy {
 		}
 	}
 
-	public void addFsn(String conceptId, String term) {
-		conceptFsnTermMap.put(parseLong(conceptId), term);
+	public synchronized void addDescription(Description description) {
+		conceptDescriptionsMap.computeIfAbsent(description.getConceptId(), id -> new HashSet<>()).add(description);
+		descriptionsMap.put(description.getId(), description);
 	}
 
-	public String getConceptFsnTerm(Long conceptId) {
-		return conceptFsnTermMap.get(conceptId);
+	public void markDescriptionPreferred(long descriptionId) {
+		Description description = descriptionsMap.get(descriptionId);
+		if (description != null) {
+			description.markPreferred();
+		}
+	}
+
+	public String getConceptTerm(Long conceptId) {
+		Set<Description> descriptions = conceptDescriptionsMap.get(conceptId);
+		if (descriptions != null) {
+			for (Description description : descriptions) {
+				if (description.isPreferred()) {
+					return description.getTerm();
+				}
+			}
+		}
+		return null;
 	}
 
 	public void addUngroupedRole(Long contentType, Long attributeId) {

@@ -73,7 +73,7 @@ public class StatedRelationshipToOwlRefsetService {
 
 		try {
 			return new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream.getInputStream().orElse(null),
-					publishedStatedRelationshipInactivator, axiomDeltaCopier, false);
+					publishedStatedRelationshipInactivator, axiomDeltaCopier);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}

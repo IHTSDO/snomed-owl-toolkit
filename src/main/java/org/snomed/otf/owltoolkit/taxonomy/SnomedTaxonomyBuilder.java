@@ -21,6 +21,7 @@ import org.ihtsdo.otf.snomedboot.factory.ComponentFactory;
 import org.ihtsdo.otf.snomedboot.factory.LoadingProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snomed.otf.owltoolkit.constants.DescriptionType;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.springframework.util.StopWatch;
 
@@ -48,20 +49,32 @@ public class SnomedTaxonomyBuilder {
 		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_cissccRefset_MRCMAttributeDomain.*");
 	}
 
-	private static final LoadingProfile DELTA_LOADING_PROFILE = SNAPSHOT_LOADING_PROFILE
-			.withInactiveRelationships()
-			.withInactiveRefsetMembers();
+	public SnomedTaxonomy build(InputStreamSet snomedRf2SnapshotArchives) throws ReleaseImportException {
+		return build(snomedRf2SnapshotArchives, null);
+	}
 
-	public SnomedTaxonomy build(InputStreamSet snomedRf2SnapshotArchives, boolean includeFSNs) throws ReleaseImportException {
-		return build(snomedRf2SnapshotArchives, null, includeFSNs);
+	public SnomedTaxonomy build(
+			InputStreamSet snomedRf2SnapshotArchives,
+			InputStream currentReleaseRf2DeltaArchive) throws ReleaseImportException {
+
+		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, null, DescriptionType.NONE, null);
 	}
 
 	public SnomedTaxonomy build(
 			InputStreamSet snomedRf2SnapshotArchives,
 			InputStream currentReleaseRf2DeltaArchive,
-			boolean includeFSNs) throws ReleaseImportException {
+			DescriptionType descriptionType,
+			String langRefset) throws ReleaseImportException {
 
-		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, null, includeFSNs);
+		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, null, descriptionType, langRefset);
+	}
+
+	public SnomedTaxonomy build(
+			InputStreamSet snomedRf2SnapshotArchives,
+			InputStream currentReleaseRf2DeltaArchive,
+			ComponentFactory snapshotComponentFactoryTap,
+			ComponentFactory deltaComponentFactoryTap) throws ReleaseImportException {
+		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, snapshotComponentFactoryTap, deltaComponentFactoryTap, DescriptionType.NONE, null);
 	}
 
 	public SnomedTaxonomy build(
@@ -69,17 +82,33 @@ public class SnomedTaxonomyBuilder {
 			InputStream currentReleaseRf2DeltaArchive,
 			ComponentFactory snapshotComponentFactoryTap,
 			ComponentFactory deltaComponentFactoryTap,
-			boolean includeFSNs) throws ReleaseImportException {
+			DescriptionType descriptionType,
+			String langRefset) throws ReleaseImportException {
 
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 
+		if (descriptionType == null) {
+			descriptionType = DescriptionType.NONE;
+		}
+
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snapshotComponentFactoryTap, deltaComponentFactoryTap);
+		snomedTaxonomyLoader.setDescriptionType(descriptionType);
+		snomedTaxonomyLoader.setLangRefset(langRefset);
 
 		ReleaseImporter releaseImporter = new ReleaseImporter();
+
+		LoadingProfile loadingProfile = SNAPSHOT_LOADING_PROFILE;
+		if (descriptionType != DescriptionType.NONE) {
+			loadingProfile = SNAPSHOT_LOADING_PROFILE
+					.withFullDescriptionObjects()
+					.withRefset(langRefset);
+			loadingProfile.getIncludedReferenceSetFilenamePatterns().add(".*_cRefset_Language.*");
+		}
+
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(
 				snomedRf2SnapshotArchives.getFileInputStreams(),
-				includeFSNs ? SNAPSHOT_LOADING_PROFILE.withFullDescriptionObjects() : SNAPSHOT_LOADING_PROFILE,
+				loadingProfile,
 				snomedTaxonomyLoader);
 		snomedTaxonomyLoader.reportErrors();
 		logger.info("Loaded release snapshot");
@@ -90,7 +119,9 @@ public class SnomedTaxonomyBuilder {
 
 			releaseImporter.loadDeltaReleaseFiles(
 					currentReleaseRf2DeltaArchive,
-					includeFSNs ? DELTA_LOADING_PROFILE.withFullDescriptionObjects() : DELTA_LOADING_PROFILE,
+					loadingProfile
+							.withInactiveRelationships()
+							.withInactiveRefsetMembers(),
 					snomedTaxonomyLoader);
 			snomedTaxonomyLoader.reportErrors();
 			logger.info("Loaded delta");

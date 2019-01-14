@@ -80,8 +80,8 @@ public class OntologyService {
 			// Add axioms generated from stated relationships
 			axioms.addAll(axiomsFromStatedRelationships.getOrDefault(conceptId, Collections.emptySet()));
 
-			// Add FSN annotation
-			addFSNAnnotation(conceptId, snomedTaxonomy, axioms);
+			// Add FSN/PT annotations (if loaded)
+			addAnnotation(conceptId, snomedTaxonomy, axioms);
 		}
 
 		OWLOntology ontology;
@@ -296,8 +296,8 @@ public class OntologyService {
 		return factory.getOWLClass(COLON + conceptId, prefixManager);
 	}
 
-	private void addFSNAnnotation(Long conceptId, SnomedTaxonomy snomedTaxonomy, Set<OWLAxiom> axioms) {
-		String conceptFsnTerm = snomedTaxonomy.getConceptFsnTerm(conceptId);
+	private void addAnnotation(Long conceptId, SnomedTaxonomy snomedTaxonomy, Set<OWLAxiom> axioms) {
+		String conceptFsnTerm = snomedTaxonomy.getConceptTerm(conceptId);
 		if (conceptFsnTerm != null) {
 			axioms.add(factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(), IRI.create(SNOMED_CORE_COMPONENTS_URI + conceptId), factory.getOWLLiteral(conceptFsnTerm)));
 		}

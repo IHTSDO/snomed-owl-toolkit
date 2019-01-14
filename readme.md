@@ -11,8 +11,8 @@ A classification REST API using this toolkit is available, see the [Classificati
   - Works on the command line
   - Uses MRCM Attribute Domain Reference Set for grouping information
   - Uses OWL Axiom Reference Set
-  - Can include FSN annotations
   - Support for Snomed Editions and Extensions
+  - Choice of FSN or PT annotations including translations
   - *For Java integration see RF2ToOWLService.java*
 - Classify Snomed
   - Uses RF2 to OWL conversion
@@ -85,8 +85,13 @@ Optional parameters for OWL conversion:
  -version <version>                     (Optional) Date for the ontology version e.g. 20180731.
                                         Defaults to today's date.
 
- -without-annotations                   (Optional) Flag to omit Fully Specified Name annotations from the ontology
+ -without-annotations                   (Optional) Flag to omit annotations from the ontology
                                         resulting in a smaller file size.
+
+ -preferred-terms                       (Optional) Flag to use preferred term annotations rather than the default Fully Specified Names.
+
+ -language-refset                       (Optional) The identifier of the language reference set to use when selecting an FSN or PT to include.
+                                        Defaults to 900000000000509007 which is the United States of America English language reference set.
 ```
 
 ### Snomed RF2 to OWL File Conversion

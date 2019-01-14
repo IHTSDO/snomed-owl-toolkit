@@ -39,6 +39,8 @@ public class Concepts {
 	public static final String DEFINING_RELATIONSHIP = "900000000000006009";
 
 	public static final String FSN = "900000000000003001";
+	public static final String PREFERRED = "900000000000548007";
+	public static final String US_LANGUAGE_REFERENCE_SET = "900000000000509007";
 
 	public static final String ALL_PRECOORDINATED_CONTENT = "723594008";
 

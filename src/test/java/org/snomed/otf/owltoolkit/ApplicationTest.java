@@ -50,8 +50,13 @@ public class ApplicationTest {
 			" -version <version>                     (Optional) Date for the ontology version e.g. 20180731.\n" +
 			"                                        Defaults to today's date.\n" +
 			"\n" +
-			" -without-annotations                   (Optional) Flag to omit Fully Specified Name annotations from the ontology \n" +
+			" -without-annotations                   (Optional) Flag to omit annotations from the ontology \n" +
 			"                                        resulting in a smaller file size.\n" +
+			"\n" +
+			" -preferred-terms                       (Optional) Flag to use preferred term annotations rather than the default Fully Specified Names.\n" +
+			"\n" +
+			" -language-refset                       (Optional) The identifier of the language reference set to use when selecting an FSN or PT to include.\n" +
+			"                                        Defaults to 900000000000509007 which is the United States of America English language reference set.\n" +
 			"\n" +
 			"\n";
 
