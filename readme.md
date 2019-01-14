@@ -103,6 +103,11 @@ java -jar snomed-owl-toolkit*executable.jar -rf2-to-owl -rf2-snapshot-archives S
 ```
 After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
 
+Another example including preferred terms from an extension.
+```bash
+java -jar snomed-owl-toolkit*executable.jar -rf2-to-owl -rf2-snapshot-archives SnomedCT_InternationalRF2_Production_20180731T120000Z.zip,SnomedCT_BelgiumExtensionRF2_PRODUCTION_20180915T120000Z.zip -preferred-terms -language-refset 31000172101
+```
+
 ### Snomed RF2 Classification
 Run the classification process.
 
