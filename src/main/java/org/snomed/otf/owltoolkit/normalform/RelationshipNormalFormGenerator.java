@@ -160,10 +160,7 @@ public final class RelationshipNormalFormGenerator {
 		if (!propertyChains.isEmpty()) {
 			for (Relationship inferredNonIsAFragment : inferredNonIsAFragments) {
 				// Is there a property chain for this relationship?
-				if (propertyChains.stream()
-						.filter(propertyChain -> propertyChain.getSourceType().equals(inferredNonIsAFragment.getTypeId()))
-						.count() > 0) {
-
+				if (propertyChains.stream().anyMatch(propertyChain -> propertyChain.getSourceType().equals(inferredNonIsAFragment.getTypeId()))) {
 					inferredNonIsAFragments = getInferredNonIsAFragmentsInNormalForm(conceptId);
 					break;
 				}

@@ -33,7 +33,7 @@ public class ConversionIntegrationTest {
 		- Create OWL based release by:
 				- Converting stated relationships into complete OWL Axiom refset
 				- Make stated relationships inactive
-		-  Create OWL file from OWL based release
+		- Create OWL file from OWL based release
 		- Check that OWL files from both the stated relationship and OWL Axiom based releases come out the same
 	 */
 	public void testCompareStatedToOwlFileAndCompleteAxiomsToOwlFile() throws IOException, ConversionException, OWLOntologyCreationException {

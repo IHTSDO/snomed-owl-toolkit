@@ -82,12 +82,12 @@ public class RelationshipChangeProcessor {
 		return sortedOld;
 	}
 
-	protected void handleAddedSubject(long conceptId, Relationship addedSubject) {
+	private void handleAddedSubject(long conceptId, Relationship addedSubject) {
 		addedStatements.computeIfAbsent(conceptId, k -> new HashSet<>()).add(addedSubject);
 		addedCount++;
 	}
 
-	protected void handleRemovedSubject(long conceptId, Relationship removedSubject) {
+	void handleRemovedSubject(long conceptId, Relationship removedSubject) {
 		if (skipAdditionalPartOf) {
 			//We will preserve any "Additional" characteristic types eg PartOf relationships
 			if (removedSubject.getCharacteristicTypeId() == -1 || removedSubject.getCharacteristicTypeId() != Concepts.ADDITIONAL_RELATIONSHIP_LONG) {

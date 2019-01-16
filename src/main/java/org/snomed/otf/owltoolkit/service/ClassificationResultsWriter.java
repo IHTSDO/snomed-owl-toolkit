@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class ClassificationResultsWriter {
+class ClassificationResultsWriter {
 
 	private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
@@ -37,7 +37,7 @@ public class ClassificationResultsWriter {
 	private static final String EQUIVALENT_REFSET_HEADER = "id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\tmapTarget";
 	private static final String TAB = "\t";
 
-	public void writeResultsRf2Archive(
+	void writeResultsRf2Archive(
 			RelationshipChangeProcessor changeCollector,
 			List<Set<Long>> equivalentConceptIdSets,
 			OutputStream resultsOutputStream,
