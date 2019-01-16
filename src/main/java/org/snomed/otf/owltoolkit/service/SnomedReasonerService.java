@@ -27,7 +27,7 @@ import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
-import org.snomed.otf.owltoolkit.normalform.RelationshipChangeCollector;
+import org.snomed.otf.owltoolkit.normalform.RelationshipChangeProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipInactivationProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
 import org.snomed.otf.owltoolkit.ontology.OntologyDebugUtil;
@@ -161,7 +161,7 @@ public class SnomedReasonerService {
 		}
 		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, conceptAxiomStatementMap, propertyChains);
 
-		RelationshipChangeCollector changeCollector = new RelationshipChangeCollector(true);
+		RelationshipChangeProcessor changeCollector = new RelationshipChangeProcessor(true);
 		normalFormGenerator.collectNormalFormChanges(changeCollector);
 		timer.checkpoint("Generate normal form");
 
@@ -169,7 +169,7 @@ public class SnomedReasonerService {
 
 		logger.info("Inactivating inferred relationships for new inactive concepts");
 		RelationshipInactivationProcessor processor = new RelationshipInactivationProcessor(snomedTaxonomy);
-		RelationshipChangeCollector inactivationCollector = new RelationshipChangeCollector(false);
+		RelationshipChangeProcessor inactivationCollector = new RelationshipChangeProcessor(false);
 		processor.processInactivationChanges(inactivationCollector);
 		changeCollector.getRemovedStatements().putAll(inactivationCollector.getRemovedStatements());
 

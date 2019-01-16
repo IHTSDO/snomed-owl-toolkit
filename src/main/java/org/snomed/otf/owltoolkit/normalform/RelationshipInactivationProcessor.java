@@ -13,7 +13,7 @@ public class RelationshipInactivationProcessor {
 		this.snomedTaxonomy = snomedTaxonomy;
 	}
 	
-	public void processInactivationChanges(RelationshipChangeCollector changeCollector) {
+	public void processInactivationChanges(RelationshipChangeProcessor changeCollector) {
 		Set<Long> inactiveConcepts = snomedTaxonomy.getInactivatedConcepts();
 		for (Long inactive : inactiveConcepts) {
 			for (Relationship rel : snomedTaxonomy.getInferredRelationships(inactive)) {

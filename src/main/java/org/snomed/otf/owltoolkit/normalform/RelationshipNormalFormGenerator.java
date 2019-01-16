@@ -45,7 +45,7 @@ import static org.snomed.otf.owltoolkit.constants.Concepts.IS_A_LONG;
  * Transforms a subsumption hierarchy and a set of non-ISA relationships into
  * distribution normal form.
  */
-public final class RelationshipNormalFormGenerator extends NormalFormGenerator<Relationship> {
+public final class RelationshipNormalFormGenerator {
 
 	/**
 	 * Special group number indicating that the next free group/union group number
@@ -54,18 +54,8 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 	 */
 	public static final int NUMBER_NOT_PRESERVED = -1;
 
-	private final Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap;
-
-	private static final int ZERO_GROUP = 0;
-
-	private final Map<Long, NodeGraph> transitiveNodeGraphs = new HashMap<>();
-
-	private final Set<Long> traversableProperties;
-
-	private final Map<Long, Collection<Relationship>> generatedNonIsACache = new Long2ObjectOpenHashMap<>();
-
 	private static final long INTERNATIONAL_CORE_MODULE_ID = Long.parseLong(Concepts.SNOMED_CT_CORE_MODULE);
-
+	private static final int ZERO_GROUP = 0;
 	private static final Comparator<Group> CORE_MODULE_GROUP_COMPARATOR = (o1, o2) -> {
 		long moduleId1 = o1.getUnionGroups().iterator().next().getRelationshipFragments().iterator().next().getModuleId();
 		long moduleId2 = o2.getUnionGroups().iterator().next().getRelationshipFragments().iterator().next().getModuleId();
@@ -76,8 +66,16 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 		}
 		return 0;
 	};
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(RelationshipNormalFormGenerator.class);
+
+	private final ReasonerTaxonomy reasonerTaxonomy;
+	private final SnomedTaxonomy snomedTaxonomy;
+	private final Set<PropertyChain> propertyChains;
+
+	private final Map<Long, Collection<Relationship>> generatedNonIsACache = new Long2ObjectOpenHashMap<>();
+	private final Set<Long> traversableProperties;
+	private final Map<Long, NodeGraph> transitiveNodeGraphs = new HashMap<>();
+	private final Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap;
 
 	/**
 	 * Creates a new distribution normal form generator instance.
@@ -88,8 +86,10 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 	 */
 	public RelationshipNormalFormGenerator(final ReasonerTaxonomy reasonerTaxonomy, final SnomedTaxonomy snomedTaxonomy,
 			final Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap, final Set<PropertyChain> propertyChains) {
-		super(reasonerTaxonomy, snomedTaxonomy, propertyChains);
-		
+
+		this.reasonerTaxonomy = reasonerTaxonomy;
+		this.snomedTaxonomy = snomedTaxonomy;
+		this.propertyChains = propertyChains;
 		this.conceptAxiomStatementMap = conceptAxiomStatementMap;
 
 		traversableProperties = propertyChains.stream().map(PropertyChain::getDestinationType).collect(Collectors.toSet());
@@ -99,13 +99,38 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 		traversableProperties.forEach(id -> transitiveNodeGraphs.put(id, new NodeGraph()));
 	}
 
-	@Override
-	public Collection<Relationship> getExistingComponents(final long conceptId) {
-		return snomedTaxonomy.getInferredRelationships(conceptId);
+	/**
+	 * Computes and returns all changes as a result of normal form computation.
+	 *
+	 * @param processor the change processor to route changes to
+	 * @return the total number of generated components
+	 */
+	public final void collectNormalFormChanges(final RelationshipChangeProcessor processor) {
+		LOGGER.info(">>> Relationship normal form generation");
+		final Stopwatch stopwatch = Stopwatch.createStarted();
+		final List<Long> entries = reasonerTaxonomy.getConceptIds();
+
+		for (Long conceptId : entries) {
+			firstNormalisationPass(conceptId);
+		}
+
+		for (Long conceptId : entries) {
+			final Collection<Relationship> existingComponents = snomedTaxonomy.getInferredRelationships((long) conceptId);
+			final Collection<Relationship> generatedComponents = secondNormalisationPass(conceptId);
+			processor.apply(conceptId, existingComponents, generatedComponents, StatementFragmentOrdering.INSTANCE);
+		}
+
+		LOGGER.info(MessageFormat.format("<<< Relationship normal form generation [{0}]", stopwatch.toString()));
 	}
 
-	@Override
-	public void firstNormalisationPass(long conceptId) {
+	/**
+	 * Computes and caches a set of components in normal form for the specified concept.
+	 * The first pass uses the is-a hierarchy for normalisation.
+	 * This hierarchy is available during the first pass because of the breath first order of processing concepts.
+	 *
+	 * @param conceptId the concept for which components should be generated
+	 */
+	private void firstNormalisationPass(long conceptId) {
 		final Set<Relationship> inferredNonIsAFragments = getInferredNonIsAFragmentsInNormalForm(conceptId);
 
 		// Place results in the cache, so children can re-use it
@@ -116,8 +141,16 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 				transitiveNodeGraphs.get(r.getTypeId()).addParent(conceptId, r.getDestinationId()));
 	}
 
-	@Override
-	public Collection<Relationship> secondNormalisationPass(final long conceptId) {
+	/**
+	 * Performs additional normalisation as required before returning components in normal form for the specified concept.
+	 * The second pass uses property chains and transitive properties in order to further normalise components.
+	 * Other transitive hierarchies can not be guaranteed to be complete during the first pass because the super-type of a
+	 * concept in a transitive property hierarchy may be at a lower level in the is-a hierarchy meaning that it's processed later during the first pass.
+	 *
+	 * @param conceptId the concept for which components should be generated
+	 * @return the generated components of the specified concept in normal form
+	 */
+	private Collection<Relationship> secondNormalisationPass(final long conceptId) {
 		final Set<Long> directSuperTypes = reasonerTaxonomy.getParents(conceptId);
 
 		// Step 1: collect IS-A relationships
@@ -234,6 +267,7 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 
 		// Sort groups to favour the core module
 		inferredGroups.sort(CORE_MODULE_GROUP_COMPARATOR);
+
 		// Shuffle around the numbers to match existing inferred group numbers as much as possible
 		groups.adjustOrder(inferredGroups);
 
@@ -403,13 +437,6 @@ public final class RelationshipNormalFormGenerator extends NormalFormGenerator<R
 						input.isUniversal(),
 						-1))
 				.collect(Collectors.toSet());
-	}
-
-	public final void collectNormalFormChanges(final OntologyChangeProcessor<Relationship> processor) {
-		LOGGER.info(">>> Relationship normal form generation");
-		final Stopwatch stopwatch = Stopwatch.createStarted();
-		collectNormalFormChanges(processor, StatementFragmentOrdering.INSTANCE);
-		LOGGER.info(MessageFormat.format("<<< Relationship normal form generation [{0}]", stopwatch.toString()));
 	}
 
 	public ReasonerTaxonomy getReasonerTaxonomy() {

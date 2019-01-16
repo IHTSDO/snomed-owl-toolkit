@@ -17,8 +17,7 @@ package org.snomed.otf.owltoolkit.service;
 
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
-import org.snomed.otf.owltoolkit.normalform.RelationshipChangeCollector;
-import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
+import org.snomed.otf.owltoolkit.normalform.RelationshipChangeProcessor;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class ClassificationResultsWriter {
 	private static final String TAB = "\t";
 
 	public void writeResultsRf2Archive(
-			RelationshipChangeCollector changeCollector,
+			RelationshipChangeProcessor changeCollector,
 			List<Set<Long>> equivalentConceptIdSets,
 			OutputStream resultsOutputStream,
 			Date startDate) throws ReasonerServiceException {
