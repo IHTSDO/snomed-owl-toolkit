@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -117,8 +118,7 @@ public class ApplicationTest {
 		runApplication(arguments.split(" "));
 
 		String out = outStream.toString();
-		assertTrue(out.contains("concepts read from sct2_Concept_Snapshot_INT_20180731.txt"));
-		assertTrue(out.contains("concepts read from sct2_Concept_Snapshot_ExtensionA_20180931.txt"));
+		assertTrue(Pattern.compile(".*Snapshot archives: \\[.*\\.zip, .*\\.zip].*", Pattern.DOTALL).matcher(out).matches());
 		assertTrue(out.contains("OWL Ontology file written to - ontology-"));
 		assertEquals("", errorStream.toString());
 	}
