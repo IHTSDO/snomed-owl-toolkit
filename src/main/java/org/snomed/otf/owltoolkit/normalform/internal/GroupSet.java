@@ -20,9 +20,6 @@
  */
 package org.snomed.otf.owltoolkit.normalform.internal;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -84,27 +81,29 @@ public final class GroupSet extends AbstractSet<Group> {
 		return groups.size();
 	}
 
-	public void adjustOrder(final GroupSet other) {
+	public void adjustOrder(final GroupSet previousInferredSet) {
 		if (isEmpty()) {
 			return;
 		}
 
 		final Map<Integer, Group> oldNumberMap = new Int2ObjectOpenHashMap<>(groups.size());
-		for (final Group group : groups) {
-			oldNumberMap.put(group.getGroupNumber(), group);
+		for (final Group statedGroup : groups) {
+			oldNumberMap.put(statedGroup.getGroupNumber(), statedGroup);
 		}
 
 		final Map<Group, Integer> newNumberMap = new Object2IntOpenHashMap<>(groups.size());
-		for (final Group group : groups) {
-			final Optional<Group> otherGroup = Iterables.tryFind(other.groups, Predicates.equalTo(group));
-			if (otherGroup.isPresent()) {
-				final int oldNumber = group.getGroupNumber();
-				final int newNumber = otherGroup.get().getGroupNumber();
+		for (final Group statedGroup : groups) {
+			final Optional<Group> previousInferredGroup = previousInferredSet.groups.stream().filter(group -> group.equals(statedGroup)).findAny();
+			if (previousInferredGroup.isPresent()) {
+				final int statedNumber = statedGroup.getGroupNumber();
+				final int previouslyInferredNumber = previousInferredGroup.get().getGroupNumber();
 
-				// If the current group number is 0, it has a single relationship only, and should be kept that way
-				if (oldNumber != 0 && oldNumber != newNumber) {
-					newNumberMap.put(group, newNumber);
-					group.adjustOrder(otherGroup.get());
+				if (statedNumber != previouslyInferredNumber) {
+					// Allow groups to move out of group 0 if they are no longer stated that way
+					if (previouslyInferredNumber != 0) {
+						newNumberMap.put(statedGroup, previouslyInferredNumber);
+						statedGroup.adjustOrder(previousInferredGroup.get());
+					}
 				}
 			}
 		}

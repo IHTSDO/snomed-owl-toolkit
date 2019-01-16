@@ -19,7 +19,7 @@ import java.util.Objects;
 
 public class Relationship {
 
-	private final long relationshipId;
+	private long relationshipId;
 	private int effectiveTime;
 	private final long moduleId;
 	private final long typeId;
@@ -58,6 +58,10 @@ public class Relationship {
 		this.unionGroup = unionGroup;
 		this.universal = universal;
 		this.characteristicTypeId = characteristicTypeId;
+	}
+
+	public void clearId() {
+		relationshipId = -1;
 	}
 
 	public long getRelationshipId() {
@@ -133,7 +137,8 @@ public class Relationship {
 	@Override
 	public String toString() {
 		return "Relationship{" +
-				"typeId=" + typeId +
+				"group=" + group +
+				", typeId=" + typeId +
 				", destinationId=" + destinationId +
 				'}';
 	}

@@ -1,0 +1,13 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+
+# Laterality - is a - Concept model object attribute
+100011001	20180931	1	900000000000012004	272741003	762705008	0	116680003	900000000000010007	900000000000451002
+
+# Left - is a - Model Component
+100012001	20180931	1	900000000000012004	7771000	900000000000441003	0	116680003	900000000000010007	900000000000451002
+
+# Disorder of endocrine system - Laterality - Left ...this is nonsense but supports testing
+100013001	20180931	1	900000000000207008	362969004	7771000	0	272741003	900000000000010007	900000000000451002

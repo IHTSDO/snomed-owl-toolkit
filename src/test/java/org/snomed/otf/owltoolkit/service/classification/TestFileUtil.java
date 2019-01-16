@@ -15,25 +15,35 @@
  */
 package org.snomed.otf.owltoolkit.service.classification;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
+import org.springframework.util.StreamUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import static org.junit.Assert.assertTrue;
 
-class TestFileUtil {
+public class TestFileUtil {
 
 	private static final String EQUIVALENT_DELTA = "der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_";
 	private static final String RELATIONSHIP_DELTA = "sct2_Relationship_Delta_Classification_";
+	private static final Logger LOGGER = LoggerFactory.getLogger(TestFileUtil.class);
 
-	static List<String> readInferredRelationshipLinesTrim(File zipFile) throws IOException {
+	public static List<String> readInferredRelationshipLinesTrim(File zipFile) throws IOException {
 		return readLinesTrim(zipFile, RELATIONSHIP_DELTA);
 	}
 
@@ -62,7 +72,54 @@ class TestFileUtil {
 		return lines;
 	}
 
-	static File newTemporaryFile() throws IOException {
+	public static File newTemporaryFile() throws IOException {
 		return Files.createTempFile(new Date().getTime() + "", ".txt").toFile();
+	}
+
+	public static void addFilesToZipFlatteningPaths(File directoryOfFiles, File existingZipFile, boolean allowEntryOverwriting) throws IOException {
+
+		List<String> newFilenames = new ArrayList<>();
+		List<String> newPaths = new ArrayList<>();
+		Files.walk(directoryOfFiles.toPath())
+				.forEach(path -> {
+					if (path.toFile().isFile()) {
+						newFilenames.add(path.toFile().getName());
+						String absolutePath = path.toFile().getAbsolutePath();
+						newPaths.add(absolutePath.replace(directoryOfFiles.getAbsolutePath(), ""));
+					}
+				});
+
+		File tempFile = Files.createTempFile("temp-file", ".zip").toFile();
+		try (ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(existingZipFile));
+			 ZipOutputStream zipOutputStream = new ZipOutputStream(new FileOutputStream(tempFile))) {
+
+			// Copy existing zip entries to new zip file
+			List<String> zipEntriesFilenames = new ArrayList<>();
+			ZipEntry nextEntry;
+			while ((nextEntry = zipInputStream.getNextEntry()) != null) {
+				String existingEntry = nextEntry.getName();
+				existingEntry = existingEntry.replaceFirst(".*/", "");
+				if (newFilenames.contains(existingEntry) && !allowEntryOverwriting) {
+					LOGGER.info("Adding existing zip entry {}", existingEntry);
+					zipEntriesFilenames.add(existingEntry);
+					zipOutputStream.putNextEntry(nextEntry);
+					StreamUtils.copy(zipInputStream, zipOutputStream);
+					zipOutputStream.closeEntry();
+				}
+			}
+
+			// Copy files to new zip file
+			for (String entryPath : newPaths) {
+				String entryFilename = entryPath.replaceFirst(".*/", "");
+				if (!zipEntriesFilenames.contains(entryFilename)) {
+					LOGGER.info("Adding new zip entry {}", entryFilename);
+					zipOutputStream.putNextEntry(new ZipEntry(entryFilename));
+					StreamUtils.copy(new FileInputStream(new File(directoryOfFiles, entryPath)), zipOutputStream);
+					zipOutputStream.closeEntry();
+				}
+			}
+		}
+
+		Files.move(tempFile.toPath(), existingZipFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 	}
 }

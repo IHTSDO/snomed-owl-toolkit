@@ -66,11 +66,10 @@ class ClassificationResultsWriter {
 
 		// Write newly inferred relationships
 		for (Long sourceId : addedStatements.keySet()) {
-			String relationshipId = "";
 			String active = "1";
 			for (Relationship relationship : addedStatements.get(sourceId)) {
 				writeRelationship(writer,
-						relationshipId,
+						relationship.getRelationshipId() == -1 ? "" : relationship.getRelationshipId() + "",
 						active,
 						sourceId,
 						relationship.getDestinationId(),

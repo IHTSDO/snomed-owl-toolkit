@@ -35,6 +35,13 @@ public class RelationshipChangeProcessor {
 			.thenComparing(Relationship::isUniversal)
 			.thenComparing(Relationship::isDestinationNegated);
 
+	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_WITHOUT_GROUP = Comparator
+			.comparing(Relationship::getTypeId)
+			.thenComparing(Relationship::getDestinationId)
+			.thenComparing(Relationship::getUnionGroup)
+			.thenComparing(Relationship::isUniversal)
+			.thenComparing(Relationship::isDestinationNegated);
+
 	private final Map<Long, Set<Relationship>> addedStatements;
 	private final Map<Long, Set<Relationship>> removedStatements;
 	private Long addedCount;
@@ -55,14 +62,23 @@ public class RelationshipChangeProcessor {
 		final List<Relationship> sortedOld = newSortedList(existingRelationships, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
 		final List<Relationship> sortedNew = newSortedList(newRelationships, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
 
-
-		// Collect removed subjects and added subjects
-		// Use secondary compare to find matching groups with a new number.. we should mark this during groups.adjustOrder(inferredGroups) to be sure they are from the same group!
+		final Map<Relationship, Relationship> updatedRelationshipNewOldMap = new HashMap<>();
 
 		// For each existing relationship if it can not be found in the new set mark it as removed
 		for (final Relationship oldSubject : sortedOld) {
 			final int i = Collections.binarySearch(sortedNew, oldSubject, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
 			if (i < 0 || !uniqueOlds.add(oldSubject)) {
+
+				// Handle the case where existing relationships are being moved out of group 0.
+				// This will happen as editions move from stated relationships to OWL axioms.
+				if (oldSubject.getGroup() == 0 && oldSubject.getTypeId() != Concepts.IS_A_LONG) {
+					final int y = Collections.binarySearch(sortedNew, oldSubject, RELATIONSHIP_COMPARATOR_WITHOUT_GROUP);
+					if (y != -1) {
+						// Update existing relationship rather than creating new
+						updatedRelationshipNewOldMap.put(sortedNew.get(y), oldSubject);
+						continue;
+					}
+				}
 
 				handleRemovedSubject(conceptId, oldSubject);
 			}
@@ -70,7 +86,13 @@ public class RelationshipChangeProcessor {
 
 		// For each relationship in the new set if it does not match one in the old set mark is as added
 		for (final Relationship newMini : sortedNew) {
-			if (Collections.binarySearch(sortedOld, newMini, RELATIONSHIP_COMPARATOR_ALL_FIELDS) < 0) {
+			if (updatedRelationshipNewOldMap.containsKey(newMini)) {
+				// Update existing relationship
+				Relationship existingRelationship = updatedRelationshipNewOldMap.get(newMini);
+				existingRelationship.setGroup(newMini.getGroup());
+				handleAddedSubject(conceptId, existingRelationship);
+			} else if (Collections.binarySearch(sortedOld, newMini, RELATIONSHIP_COMPARATOR_ALL_FIELDS) < 0) {
+				newMini.clearId();// Make sure stated relationship ids don't get through into new inferred relationship results
 				handleAddedSubject(conceptId, newMini);
 			}
 		}
