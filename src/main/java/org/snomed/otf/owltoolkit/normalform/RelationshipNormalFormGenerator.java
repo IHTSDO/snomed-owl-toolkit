@@ -117,7 +117,7 @@ public final class RelationshipNormalFormGenerator {
 		for (Long conceptId : entries) {
 			final Collection<Relationship> existingComponents = snomedTaxonomy.getInferredRelationships((long) conceptId);
 			final Collection<Relationship> generatedComponents = secondNormalisationPass(conceptId);
-			processor.apply(conceptId, existingComponents, generatedComponents, StatementFragmentOrdering.INSTANCE);
+			processor.apply(conceptId, existingComponents, generatedComponents);
 		}
 
 		LOGGER.info(MessageFormat.format("<<< Relationship normal form generation [{0}]", stopwatch.toString()));

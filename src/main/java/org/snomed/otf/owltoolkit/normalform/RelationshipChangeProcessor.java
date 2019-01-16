@@ -15,9 +15,6 @@
  */
 package org.snomed.otf.owltoolkit.normalform;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Ordering;
-import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
@@ -29,6 +26,14 @@ import java.util.*;
  * element is encountered.
  */
 public class RelationshipChangeProcessor {
+
+	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_ALL_FIELDS = Comparator
+			.comparing(Relationship::getTypeId)
+			.thenComparing(Relationship::getDestinationId)
+			.thenComparing(Relationship::getGroup)
+			.thenComparing(Relationship::getUnionGroup)
+			.thenComparing(Relationship::isUniversal)
+			.thenComparing(Relationship::isDestinationNegated);
 
 	private final Map<Long, Set<Relationship>> addedStatements;
 	private final Map<Long, Set<Relationship>> removedStatements;
@@ -44,30 +49,37 @@ public class RelationshipChangeProcessor {
 		skipAdditionalPartOf = skipAdditionalRelationship;
 	}
 
-	public void apply(final long conceptId, final Collection<Relationship> oldCollection, final Collection<Relationship> newCollection, final Ordering<Relationship> ordering) {
+	public void apply(final long conceptId, final Collection<Relationship> existingRelationships, final Collection<Relationship> newRelationships) {
 
-		final TreeSet<Relationship> uniqueOlds = Sets.newTreeSet(ordering);
-		final ImmutableList<Relationship> sortedOld = ordering.immutableSortedCopy(oldCollection);
-		final ImmutableList<Relationship> sortedNew = ordering.immutableSortedCopy(newCollection);
+		final TreeSet<Relationship> uniqueOlds = new TreeSet<>(RELATIONSHIP_COMPARATOR_ALL_FIELDS);
+		final List<Relationship> sortedOld = newSortedList(existingRelationships, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
+		final List<Relationship> sortedNew = newSortedList(newRelationships, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
 
 
 		// Collect removed subjects and added subjects
 		// Use secondary compare to find matching groups with a new number.. we should mark this during groups.adjustOrder(inferredGroups) to be sure they are from the same group!
 
-
+		// For each existing relationship if it can not be found in the new set mark it as removed
 		for (final Relationship oldSubject : sortedOld) {
-			final int idx = ordering.binarySearch(sortedNew, oldSubject);
+			final int i = Collections.binarySearch(sortedNew, oldSubject, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
+			if (i < 0 || !uniqueOlds.add(oldSubject)) {
 
-			if (idx < 0 || !uniqueOlds.add(oldSubject)) {
 				handleRemovedSubject(conceptId, oldSubject);
 			}
 		}
 
+		// For each relationship in the new set if it does not match one in the old set mark is as added
 		for (final Relationship newMini : sortedNew) {
-			if (ordering.binarySearch(sortedOld, newMini) < 0) {
+			if (Collections.binarySearch(sortedOld, newMini, RELATIONSHIP_COMPARATOR_ALL_FIELDS) < 0) {
 				handleAddedSubject(conceptId, newMini);
 			}
 		}
+	}
+
+	private List<Relationship> newSortedList(Collection<Relationship> relationships, Comparator<Relationship> comparator) {
+		final List<Relationship> sortedOld = new ArrayList<>(relationships);
+		sortedOld.sort(comparator);
+		return sortedOld;
 	}
 
 	protected void handleAddedSubject(long conceptId, Relationship addedSubject) {
