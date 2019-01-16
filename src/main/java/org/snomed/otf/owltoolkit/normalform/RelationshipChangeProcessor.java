@@ -73,7 +73,7 @@ public class RelationshipChangeProcessor {
 				// This will happen as editions move from stated relationships to OWL axioms.
 				if (oldSubject.getGroup() == 0 && oldSubject.getTypeId() != Concepts.IS_A_LONG) {
 					final int y = Collections.binarySearch(sortedNew, oldSubject, RELATIONSHIP_COMPARATOR_WITHOUT_GROUP);
-					if (y != -1) {
+					if (y >= 0) {
 						// Update existing relationship rather than creating new
 						updatedRelationshipNewOldMap.put(sortedNew.get(y), oldSubject);
 						continue;
