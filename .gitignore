@@ -8,3 +8,6 @@ target
 /local*
 _*
 /RF2
+tmp
+work
+log.log
