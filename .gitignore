@@ -11,3 +11,5 @@ _*
 tmp
 work
 log.log
+/SnomedCT_*
+*.jar
