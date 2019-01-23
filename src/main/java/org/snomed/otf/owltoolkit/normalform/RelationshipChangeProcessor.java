@@ -45,15 +45,15 @@ public class RelationshipChangeProcessor {
 	private final Map<Long, Set<Relationship>> addedStatements;
 	private final Map<Long, Set<Relationship>> removedStatements;
 	private Long addedCount;
-	private Long removedCount;
-	private boolean skipAdditionalPartOf;
+	private Long updatedCount;
+	private Long removedDueToConceptInactivationCount;
 
-	public RelationshipChangeProcessor(boolean skipAdditionalRelationship) {
+	public RelationshipChangeProcessor() {
 		addedCount = 0L;
-		removedCount = 0L;
+		updatedCount = 0L;
+		removedDueToConceptInactivationCount = 0L;
 		addedStatements = new Long2ObjectOpenHashMap<>();
 		removedStatements = new Long2ObjectOpenHashMap<>();
-		skipAdditionalPartOf = skipAdditionalRelationship;
 	}
 
 	public void apply(final long conceptId, final Collection<Relationship> existingRelationships, final Collection<Relationship> newRelationships) {
@@ -104,10 +104,12 @@ public class RelationshipChangeProcessor {
 				// Update existing relationship
 				Relationship existingRelationship = updatedRelationshipNewOldMap.get(newMini);
 				existingRelationship.setGroup(newMini.getGroup());
-				handleAddedSubject(conceptId, existingRelationship);
+				handleAddedOrChangedRelationship(conceptId, existingRelationship);
+				updatedCount++;
 			} else if (Collections.binarySearch(sortedOld, newMini, RELATIONSHIP_COMPARATOR_ALL_FIELDS) < 0) {
 				newMini.clearId();// Make sure stated relationship ids don't get through into new inferred relationship results
-				handleAddedSubject(conceptId, newMini);
+				handleAddedOrChangedRelationship(conceptId, newMini);
+				addedCount++;
 			}
 		}
 	}
@@ -118,30 +120,44 @@ public class RelationshipChangeProcessor {
 		return sortedOld;
 	}
 
-	private void handleAddedSubject(long conceptId, Relationship addedSubject) {
+	private void handleAddedOrChangedRelationship(long conceptId, Relationship addedSubject) {
 		addedStatements.computeIfAbsent(conceptId, k -> new HashSet<>()).add(addedSubject);
-		addedCount++;
 	}
 
-	void handleRemovedSubject(long conceptId, Relationship removedSubject) {
-		if (skipAdditionalPartOf) {
-			//We will preserve any "Additional" characteristic types eg PartOf relationships
-			if (removedSubject.getCharacteristicTypeId() == -1 || removedSubject.getCharacteristicTypeId() != Concepts.ADDITIONAL_RELATIONSHIP_LONG) {
-				removedStatements.computeIfAbsent(conceptId, k -> new HashSet<>()).add(removedSubject);
-				removedCount++;
-			}
-		} else {
+	void handleRedundantRelationship(long conceptId, Relationship removedSubject) {
+		//We will preserve any "Additional" characteristic types eg PartOf relationships
+		if (removedSubject.getCharacteristicTypeId() == -1 || removedSubject.getCharacteristicTypeId() != Concepts.ADDITIONAL_RELATIONSHIP_LONG) {
 			removedStatements.computeIfAbsent(conceptId, k -> new HashSet<>()).add(removedSubject);
-			removedCount++;
 		}
+	}
+
+	void processRemovalsDueToInactivation(Long inactiveConceptId, Set<Relationship> inferredRelationships) {
+		if (inferredRelationships.isEmpty()) {
+			return;
+		}
+		removedDueToConceptInactivationCount += inferredRelationships.size();
+		removedStatements.put(inactiveConceptId, inferredRelationships);
 	}
 
 	public Long getAddedCount() {
 		return addedCount;
 	}
 
-	public Long getRemovedCount() {
-		return removedCount;
+	public Long getUpdatedCount() {
+		return updatedCount;
+	}
+
+	public Long getRedundantCount() {
+		long redundantCount = 0L;
+		for (Set<Relationship> value : removedStatements.values()) {
+			redundantCount += value.size();
+		}
+		redundantCount -= removedDueToConceptInactivationCount;
+		return redundantCount;
+	}
+
+	public Long getRemovedDueToConceptInactivationCount() {
+		return removedDueToConceptInactivationCount;
 	}
 
 	public Map<Long, Set<Relationship>> getAddedStatements() {

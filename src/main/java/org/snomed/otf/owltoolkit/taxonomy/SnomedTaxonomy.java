@@ -69,7 +69,7 @@ public class SnomedTaxonomy {
 		return conceptStatedRelationshipMap.getOrDefault(conceptId, Collections.emptySet());
 	}
 	
-	public Collection<Relationship> getInferredRelationships(Long conceptId) {
+	public Set<Relationship> getInferredRelationships(Long conceptId) {
 		return conceptInferredRelationshipMap.getOrDefault(conceptId, Collections.emptySet());
 	}
 

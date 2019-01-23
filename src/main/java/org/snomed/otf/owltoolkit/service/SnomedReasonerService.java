@@ -161,22 +161,27 @@ public class SnomedReasonerService {
 		}
 		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, conceptAxiomStatementMap, propertyChains);
 
-		RelationshipChangeProcessor changeCollector = new RelationshipChangeProcessor(true);
+		RelationshipChangeProcessor changeCollector = new RelationshipChangeProcessor();
 		normalFormGenerator.collectNormalFormChanges(changeCollector);
 		timer.checkpoint("Generate normal form");
 
-		logger.info("{} relationships added, {} removed", changeCollector.getAddedCount(), changeCollector.getRemovedCount());
-
 		logger.info("Inactivating inferred relationships for new inactive concepts");
-		RelationshipInactivationProcessor processor = new RelationshipInactivationProcessor(snomedTaxonomy);
-		RelationshipChangeProcessor inactivationCollector = new RelationshipChangeProcessor(false);
-		processor.processInactivationChanges(inactivationCollector);
-		changeCollector.getRemovedStatements().putAll(inactivationCollector.getRemovedStatements());
+		new RelationshipInactivationProcessor(snomedTaxonomy).processInactivationChanges(changeCollector);
+
+		long redundantCount = changeCollector.getRedundantCount();
+		long totalChanges = changeCollector.getAddedCount() + changeCollector.getUpdatedCount() + redundantCount + changeCollector.getRemovedDueToConceptInactivationCount();
+		logger.info("{} relationship rows changed: {} added, {} updated, {} redundant, {} removed due to concept inactivation.",
+				formatDecimal(totalChanges), formatDecimal(changeCollector.getAddedCount()), formatDecimal(changeCollector.getUpdatedCount()),
+				formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
 
 		logger.info("Writing results archive");
 		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
 		timer.checkpoint("Write results to disk");
 		timer.finish();
+	}
+
+	private String formatDecimal(long number) {
+		return String.format("%,d", number);
 	}
 
 	private OWLReasonerFactory getOWLReasonerFactory(String reasonerFactoryClassName) throws ReasonerServiceException {
