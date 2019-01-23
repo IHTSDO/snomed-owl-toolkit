@@ -67,20 +67,34 @@ public class RelationshipChangeProcessor {
 		// For each existing relationship if it can not be found in the new set mark it as removed
 		for (final Relationship oldSubject : sortedOld) {
 			final int i = Collections.binarySearch(sortedNew, oldSubject, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
-			if (i < 0 || !uniqueOlds.add(oldSubject)) {
-
-				// Handle the case where existing relationships are being moved out of group 0.
+			if (i < 0) {
+				// Handle the case where existing self grouped relationships are being moved out of group 0.
 				// This will happen as editions move from stated relationships to OWL axioms.
 				if (oldSubject.getGroup() == 0 && oldSubject.getTypeId() != Concepts.IS_A_LONG) {
 					final int y = Collections.binarySearch(sortedNew, oldSubject, RELATIONSHIP_COMPARATOR_WITHOUT_GROUP);
 					if (y >= 0) {
-						// Update existing relationship rather than creating new
-						updatedRelationshipNewOldMap.put(sortedNew.get(y), oldSubject);
-						continue;
+						// If this is the only relationship in the group we will update the group number.
+
+						int newGroup = sortedNew.get(y).getGroup();
+						int relationshipsInGroupCount = 0;
+						for (Relationship relationship : sortedNew) {
+							if (relationship.getGroup() == newGroup) {
+								relationshipsInGroupCount++;
+							}
+						}
+						if (relationshipsInGroupCount == 1) {
+							// Update existing relationship rather than creating new
+							updatedRelationshipNewOldMap.put(sortedNew.get(y), oldSubject);
+							continue;
+						}
+						// We keep the relationship ID when just the relationship group number changes
+						// but if the triple joins another group of relationships we need to make this one inactive and recreate.
 					}
 				}
-
-				handleRemovedSubject(conceptId, oldSubject);
+				handleRedundantRelationship(conceptId, oldSubject);
+			} else if (!uniqueOlds.add(oldSubject)) {
+				// Existing relationship is a duplicate
+				handleRedundantRelationship(conceptId, oldSubject);
 			}
 		}
 
