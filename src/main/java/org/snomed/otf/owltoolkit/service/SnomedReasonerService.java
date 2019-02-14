@@ -111,6 +111,9 @@ public class SnomedReasonerService {
 		SnomedTaxonomyBuilder snomedTaxonomyBuilder = new SnomedTaxonomyBuilder();
 		SnomedTaxonomy snomedTaxonomy;
 		try {
+
+			// Also load inactive inferred relationships into another MAP in snomedTaxonomyBuilder
+
 			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchives, currentReleaseRf2DeltaArchive, false);
 		} catch (ReleaseImportException e) {
 			throw new ReasonerServiceException("Failed to build existing taxonomy.", e);
@@ -167,6 +170,10 @@ public class SnomedReasonerService {
 
 		logger.info("Inactivating inferred relationships for new inactive concepts");
 		new RelationshipInactivationProcessor(snomedTaxonomy).processInactivationChanges(changeCollector);
+
+		// Iterate through new inferred relationships to find inactive ones (from your Map) which match with the same relationshipGroup, sourceId, typeId and destinationId
+		// For each matching inactive relationship found, set the relationship id on the new inferred relationship.
+		changeCollector.getAddedStatements();
 
 		long redundantCount = changeCollector.getRedundantCount();
 		long totalChanges = changeCollector.getAddedCount() + changeCollector.getUpdatedCount() + redundantCount + changeCollector.getRemovedDueToConceptInactivationCount();
