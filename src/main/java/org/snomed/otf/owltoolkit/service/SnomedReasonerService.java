@@ -27,6 +27,7 @@ import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
+import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.normalform.RelationshipChangeProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipInactivationProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
@@ -41,6 +42,8 @@ import org.snomed.otf.owltoolkit.util.TimerUtil;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.lang.Long.parseLong;
 
@@ -113,7 +116,6 @@ public class SnomedReasonerService {
 		try {
 
 			// Also load inactive inferred relationships into another MAP in snomedTaxonomyBuilder
-
 			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchives, currentReleaseRf2DeltaArchive, false);
 		} catch (ReleaseImportException e) {
 			throw new ReasonerServiceException("Failed to build existing taxonomy.", e);
@@ -173,7 +175,22 @@ public class SnomedReasonerService {
 
 		// Iterate through new inferred relationships to find inactive ones (from your Map) which match with the same relationshipGroup, sourceId, typeId and destinationId
 		// For each matching inactive relationship found, set the relationship id on the new inferred relationship.
-		changeCollector.getAddedStatements();
+		for (Long conceptId : changeCollector.getAddedStatements().keySet()) {
+			Set<Relationship> conceptInactiveInferredRelationship = snomedTaxonomy.getInactiveInferredRelationships(conceptId);
+			Set<Relationship> newInferredRelationship = changeCollector.getAddedStatements().get(conceptId);
+
+			if(!conceptInactiveInferredRelationship.isEmpty() && !newInferredRelationship.isEmpty()) {
+				for (Relationship newRel : newInferredRelationship) {
+					for (Relationship inactiveRel : conceptInactiveInferredRelationship) {
+						if(newRel.getGroup() == inactiveRel.getGroup()
+								&& newRel.getTypeId() == inactiveRel.getTypeId()
+								&& newRel.getDestinationId() == inactiveRel.getDestinationId()) {
+							newRel.setRelationshipId(inactiveRel.getRelationshipId());
+						}
+					}
+				}
+			}
+		}
 
 		long redundantCount = changeCollector.getRedundantCount();
 		long totalChanges = changeCollector.getAddedCount() + changeCollector.getUpdatedCount() + redundantCount + changeCollector.getRemovedDueToConceptInactivationCount();

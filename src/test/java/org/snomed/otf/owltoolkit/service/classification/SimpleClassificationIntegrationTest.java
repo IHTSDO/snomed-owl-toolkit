@@ -176,7 +176,7 @@ public class SimpleClassificationIntegrationTest {
 		List<String> lines = readInferredRelationshipLinesTrim(results);
 		System.out.println(lines);
 		assertEquals("Relationship delta should only contain the header line.", 3, lines.size());
-		assertTrue(lines.contains("200009001\t20170131\t1\t900000000000207008\t362969004\t404684003\t0\t116680003\t900000000000011006\t900000000000451002"));
-		assertTrue(lines.contains("200010001\t20170131\t1\t900000000000207008\t362969004\t113331007\t0\t363698007\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("200009001\t\t1\t\t362969004\t404684003\t0\t116680003\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("200010001\t\t1\t\t362969004\t113331007\t0\t363698007\t900000000000011006\t900000000000451002"));
 	}
 }

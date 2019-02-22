@@ -41,6 +41,7 @@ public class SnomedTaxonomy {
 	private Map<String, OWLAxiom> axiomsById = new HashMap<>();
 	private Map<Long, Set<Relationship>> conceptStatedRelationshipMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Relationship>> conceptInferredRelationshipMap = new Long2ObjectOpenHashMap<>();
+	private Map<Long, Set<Relationship>> conceptInactiveInferredRelationshipMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<OWLAxiom>> conceptAxiomMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> statedSubTypesMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
@@ -73,6 +74,10 @@ public class SnomedTaxonomy {
 		return conceptInferredRelationshipMap.getOrDefault(conceptId, Collections.emptySet());
 	}
 
+	public Set<Relationship> getInactiveInferredRelationships(Long conceptId) {
+		return conceptInactiveInferredRelationshipMap.getOrDefault(conceptId, Collections.emptySet());
+	}
+
 	public void addOrModifyRelationship(boolean stated, long conceptId, Relationship relationship) {
 		// Have we seen this relationship before ie we need to modify it?
 		Relationship existingRelationship = stated ? statedRelationshipsById.get(relationship.getRelationshipId())
@@ -95,6 +100,10 @@ public class SnomedTaxonomy {
 				inferredRelationshipsById.put(relationship.getRelationshipId(), relationship);
 			}
 		}
+	}
+
+	public void addInactiveInferredRelationship(long conceptId, Relationship relationship) {
+		conceptInactiveInferredRelationshipMap.computeIfAbsent(conceptId, k -> new HashSet<>()).add(relationship);
 	}
 
 	public Set<Long> getDescendants(Long ancestor) {
