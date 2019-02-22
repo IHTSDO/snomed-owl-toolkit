@@ -80,7 +80,7 @@ echo "-- Merging Complete OWL with Delta archive"
 echo "--"
 rm -rf work
 mkdir work
-unzip $delta **/Delta/* -d work
+unzip $delta '**/Delta/*' -d work
 cd work
 unzip ../$conversionDelta
 echo "- Replacing Stated Relationship delta"

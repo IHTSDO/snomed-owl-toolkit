@@ -163,4 +163,20 @@ public class SimpleClassificationIntegrationTest {
 		List<String> equivalence = readEquivalentConceptLinesTrim(results);
 		assertEquals(1, equivalence.size());
 	}
+
+	@Test
+	public void testClassifyReactivateInferredRelationship() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_some_Inactive_snapshot");
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, null, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		System.out.println(lines);
+		assertEquals("Relationship delta should only contain the header line.", 3, lines.size());
+		assertTrue(lines.contains("200009001\t\t1\t\t362969004\t404684003\t0\t116680003\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("200010001\t\t1\t\t362969004\t113331007\t0\t363698007\t900000000000011006\t900000000000451002"));
+	}
 }

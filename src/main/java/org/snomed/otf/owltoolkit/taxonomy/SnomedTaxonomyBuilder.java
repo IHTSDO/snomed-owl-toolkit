@@ -40,7 +40,8 @@ public class SnomedTaxonomyBuilder {
 			.withRefset(OWL_AXIOM_REFERENCE_SET)
 			.withRefset(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)
 			.withFullRefsetMemberObjects()
-			.withoutDescriptions();
+			.withoutDescriptions()
+			.withInactiveRelationships();
 
 	static {
 		// Giving reference set filename patterns avoids reading them all
