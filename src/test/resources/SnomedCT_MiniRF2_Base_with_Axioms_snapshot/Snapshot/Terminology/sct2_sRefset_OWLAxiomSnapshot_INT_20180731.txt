@@ -1,0 +1,2 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+3e15a819-dc93-4b22-80b8-75ac8e485325	20190131	1	900000000000207008	733073007	30171000	EquivalentClasses(:30171000 ObjectIntersectionOf(:362969004 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :23451007))))

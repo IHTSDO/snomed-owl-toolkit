@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2019 SNOMED International, http://snomed.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -219,7 +219,14 @@ public class SnomedTaxonomy {
 	}
 
 	public void addAxiom(String referencedComponentId, String axiomId, OWLAxiom owlAxiom) {
-		conceptAxiomMap.computeIfAbsent(parseLong(referencedComponentId), id -> new HashSet<>()).add(owlAxiom);
+		// Manually remove any existing axiom by axiomId.
+		// We can't use the natural behaviour of a Java Set because the OWLAxiom does not use the axiomId in the equals method.
+		OWLAxiom existingAxiomVersion = axiomsById.get(axiomId);
+		Set<OWLAxiom> conceptAxioms = conceptAxiomMap.computeIfAbsent(parseLong(referencedComponentId), id -> new HashSet<>());
+		if (existingAxiomVersion != null) {
+			conceptAxioms.remove(existingAxiomVersion);
+		}
+		conceptAxioms.add(owlAxiom);
 		axiomsById.put(axiomId, owlAxiom);
 	}
 
