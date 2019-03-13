@@ -61,6 +61,13 @@ public final class StatementFragmentOrdering extends Ordering<Relationship> {
 			return isUniversalDelta;
 
 		final int isDestinationNegatedDelta = Booleans.compare(o1.isDestinationNegated(), o2.isDestinationNegated());
-		return isDestinationNegatedDelta;
+		if (isDestinationNegatedDelta != 0)
+			return isDestinationNegatedDelta;
+
+		if (o1.getRelationshipId() != -1 && o2.getRelationshipId() != -1) {
+			return Longs.compare(o1.getModuleId(), o2.getModuleId());
+		} else {
+			return isDestinationNegatedDelta;
+		}
 	}
 }
