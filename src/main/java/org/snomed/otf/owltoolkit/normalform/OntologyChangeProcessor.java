@@ -38,11 +38,10 @@ public abstract class OntologyChangeProcessor<T> {
 		final TreeSet<T> uniqueOlds = Sets.newTreeSet(ordering);
 		final ImmutableList<T> sortedOld = ordering.immutableSortedCopy(oldCollection);
 		final ImmutableList<T> sortedNew = ordering.immutableSortedCopy(newCollection);
-		
-		for (final T oldSubject : sortedOld) {
+
+		for (final T oldSubject : sortedOld.reverse()) {
 			final int idx = ordering.binarySearch(sortedNew, oldSubject);
-			
-			if (idx < 0 || !uniqueOlds.add(oldSubject)) {
+			if (idx < 0 || !uniqueOlds.add(sortedNew.get(idx))) {
 				handleRemovedSubject(conceptId, oldSubject);
 			}
 		}
