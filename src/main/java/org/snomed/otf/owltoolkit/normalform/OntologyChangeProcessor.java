@@ -22,6 +22,8 @@ import com.google.common.collect.Sets;
 
 import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 /**
@@ -34,14 +36,14 @@ import java.util.TreeSet;
 public abstract class OntologyChangeProcessor<T> {
 
 	public void apply(final long conceptId, final Collection<T> oldCollection, final Collection<T> newCollection, final Ordering<T> ordering) {
-		
-		final TreeSet<T> uniqueOlds = Sets.newTreeSet(ordering);
+
 		final ImmutableList<T> sortedOld = ordering.immutableSortedCopy(oldCollection);
 		final ImmutableList<T> sortedNew = ordering.immutableSortedCopy(newCollection);
+		final Set<Integer> uniqueIndex = new HashSet<>();
 
 		for (final T oldSubject : sortedOld) {
-			final int idx = ordering.binarySearch(sortedNew, oldSubject);
-			if (idx < 0 || !uniqueOlds.add(sortedNew.get(idx))) {
+			final int index = ordering.binarySearch(sortedNew, oldSubject);
+			if (index < 0 || !uniqueIndex.add(index)) {
 				handleRemovedSubject(conceptId, oldSubject);
 			}
 		}
