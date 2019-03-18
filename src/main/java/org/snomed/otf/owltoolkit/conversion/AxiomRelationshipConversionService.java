@@ -173,7 +173,7 @@ public class AxiomRelationshipConversionService {
 
 	public String convertRelationshipsToAxiom(AxiomRepresentation representation) {
 		OWLClassAxiom owlClassAxiom = ontologyService.createOwlClassAxiom(representation);
-		return owlClassAxiom.toString().replaceAll(CORE_COMPONENT_NAMESPACE_PATTERN, ":$1");
+		return owlClassAxiom.toString().replaceAll(CORE_COMPONENT_NAMESPACE_PATTERN, ":$1").replace(") )", "))");
 	}
 
 	/**

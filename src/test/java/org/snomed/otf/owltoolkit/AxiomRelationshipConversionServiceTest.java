@@ -106,7 +106,7 @@ public class AxiomRelationshipConversionServiceTest {
 							")" +
 						")" +
 					")" +
-				" )";
+				")";
 
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
@@ -194,7 +194,7 @@ public class AxiomRelationshipConversionServiceTest {
 							":24028007" +
 						")" +
 					")" +
-				" )";
+				")";
 
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(9846003L, axiom);
 
