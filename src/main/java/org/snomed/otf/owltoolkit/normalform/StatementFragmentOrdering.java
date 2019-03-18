@@ -65,7 +65,7 @@ public final class StatementFragmentOrdering extends Ordering<Relationship> {
 			return isDestinationNegatedDelta;
 
 		if (o1.getRelationshipId() != -1 && o2.getRelationshipId() != -1) {
-			return Longs.compare(o1.getModuleId(), o2.getModuleId());
+			return Longs.compare(o2.getModuleId(), o1.getModuleId());
 		} else {
 			return isDestinationNegatedDelta;
 		}

@@ -39,7 +39,7 @@ public abstract class OntologyChangeProcessor<T> {
 		final ImmutableList<T> sortedOld = ordering.immutableSortedCopy(oldCollection);
 		final ImmutableList<T> sortedNew = ordering.immutableSortedCopy(newCollection);
 
-		for (final T oldSubject : sortedOld.reverse()) {
+		for (final T oldSubject : sortedOld) {
 			final int idx = ordering.binarySearch(sortedNew, oldSubject);
 			if (idx < 0 || !uniqueOlds.add(sortedNew.get(idx))) {
 				handleRemovedSubject(conceptId, oldSubject);
