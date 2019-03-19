@@ -35,6 +35,15 @@ public class RelationshipChangeProcessor {
 			.thenComparing(Relationship::isUniversal)
 			.thenComparing(Relationship::isDestinationNegated);
 
+	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_WITH_MODULE_ID = Comparator
+			.comparing(Relationship::getTypeId)
+			.thenComparing(Relationship::getDestinationId)
+			.thenComparing(Relationship::getGroup)
+			.thenComparing(Relationship::getUnionGroup)
+			.thenComparing(Relationship::isUniversal)
+			.thenComparing(Relationship::isDestinationNegated)
+			.thenComparing(Relationship::getModuleId, Comparator.reverseOrder());
+
 	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_WITHOUT_GROUP = Comparator
 			.comparing(Relationship::getTypeId)
 			.thenComparing(Relationship::getDestinationId)
@@ -58,14 +67,14 @@ public class RelationshipChangeProcessor {
 
 	public void apply(final long conceptId, final Collection<Relationship> existingRelationships, final Collection<Relationship> newRelationships) {
 
-		final TreeSet<Relationship> uniqueOlds = new TreeSet<>(RELATIONSHIP_COMPARATOR_ALL_FIELDS);
 		final List<Relationship> sortedOld = newSortedList(existingRelationships, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
 		final List<Relationship> sortedNew = newSortedList(newRelationships, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
 
 		final Map<Relationship, Relationship> updatedRelationshipNewOldMap = new HashMap<>();
+		final Set<Integer> uniqueIndex = new HashSet<>();
 
 		// For each existing relationship if it can not be found in the new set mark it as removed
-		for (final Relationship oldSubject : sortedOld) {
+		for (final Relationship oldSubject : newSortedList(existingRelationships, RELATIONSHIP_COMPARATOR_WITH_MODULE_ID)) {
 			final int i = Collections.binarySearch(sortedNew, oldSubject, RELATIONSHIP_COMPARATOR_ALL_FIELDS);
 			if (i < 0) {
 				// Handle the case where existing self grouped relationships are being moved out of group 0.
@@ -92,7 +101,7 @@ public class RelationshipChangeProcessor {
 					}
 				}
 				handleRedundantRelationship(conceptId, oldSubject);
-			} else if (!uniqueOlds.add(oldSubject)) {
+			} else if (!uniqueIndex.add(i)) {
 				// Existing relationship is a duplicate
 				handleRedundantRelationship(conceptId, oldSubject);
 			}

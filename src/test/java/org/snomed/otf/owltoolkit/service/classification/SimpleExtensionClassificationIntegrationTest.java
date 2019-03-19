@@ -78,8 +78,10 @@ public class SimpleExtensionClassificationIntegrationTest {
 
 		// Assert results
 		List<String> lines = readInferredRelationshipLinesTrim(results);
-		assertEquals(9, lines.size());
+		assertEquals(10, lines.size());
 
+		assertTrue("Logically equal inferred relationship in extension is made redundant.",
+				lines.contains("600101001\t\t0\t\t409498004\t404684003\t0\t116680003\t900000000000011006\t900000000000451002"));
 		assertTrue("Logically equal inferred relationship in extension is made redundant.",
 				lines.contains("600202001\t\t0\t\t409498004\t21927003\t2\t246075003\t900000000000011006\t900000000000451002"));
 		assertTrue("Logically equal inferred relationship in extension is made redundant.",
