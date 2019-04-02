@@ -13,11 +13,10 @@ import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StreamUtils;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -90,6 +89,8 @@ public class RF2ToOWLService {
 		if (!extraOntologyNamespaces.isEmpty()) {
 			try {
 				BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(owlFileOutputStream));
+				writer.write(getCopyrightNotice());
+				writer.newLine();
 				for (String extraOntologyNamespace : extraOntologyNamespaces) {
 					writer.write(extraOntologyNamespace);
 					writer.newLine();
@@ -108,6 +109,10 @@ public class RF2ToOWLService {
 		}
 
 		logger.info("RF2 to OWL Ontology conversion complete.");
+	}
+
+	protected String getCopyrightNotice() throws IOException {
+		return FileCopyUtils.copyToString(new InputStreamReader(getClass().getResourceAsStream("/owl-file-copyright-notice.txt")));
 	}
 
 }

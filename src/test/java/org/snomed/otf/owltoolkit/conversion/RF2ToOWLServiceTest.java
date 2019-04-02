@@ -24,6 +24,21 @@ public class RF2ToOWLServiceTest {
 		rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180731", true, new InputStreamSet(rf2ArchiveStream), new OptionalFileInputStream(null), byteArrayOutputStream);
 
 		assertEquals("" +
+						"#############################################################################################################\n" +
+						"# © International Health Terminology Standards Development Organisation 2002-2019. All rights reserved.\n" +
+						"# SNOMED CT® was originally created by the College of American Pathologists.\n" +
+						"# \"SNOMED\" and \"SNOMED CT\" are registered trademarks of International Health Terminology Standards\n" +
+						"# Development Organisation, trading as SNOMED International.\n" +
+						"#\n" +
+						"# SNOMED CT has been created by combining SNOMED RT and a computer based nomenclature and classification\n" +
+						"# known as Clinical Terms Version 3, formerly known as Read Codes Version 3, which was created on behalf of\n" +
+						"# the UK Department of Health and is Crown copyright.\n" +
+						"#\n" +
+						"# This OWL Ontology contains portions of SNOMED CT® distributed by SNOMED International, which is subject to\n" +
+						"# SNOMED International's SNOMED CT® Affiliate License, details of which may be found at\n" +
+						"# http://www.snomed.org/snomed-ct/get-snomed-ct/.\n" +
+						"#############################################################################################################\n" +
+						"\n" +
 						"Prefix(test:=<http://test.com/test/>)\n" +
 						"Prefix(:=<http://snomed.info/id/>)\n" +
 						"Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n" +
@@ -129,6 +144,8 @@ public class RF2ToOWLServiceTest {
 		rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180801", true, new InputStreamSet(rf2ArchiveStream), new OptionalFileInputStream(fictitiousDataAttributeDelta), byteArrayOutputStream);
 
 		assertEquals("" +
+						rf2ToOWLService.getCopyrightNotice() +
+						"\n" +
 						"Prefix(test:=<http://test.com/test/>)\n" +
 						"Prefix(:=<http://snomed.info/id/>)\n" +
 						"Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n" +
@@ -240,6 +257,8 @@ public class RF2ToOWLServiceTest {
 		rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180731", true, new InputStreamSet(baseRF2SnapshotZip, extensionRF2SnapshotZip), new OptionalFileInputStream(null), byteArrayOutputStream);
 
 		assertEquals("" +
+						rf2ToOWLService.getCopyrightNotice() +
+						"\n" +
 						"Prefix(test:=<http://test.com/test/>)\n" +
 						"Prefix(:=<http://snomed.info/id/>)\n" +
 						"Prefix(owl:=<http://www.w3.org/2002/07/owl#>)\n" +
