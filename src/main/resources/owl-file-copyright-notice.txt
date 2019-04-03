@@ -9,6 +9,6 @@
 # the UK Department of Health and is Crown copyright.
 #
 # This OWL Ontology contains portions of SNOMED CT® distributed by SNOMED International, which is subject to
-# SNOMED International's SNOMED CT® Affiliate License, details of which may be found at
-# http://www.snomed.org/snomed-ct/get-snomed-ct/.
+# the SNOMED CT® Affiliate License, details of which may be found at
+# https://www.snomed.org/snomed-ct/get-snomed
 #############################################################################################################

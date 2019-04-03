@@ -35,8 +35,8 @@ public class RF2ToOWLServiceTest {
 						"# the UK Department of Health and is Crown copyright.\n" +
 						"#\n" +
 						"# This OWL Ontology contains portions of SNOMED CT® distributed by SNOMED International, which is subject to\n" +
-						"# SNOMED International's SNOMED CT® Affiliate License, details of which may be found at\n" +
-						"# http://www.snomed.org/snomed-ct/get-snomed-ct/.\n" +
+						"# the SNOMED CT® Affiliate License, details of which may be found at\n" +
+						"# https://www.snomed.org/snomed-ct/get-snomed\n" +
 						"#############################################################################################################\n" +
 						"\n" +
 						"Prefix(test:=<http://test.com/test/>)\n" +
