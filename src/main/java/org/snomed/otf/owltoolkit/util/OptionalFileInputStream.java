@@ -12,7 +12,8 @@ public class OptionalFileInputStream implements AutoCloseable {
 
 	public OptionalFileInputStream(java.io.File file) throws FileNotFoundException {
 		if (file != null) {
-			this.inputStream = Optional.of(new FileInputStream(file));
+			// Open stream as auto-closable field
+			this.inputStream = Optional.of(new FileInputStream(file));// lgtm [java/input-resource-leak]
 		} else {
 			this.inputStream = Optional.empty();
 		}

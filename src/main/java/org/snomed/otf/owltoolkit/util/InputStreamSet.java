@@ -19,7 +19,8 @@ public class InputStreamSet extends HashSet<InputStream> implements AutoCloseabl
 	public InputStreamSet(Set<java.io.File> files) throws FileNotFoundException {
 		fileInputStreams = new HashSet<>();
 		for (File file : files) {
-			fileInputStreams.add(new FileInputStream(file));
+			// Open stream and add to the auto-closable collection
+			fileInputStreams.add(new FileInputStream(file));// lgtm [java/input-resource-leak]
 		}
 	}
 
