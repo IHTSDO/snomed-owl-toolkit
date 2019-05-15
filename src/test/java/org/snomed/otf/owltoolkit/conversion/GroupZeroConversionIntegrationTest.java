@@ -63,6 +63,7 @@ public class GroupZeroConversionIntegrationTest {
 		assertEquals(2, lines.size());
 
 		String inferredGroupNumber = "1";
+		// Assert that the existing active group 0 relationship is moved to another group number
 		assertEquals("200010001\t\t1\t\t362969004\t113331007\t" + inferredGroupNumber + "\t363698007\t900000000000011006\t900000000000451002", lines.get(1));
 	}
 

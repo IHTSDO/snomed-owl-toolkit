@@ -38,3 +38,6 @@ id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId
 
 # Disorder of endocrine system - Finding site - Structure of endocrine system
 200010001	20170131	1	900000000000207008	362969004	113331007	0	363698007	900000000000011006	900000000000451002
+
+# Existing inactive relationship in group 1 for: Disorder of endocrine system - Finding site - Structure of endocrine system
+200111001	20170131	0	900000000000207008	362969004	113331007	1	363698007	900000000000011006	900000000000451002

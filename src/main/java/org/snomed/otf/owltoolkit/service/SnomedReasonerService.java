@@ -179,11 +179,13 @@ public class SnomedReasonerService {
 
 			if(!conceptInactiveInferredRelationship.isEmpty() && !newInferredRelationship.isEmpty()) {
 				for (Relationship newRel : newInferredRelationship) {
-					for (Relationship inactiveRel : conceptInactiveInferredRelationship) {
-						if(newRel.getGroup() == inactiveRel.getGroup()
-								&& newRel.getTypeId() == inactiveRel.getTypeId()
-								&& newRel.getDestinationId() == inactiveRel.getDestinationId()) {
-							newRel.setRelationshipId(inactiveRel.getRelationshipId());
+					if (newRel.getRelationshipId() == -1) {// If we are updating an existing relationship then no need to find another one
+						for (Relationship inactiveRel : conceptInactiveInferredRelationship) {
+							if (newRel.getGroup() == inactiveRel.getGroup()
+									&& newRel.getTypeId() == inactiveRel.getTypeId()
+									&& newRel.getDestinationId() == inactiveRel.getDestinationId()) {
+								newRel.setRelationshipId(inactiveRel.getRelationshipId());
+							}
 						}
 					}
 				}
