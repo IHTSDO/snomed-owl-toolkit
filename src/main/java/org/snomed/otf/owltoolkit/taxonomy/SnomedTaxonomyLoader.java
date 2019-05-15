@@ -128,22 +128,28 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 							parseLong(characteristicTypeId)
 					)
 			);
-		} else if (loadingDelta || (!stated && !ACTIVE.equals(active))) {
-			// Inactive relationships in the delta should be removed from the snapshot view
-			snomedTaxonomy.removeRelationship(stated, sourceId, id);
-			int effectiveTimeInt = !Strings.isNullOrEmpty(effectiveTime) ? Integer.parseInt(effectiveTime) : effectiveTimeNow;
-			boolean universal = UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId);
-			snomedTaxonomy.addInactiveInferredRelationship(parseLong(sourceId), new Relationship(
-					parseLong(id),
-					effectiveTimeInt,
-					parseLong(moduleId),
-					parseLong(typeId),
-					parseLong(destinationId),
-					false,
-					Integer.parseInt(relationshipGroup),
-					0,
-					universal,
-					parseLong(characteristicTypeId)));
+		} else {
+			// Inactive
+			if (loadingDelta) {
+				// Inactive relationships in the delta should be removed from the snapshot view
+				snomedTaxonomy.removeRelationship(stated, sourceId, id);
+			}
+			if (!stated) {
+				// Inactive inferred relationships kept for possible reactivation
+				int effectiveTimeInt = !Strings.isNullOrEmpty(effectiveTime) ? Integer.parseInt(effectiveTime) : effectiveTimeNow;
+				boolean universal = UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId);
+				snomedTaxonomy.addInactiveInferredRelationship(parseLong(sourceId), new Relationship(
+						parseLong(id),
+						effectiveTimeInt,
+						parseLong(moduleId),
+						parseLong(typeId),
+						parseLong(destinationId),
+						false,
+						Integer.parseInt(relationshipGroup),
+						0,
+						universal,
+						parseLong(characteristicTypeId)));
+			}
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
