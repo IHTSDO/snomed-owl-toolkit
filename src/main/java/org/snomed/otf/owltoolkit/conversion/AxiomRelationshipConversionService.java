@@ -23,10 +23,25 @@ public class AxiomRelationshipConversionService {
 	private final OntologyService ontologyService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AxiomRelationshipConversionService.class);
+	private Collection<Long> objectAttributes;
+	private Collection<Long> dataAttributes;
 
 	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
 		ontologyService = new OntologyService(ungroupedAttributes);
+	}
+
+	/**
+	 * Use this constructor to enable generating SubObjectPropertyOf and SubDataPropertyOf axioms from relationships.
+	 * @param ungroupedAttributes
+	 * @param objectAttributes
+	 * @param dataAttributes
+	 */
+	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes, Collection<Long> objectAttributes, Collection<Long> dataAttributes) {
+		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
+		ontologyService = new OntologyService(ungroupedAttributes);
+		this.objectAttributes = objectAttributes;
+		this.dataAttributes = dataAttributes;
 	}
 
 	/**
@@ -172,8 +187,31 @@ public class AxiomRelationshipConversionService {
 	}
 
 	public String convertRelationshipsToAxiom(AxiomRepresentation representation) {
-		OWLClassAxiom owlClassAxiom = ontologyService.createOwlClassAxiom(representation);
-		return owlClassAxiom.toString().replaceAll(CORE_COMPONENT_NAMESPACE_PATTERN, ":$1").replace(") )", "))");
+
+		// Identify and convert object and data property axioms
+		if (representation.getLeftHandSideNamedConcept() != null && representation.getRightHandSideRelationships() != null) {
+			List<Relationship> relationships = representation.getRightHandSideRelationships().get(0);
+			for (Relationship relationship : relationships) {
+				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
+					if (objectAttributes != null && objectAttributes.contains(relationship.getDestinationId())) {
+						// Attributes will only have one parent
+						return axiomToString(ontologyService.createOwlSubObjectPropertyOfAxiom(representation.getLeftHandSideNamedConcept(), relationship.getDestinationId()));
+					} else if (dataAttributes != null && dataAttributes.contains(relationship.getDestinationId())) {
+						return axiomToString(ontologyService.createOwlSubDataPropertyOfAxiom(representation.getLeftHandSideNamedConcept(), relationship.getDestinationId()));
+					} else {
+						// If the first parent is not an attribute then the concept is not an attribute.
+						break;
+					}
+				}
+			}
+		}
+
+		// Normal axioms and GCI axioms go through here
+		return axiomToString(ontologyService.createOwlClassAxiom(representation));
+	}
+
+	public String axiomToString(OWLLogicalAxiom owlAxiom) {
+		return owlAxiom.toString().replaceAll(CORE_COMPONENT_NAMESPACE_PATTERN, ":$1").replace(") )", "))");
 	}
 
 	/**

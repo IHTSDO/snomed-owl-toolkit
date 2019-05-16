@@ -112,22 +112,20 @@ public class OntologyService {
 
 		Set<Long> descendants = snomedTaxonomy.getDescendants(conceptModelObjectAttribute);
 		for (Long objectAttributeId : descendants) {
-			OWLObjectProperty owlObjectProperty = getOwlObjectProperty(objectAttributeId);
 			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(objectAttributeId)) {
 				if (relationship.getTypeId() == Concepts.IS_A_LONG && (relationship.getDestinationId() != Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG) || !conceptModelObjectAttributePresent) {
 					axiomsMap.computeIfAbsent(objectAttributeId, (id) -> new HashSet<>())
-							.add(factory.getOWLSubObjectPropertyOfAxiom(owlObjectProperty, getOwlObjectProperty(relationship.getDestinationId())));
+							.add(createOwlSubObjectPropertyOfAxiom(objectAttributeId, relationship.getDestinationId()));
 				}
 			}
 		}
 
 		if (snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG)) {
 			for (Long dataAttributeId : snomedTaxonomy.getDescendants(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG)) {
-				OWLDataProperty owlDataProperty = getOwlDataProperty(dataAttributeId);
 				for (Relationship relationship : snomedTaxonomy.getStatedRelationships(dataAttributeId)) {
 					if (relationship.getTypeId() == Concepts.IS_A_LONG) {
 						axiomsMap.computeIfAbsent(dataAttributeId, (id) -> new HashSet<>())
-								.add(factory.getOWLSubDataPropertyOfAxiom(owlDataProperty, getOwlDataProperty(relationship.getDestinationId())));
+								.add(createOwlSubDataPropertyOfAxiom(dataAttributeId, relationship.getDestinationId()));
 					}
 				}
 			}
@@ -192,6 +190,14 @@ public class OntologyService {
 		} else {
 			return factory.getOWLEquivalentClassesAxiom(leftSide, rightSide);
 		}
+	}
+
+	public OWLSubObjectPropertyOfAxiom createOwlSubObjectPropertyOfAxiom(Long objectAttributeId, long destinationId) {
+		return factory.getOWLSubObjectPropertyOfAxiom(getOwlObjectProperty(objectAttributeId), getOwlObjectProperty(destinationId));
+	}
+
+	public OWLSubDataPropertyOfAxiom createOwlSubDataPropertyOfAxiom(Long dataAttributeId, long destinationId) {
+		return factory.getOWLSubDataPropertyOfAxiom(getOwlDataProperty(dataAttributeId), getOwlDataProperty(destinationId));
 	}
 
 	private OWLClassExpression createOwlClassExpression(Long namedConcept, Map<Integer, List<Relationship>> relationships) {
