@@ -8,9 +8,9 @@ import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
+import org.snomed.otf.owltoolkit.ontology.OntologyService;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -20,7 +20,8 @@ public class AxiomRelationshipConversionServiceTest {
 
 	@Before
 	public void setup() {
-		axiomRelationshipConversionService = new AxiomRelationshipConversionService(Sets.newHashSet(Concepts.LATERALITY_LONG));
+		HashSet<Long> ungroupedAttributes = Sets.newHashSet(Concepts.LATERALITY_LONG);
+		axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedAttributes);
 	}
 
 	@Test
@@ -241,6 +242,42 @@ public class AxiomRelationshipConversionServiceTest {
 						")" +
 						" )";
 		assertEquals(Sets.newHashSet(9846003L, 39132006L, 64033007L, 272741003L, 24028007L), axiomRelationshipConversionService.getIdsOfConceptsNamedInAxiom(equivalentClassAxiom));
+	}
+
+	@Test
+	public void testConvertRelationshipsToAxiomAllowGroupedAttribute() {
+		AxiomRepresentation representation = new AxiomRepresentation();
+		representation.setLeftHandSideNamedConcept(9846003L);
+		representation.setRightHandSideRelationships(toMap(
+				new Relationship(Concepts.IS_A_LONG, 39132006L),
+				// Put a grouped attribute in group 1
+				new Relationship(1, Concepts.HAS_ACTIVE_INGREDIENT_LONG, 7771000L)));
+
+		String actual = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
+		assertTrue(actual.contains(OntologyService.ROLE_GROUP_SCTID));
+		assertEquals("EquivalentClasses(:9846003 ObjectIntersectionOf(:39132006 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:127489000 :7771000))))", actual);
+	}
+
+	@Test
+	public void testConvertRelationshipsToAxiomMoveUngroupedAttribute() {
+		AxiomRepresentation representation = new AxiomRepresentation();
+		representation.setLeftHandSideNamedConcept(9846003L);
+		representation.setRightHandSideRelationships(toMap(
+				new Relationship(Concepts.IS_A_LONG, 39132006L),
+				// Attempt to group an ungroupable attribute by placing it in group 1
+				new Relationship(1, Concepts.LATERALITY_LONG, 7771000L)));
+
+		String actual = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
+		assertFalse(actual.contains(OntologyService.ROLE_GROUP_SCTID));
+		assertEquals("EquivalentClasses(:9846003 ObjectIntersectionOf(:39132006 ObjectSomeValuesFrom(:272741003 :7771000)))", actual);
+	}
+
+	private Map<Integer, List<Relationship>> toMap(Relationship... relationships) {
+		HashMap<Integer, List<Relationship>> relationshipMap = new HashMap<>();
+		for (Relationship relationship : relationships) {
+			relationshipMap.computeIfAbsent(relationship.getGroup(), g -> new ArrayList<>()).add(relationship);
+		}
+		return relationshipMap;
 	}
 
 	private String toString(Map<Integer, List<Relationship>> relationshipGroups) {

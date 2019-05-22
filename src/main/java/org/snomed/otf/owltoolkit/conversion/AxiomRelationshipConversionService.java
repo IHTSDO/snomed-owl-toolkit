@@ -164,7 +164,7 @@ public class AxiomRelationshipConversionService {
 			for (Relationship relationship : relationships) {
 				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
 					if (objectAttributes != null && objectAttributes.contains(relationship.getDestinationId())) {
-						// Attributes will only have one parent
+						// Attribute concepts will only have one parent
 						return axiomToString(ontologyService.createOwlSubObjectPropertyOfAxiom(representation.getLeftHandSideNamedConcept(), relationship.getDestinationId()));
 					} else if (dataAttributes != null && dataAttributes.contains(relationship.getDestinationId())) {
 						return axiomToString(ontologyService.createOwlSubDataPropertyOfAxiom(representation.getLeftHandSideNamedConcept(), relationship.getDestinationId()));

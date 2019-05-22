@@ -231,6 +231,9 @@ public class OntologyService {
 						// Self grouped relationships in group 0
 						terms.add(getOwlObjectSomeValuesFromGroup(getOwlObjectSomeValuesFrom(typeId, destinationId)));
 					}
+				} else if (ungroupedAttributes.contains(typeId)) {
+						// Prevent MRCM ungrouped attribute from being grouped, even though a group other than 0 was given
+						terms.add(getOwlObjectSomeValuesFrom(typeId, destinationId));
 				} else {
 					// Collect statements in the same role group into sets
 					nonZeroRoleGroups.computeIfAbsent(group, g -> new HashSet<>())
