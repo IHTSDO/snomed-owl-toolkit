@@ -91,6 +91,7 @@ public class AxiomRelationshipConversionService {
 
 			representation.setLeftHandSideNamedConcept(subAttributeConceptId);
 			representation.setRightHandSideRelationships(newSingleIsARelationship(superAttributeConceptId));
+			representation.setPrimitive(true);
 
 			return representation;
 

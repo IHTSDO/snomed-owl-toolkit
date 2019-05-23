@@ -43,6 +43,8 @@ public class AxiomRelationshipConversionServiceTest {
 
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
+		assertEquals(true, representation.isPrimitive());
+
 		assertEquals(
 				"0 116680003=73211009\n" +
 				"1 100105001=100101001",
@@ -73,6 +75,8 @@ public class AxiomRelationshipConversionServiceTest {
 				")";
 
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
+
+		assertEquals(true, representation.isPrimitive());
 
 		assertEquals(8801005, representation.getLeftHandSideNamedConcept().longValue());
 
@@ -111,6 +115,8 @@ public class AxiomRelationshipConversionServiceTest {
 
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
+		assertEquals(false, representation.isPrimitive());
+
 		assertEquals(10002003, representation.getLeftHandSideNamedConcept().longValue());
 
 		assertEquals(
@@ -141,6 +147,7 @@ public class AxiomRelationshipConversionServiceTest {
 		// Test converting relationships back to an axiom
 		String recreatedAxiom = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
 		assertEquals(axiom, recreatedAxiom);
+		assertEquals(true, representation.isPrimitive());
 	}
 
 	@Test
@@ -173,6 +180,7 @@ public class AxiomRelationshipConversionServiceTest {
 				toString(representation.getRightHandSideRelationships()));
 
 		assertEquals(363698007, representation.getLeftHandSideNamedConcept().longValue());
+		assertEquals(true, representation.isPrimitive());
 	}
 
 	@Test
@@ -202,6 +210,8 @@ public class AxiomRelationshipConversionServiceTest {
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
 		assertEquals(9846003L, representation.getLeftHandSideNamedConcept().longValue());
+
+		assertEquals(false, representation.isPrimitive());
 
 		assertEquals(
 				"0 116680003=39132006\n" +
