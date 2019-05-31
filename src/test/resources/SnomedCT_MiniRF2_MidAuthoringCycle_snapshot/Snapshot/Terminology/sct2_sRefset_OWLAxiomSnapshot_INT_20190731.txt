@@ -1,0 +1,2 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+e35258b4-15d8-4fb2-bea5-dcc6b5e7de62	20190731	1	900000000000207008	733073007	8801005	SubClassOf(ObjectIntersectionOf(:73211009 ObjectSomeValuesFrom(:roleGroup ObjectSomeValuesFrom(:100106001 :100102001))) :8801005)

@@ -17,10 +17,13 @@ import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -31,6 +34,7 @@ import static java.lang.Long.parseLong;
  */
 public class StatedRelationshipToOwlRefsetService {
 
+	private static final String OWL_AXIOM_REFSET_DELTA = "sct2_sRefset_OWLAxiomDelta_INT_";
 	private Supplier<String> identifierSupplier = () -> UUID.randomUUID().toString();
 	private static final String TAB = "\t";
 	private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -53,7 +57,7 @@ public class StatedRelationshipToOwlRefsetService {
 				try {
 					publishedStatedRelationshipInactivator.complete();
 					zipOutputStream.closeEntry();
-					zipOutputStream.putNextEntry(new ZipEntry("sct2_sRefset_OWLAxiomDelta_INT_" + effectiveDate + ".txt"));
+					zipOutputStream.putNextEntry(new ZipEntry(OWL_AXIOM_REFSET_DELTA + effectiveDate + ".txt"));
 					return new BufferedWriter(new OutputStreamWriter(zipOutputStream));
 				} catch (IOException e) {
 					logger.error("Failed to start OWL Axiom zip entry", e);
@@ -67,28 +71,63 @@ public class StatedRelationshipToOwlRefsetService {
 			zipOutputStream.closeEntry();
 		}
 	}
-
-	SnomedTaxonomy readSnomedTaxonomy(InputStream snomedRf2SnapshotArchive, OptionalFileInputStream deltaStream,
-			ComponentFactory publishedStatedRelationshipInactivator, ComponentFactory axiomDeltaCopier) throws ConversionException {
-
-		try {
-			return new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream.getInputStream().orElse(null),
-					publishedStatedRelationshipInactivator, axiomDeltaCopier, false);
-		} catch (ReleaseImportException e) {
-			throw new ConversionException("Failed to load RF2 archive.", e);
+	
+	public void convertStatedRelationshipsToOwlReRefsetAndReconcileWithPublishedArchive(InputStream snomedRf2SnapshotArchive,
+			InputStream snomedRf2CompleteOwlSnapshotArchive,
+			OutputStream rf2DeltaZipResults,
+			String effectiveDate) throws ConversionException, OWLOntologyCreationException, IOException {
+		
+		// Load required parts of RF2 into memory, copying existing owl axioms to output file
+		logger.info("Loading RF2 files.");
+		// Create delta results zip stream
+		try (ZipOutputStream zipOutputStream = new ZipOutputStream(rf2DeltaZipResults)) {
+			AxiomCopier axiomCopier = new AxiomCopier(() -> {
+				try {
+					zipOutputStream.putNextEntry(new ZipEntry(OWL_AXIOM_REFSET_DELTA + effectiveDate + ".txt"));
+					return new BufferedWriter(new OutputStreamWriter(zipOutputStream));
+				} catch (IOException e) {
+					logger.error("Failed to start OWL Axiom zip entry", e);
+				}
+				return null;
+			});
+			axiomCopier.setExtractEffectiveTime(effectiveDate);
+			SnomedTaxonomy snomedTaxonomy = readSnomedTaxonomy(snomedRf2SnapshotArchive, new OptionalFileInputStream(null), axiomCopier, null);
+			axiomCopier.complete();
+			// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
+			Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
+			OntologyService ontologyService = new OntologyService(neverGroupedRoles);
+			
+			AxiomChangesGenerator generator = new AxiomChangesGenerator();
+			generator.generate(snomedTaxonomy, ontologyService, snomedRf2CompleteOwlSnapshotArchive);
+			
+			OWLOntology ontology = ontologyService.createOntology(snomedTaxonomy);
+			convertAxiomsToReferenceSet(generator, ontologyService, ontology, zipOutputStream, snomedTaxonomy);
+			zipOutputStream.closeEntry();
 		}
 	}
 
-	void convertStatedRelationshipsToOwlRefset(SnomedTaxonomy snomedTaxonomy, OutputStream outputStream) throws OWLOntologyCreationException, ConversionException {
+	private void convertAxiomsToReferenceSet(AxiomChangesGenerator generator,
+			OntologyService ontologyService, OWLOntology ontology,
+			ZipOutputStream zipOutputStream, SnomedTaxonomy snomedTaxonomy) throws OWLOntologyCreationException, ConversionException {
+		
+		convertAxiomsToReferenceSet(generator.getAxiomsIdMap(),
+				generator.getChanges(),
+				generator.getConceptsInactivated(),
+				ontologyService,
+				ontology,
+				zipOutputStream,
+				snomedTaxonomy);
+		
+	}
 
-		// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
-		Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
-
-		OntologyService ontologyService = new OntologyService(neverGroupedRoles);
-		OWLOntology ontology = ontologyService.createOntology(snomedTaxonomy);
-
-		Map<Long, Set<OWLAxiom>> axiomsFromStatedRelationships = ontologyService.createAxiomsFromStatedRelationships(snomedTaxonomy);
-
+	private void convertAxiomsToReferenceSet(Map<OWLAxiom, String> axiomsIdMap,
+			Map<Long, Set<OWLAxiom>> changes,
+			Set<Long> inactiveConcepts,
+			OntologyService ontologyService,
+			OWLOntology ontology,
+			OutputStream outputStream,
+			SnomedTaxonomy snomedTaxonomy) throws OWLOntologyCreationException, ConversionException {
+		
 		try {
 			// Leave stream open so other entries can be written when used as a zip stream
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
@@ -102,19 +141,26 @@ public class StatedRelationshipToOwlRefsetService {
 			modelComponentIds.add(parseLong(Concepts.SNOMED_CT_MODEL_COMPONENT));
 			modelComponentIds.add(Concepts.ROOT_LONG);
 
-			for (Long conceptId : axiomsFromStatedRelationships.keySet()) {
-				for (OWLAxiom owlAxiom : axiomsFromStatedRelationships.get(conceptId)) {
+			for (Long conceptId : changes.keySet()) {
+				for (OWLAxiom owlAxiom : changes.get(conceptId)) {
 					// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
 
-					// Random ID
-					writer.write(generateIdentifier());
+					if (axiomsIdMap == null || !axiomsIdMap.containsKey(owlAxiom)) {
+						writer.write(generateIdentifier());
+					} else {
+						writer.write(axiomsIdMap.get(owlAxiom));
+					}
 					writer.write(TAB);
 
 					// Blank effectiveTime
 					writer.write(TAB);
 
-					// Active
-					writer.write("1");
+					// inactivation
+					if (inactiveConcepts != null && inactiveConcepts.contains(conceptId)) {
+						writer.write("0");
+					} else {
+						writer.write("1");
+					}
 					writer.write(TAB);
 
 					// Module
@@ -143,7 +189,143 @@ public class StatedRelationshipToOwlRefsetService {
 		} catch (IOException e) {
 			throw new ConversionException("Failed to write to OWL Reference Set output file.", e);
 		}
+		
 	}
+
+	SnomedTaxonomy readSnomedTaxonomy(InputStream snomedRf2SnapshotArchive, OptionalFileInputStream deltaStream,
+			ComponentFactory publishedStatedRelationshipInactivator, ComponentFactory axiomDeltaCopier) throws ConversionException {
+
+		try {
+			return new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream.getInputStream().orElse(null),
+					publishedStatedRelationshipInactivator, axiomDeltaCopier, false);
+		} catch (ReleaseImportException e) {
+			throw new ConversionException("Failed to load RF2 archive.", e);
+		}
+	}
+
+	void convertStatedRelationshipsToOwlRefset(SnomedTaxonomy snomedTaxonomy, OutputStream outputStream) throws OWLOntologyCreationException, ConversionException {
+
+		// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
+		Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
+
+		OntologyService ontologyService = new OntologyService(neverGroupedRoles);
+		OWLOntology ontology = ontologyService.createOntology(snomedTaxonomy);
+		
+		Map<Long, Set<OWLAxiom>> axiomsFromStatedRelationships = ontologyService.createAxiomsFromStatedRelationships(snomedTaxonomy);
+		convertAxiomsToReferenceSet(null, axiomsFromStatedRelationships, null, ontologyService, ontology, outputStream, snomedTaxonomy);
+	}
+
+	
+	static class AxiomChangesGenerator {
+		
+		private Map<Long, Set<OWLAxiom>> changes = new HashMap<>();
+		private Map<OWLAxiom, String> publishedAxiomsIdMap = new HashMap<>();
+		private Set<Long> inactivatedConcepts = new HashSet<>();
+		private final Logger logger = LoggerFactory.getLogger(getClass());
+
+		public void generate(SnomedTaxonomy snomedTaxonomy, OntologyService ontologyService, InputStream snomedRf2CompleteOwlSnapshotArchive) throws ConversionException {
+			//load published complete owl
+			logger.info("Loading complete owl snapshot files ..");
+			SnomedTaxonomy completeOwlTaxonomy = readSnomedTaxonomyWithoutRelationships(snomedRf2CompleteOwlSnapshotArchive);
+			logger.info("Total concepts loaded with axioms:" + completeOwlTaxonomy.getConceptAxiomMap().keySet().size());
+			
+			for (String id : completeOwlTaxonomy.getAxiomsById().keySet()) {
+				if (!snomedTaxonomy.getAxiomsById().containsKey(id)) {
+					publishedAxiomsIdMap.put(completeOwlTaxonomy.getAxiomsById().get(id), id);
+				}
+			}
+						
+			//convert stated relationships
+			Map<Long, Set<OWLAxiom>> axiomsFromStatedRelationships = ontologyService.createAxiomsFromStatedRelationships(snomedTaxonomy);
+			int newlyAdded = 0;
+			int modifiedTotal = 0;
+			int inactivation = 0;
+			for (Long conceptId : axiomsFromStatedRelationships.keySet()) {
+				
+				if (completeOwlTaxonomy.getConceptAxiomMap().keySet().contains(conceptId)) {
+					//check any changes
+					OWLAxiom modified = findChanges(publishedAxiomsIdMap, completeOwlTaxonomy.getConceptAxiomMap().get(conceptId),
+														axiomsFromStatedRelationships.get(conceptId));
+					if (modified != null) {
+						logger.debug("Axiom modified for concept " + conceptId);
+						changes.putIfAbsent(conceptId, new HashSet<>());
+						changes.get(conceptId).add(modified);
+						modifiedTotal++;
+					}
+				} else {
+					// axioms for new concept
+					logger.debug("Axioms added for new concept " + conceptId);
+					changes.putIfAbsent(conceptId, new HashSet<>());
+					changes.get(conceptId).addAll(axiomsFromStatedRelationships.get(conceptId));
+					newlyAdded += axiomsFromStatedRelationships.get(conceptId).size();
+				}
+			}
+			
+			//inactivation
+			inactivatedConcepts = new LongOpenHashSet(snomedTaxonomy.getInactivatedConcepts());
+			inactivatedConcepts.removeAll(completeOwlTaxonomy.getInactivatedConcepts());
+			for (Long conceptId : inactivatedConcepts) {
+				changes.put(conceptId, completeOwlTaxonomy.getConceptAxiomMap().get(conceptId));
+				inactivation += completeOwlTaxonomy.getConceptAxiomMap().get(conceptId).size();
+			}
+			logger.info("Concepts inactivated:" + inactivatedConcepts.size());
+
+			//re-activation
+			Set<Long> reActivations = new LongOpenHashSet(completeOwlTaxonomy.getInactivatedConcepts());
+			reActivations.removeAll(snomedTaxonomy.getInactivatedConcepts());
+			
+			logger.info("Concepts re-activated:" + reActivations.size());
+			
+			for (Long conceptId : reActivations) {
+				if (completeOwlTaxonomy.getConceptAxiomMap().containsKey(conceptId)) {
+					changes.put(conceptId, completeOwlTaxonomy.getConceptAxiomMap().get(conceptId));
+				}
+			}
+			
+			logger.info("Total changes:" + changes.values().size());
+			logger.info("Modified changes:" + modifiedTotal + " added for new concept changes:" + newlyAdded);
+			logger.info("Inactivation changes:" + inactivation);
+		}
+		
+		private SnomedTaxonomy readSnomedTaxonomyWithoutRelationships(InputStream snomedRf2CompleteOwlSnapshotArchive) throws ConversionException{
+			try {
+				return new SnomedTaxonomyBuilder().buildWithAxiomRefset(new InputStreamSet(snomedRf2CompleteOwlSnapshotArchive));
+			} catch (ReleaseImportException e) {
+				throw new ConversionException("Failed to load RF2 archive.", e);
+			}
+		}
+		
+		public Set<Long> getConceptsInactivated() {
+			return this.inactivatedConcepts;
+		}
+
+		public Map<Long, Set<OWLAxiom>> getChanges() {
+			return this.changes;
+		}
+
+		public Map<OWLAxiom, String> getAxiomsIdMap() {
+			return this.publishedAxiomsIdMap;
+		}
+
+		OWLAxiom findChanges(Map<OWLAxiom, String> owlAxiomIdMap, Set<OWLAxiom> previous, Set<OWLAxiom> currentFromStated) {
+			Set<OWLAxiom> previousAxiomFromStated = previous
+					.stream()
+					.filter(a -> owlAxiomIdMap.containsKey(a))
+					.collect(Collectors.toSet());
+			if (previousAxiomFromStated.isEmpty()) {
+				//newly added
+				return currentFromStated.iterator().next();
+			} else {
+				if (!previousAxiomFromStated.iterator().next().equals(currentFromStated.iterator().next())) {
+					//modified
+					owlAxiomIdMap.put(currentFromStated.iterator().next(), owlAxiomIdMap.get(previousAxiomFromStated.iterator().next()));
+					return currentFromStated.iterator().next();
+				}
+			}
+			return null;
+		}
+	}
+		
 
 	private static class PublishedStatedRelationshipInactivator extends ImpotentComponentFactory {
 
@@ -220,16 +402,23 @@ public class StatedRelationshipToOwlRefsetService {
 		private boolean entryStarted;
 		private BufferedWriter writer;
 		private final List<IOException> exceptionsThrown;
+		private String effectiveTime;
 
 		AxiomCopier(Supplier<BufferedWriter> startFunction) {
 			exceptionsThrown = new ArrayList<>();
 			this.startFunction = startFunction;
 		}
+		
+		
+
+		public void setExtractEffectiveTime(String effectiveTime) {
+			this.effectiveTime = effectiveTime;
+		}
 
 		@Override
 		public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 			// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
-			if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET)) {
+			if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && (this.effectiveTime == null || this.effectiveTime.equals(effectiveTime))) {
 				try {
 					startEntry();
 					writer.write(id);

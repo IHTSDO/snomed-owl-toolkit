@@ -295,4 +295,9 @@ public class SnomedTaxonomy {
 		conceptAxiomMap.values().forEach(axioms -> axiomCount.addAndGet(axioms.size()));
 		return axiomCount.get();
 	}
+
+	public Map<String, OWLAxiom> getAxiomsById() {
+		return axiomsById;
+	}
+	
 }

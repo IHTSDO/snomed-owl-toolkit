@@ -42,6 +42,15 @@ public class SnomedTaxonomyBuilder {
 			.withFullRefsetMemberObjects()
 			.withoutDescriptions()
 			.withInactiveRelationships();
+	
+	
+	private static final LoadingProfile OWL_SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
+			.withInactiveConcepts()
+			.withRefset(OWL_ONTOLOGY_REFERENCE_SET)
+			.withRefset(OWL_AXIOM_REFERENCE_SET)
+			.withRefset(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)
+			.withFullRefsetMemberObjects()
+			.withoutDescriptions();
 
 	static {
 		// Giving reference set filename patterns avoids reading them all
@@ -65,6 +74,29 @@ public class SnomedTaxonomyBuilder {
 		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, null, includeFSNs);
 	}
 
+	public SnomedTaxonomy buildWithAxiomRefset(InputStreamSet snomedRf2OwlSnapshotArchive) throws ReleaseImportException {
+		
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+
+		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader();
+		
+		ReleaseImporter releaseImporter = new ReleaseImporter();
+		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(snomedRf2OwlSnapshotArchive.getFileInputStreams(), OWL_SNAPSHOT_LOADING_PROFILE, snomedTaxonomyLoader);
+		snomedTaxonomyLoader.reportErrors();
+		logger.info("Loaded release snapshot");
+		logger.info("Time taken deserialising axioms {}s", (snomedTaxonomyLoader.getTimeTakenDeserialisingAxioms() / 1000.00));
+		
+		stopWatch.stop();
+		logger.info("SnomedTaxonomy loaded in {} seconds", stopWatch.getTotalTimeSeconds());
+
+		SnomedTaxonomy snomedTaxonomy = snomedTaxonomyLoader.getSnomedTaxonomy();
+		logger.info("{} concepts loaded", snomedTaxonomy.getAllConceptIds().size());
+		logger.info("{} active axioms loaded", snomedTaxonomy.getAxiomCount());
+		return snomedTaxonomy;
+
+	}
+	
 	public SnomedTaxonomy build(
 			InputStreamSet snomedRf2SnapshotArchives,
 			InputStream currentReleaseRf2DeltaArchive,
@@ -76,7 +108,7 @@ public class SnomedTaxonomyBuilder {
 		stopWatch.start();
 
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snapshotComponentFactoryTap, deltaComponentFactoryTap);
-
+		
 		ReleaseImporter releaseImporter = new ReleaseImporter();
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(
 				snomedRf2SnapshotArchives.getFileInputStreams(),

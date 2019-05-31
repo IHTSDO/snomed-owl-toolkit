@@ -34,6 +34,15 @@ public class ApplicationTest {
 			"                                         - OWL Axiom reference set delta of all axioms which were previously stated relationships\n" +
 			"                                         - Stated relationship delta with all relationships which were previously active marked as inactive.\n" +
 			"\n" +
+			" -rf2-stated-to-complete-owl-reconcile  Convert mid authoring cycle RF2 snapshot stated relationships to complete OWL Axiom reference set and reconcile with published version to genereate delta changes.\n" +
+			"                                        Two snapshot archives must be required. The first one should be the mid authoring cycle snapshot and the second one is the published complete owl snapshot archive.\n" +
+			"                                        Stated relationships are converted to OWL Axiom reference set entries.\n" +
+			"                                        These converted OWL Axioms are then reconciled with published version.\n" + 
+			"                                        Results are written to a zip file containing:\n" + 
+			"                                         - OWL Axiom reference set delta consisting of newly added or modified axioms converted from stated relationships.\n" +
+			"                                         - Published OWL Axiom reference set uuid will be used for an updated axiom.\n" +
+			"\n" +
+
 			" -rf2-snapshot-archives <path>          Comma separated paths of zip files containing RF2 Snapshot files to be loaded. \n" +
 			"                                        At least one Snapshot archive is required.\n" +
 			"\n" +

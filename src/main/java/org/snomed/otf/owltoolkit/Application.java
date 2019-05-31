@@ -16,8 +16,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -26,6 +29,8 @@ import java.util.Set;
  */
 public class Application {
 
+	private static final String ZIP = ".zip";
+	private static final String COMPLETE_OWL_AXIOM_DELTA = "complete-owl-axiom-delta-";
 	private static final String ARG_HELP = "-help";
 	private static final String ARG_DEBUG = "-debug";
 	private static final String ARG_RF2_TO_OWL = "-rf2-to-owl";
@@ -33,6 +38,7 @@ public class Application {
 	private static final String ARG_RF2_STATED_TO_COMPLETE_OWL = "-rf2-stated-to-complete-owl";
 	private static final String ARG_RF2_SNAPSHOT_ARCHIVES = "-rf2-snapshot-archives";
 	private static final String ARG_RF2_AUTHORING_DELTA_ARCHIVE = "-rf2-authoring-delta-archive";
+	private static final String ARG_RF2_STATED_TO_COMPLETE_OWL_RECONCILE = "-rf2-stated-to-complete-owl-reconcile";
 	private static final String ARG_URI = "-uri";
 	private static final String ARG_VERSION = "-version";
 	private static final String ARG_WITHOUT_ANNOTATIONS = "-without-annotations";
@@ -75,6 +81,9 @@ public class Application {
 			} else if (args.contains(ARG_RF2_STATED_TO_COMPLETE_OWL)) {
 				modeFound = true;
 				statedRelationshipsToOwlReferenceSet(args);
+			} else if (args.contains(ARG_RF2_STATED_TO_COMPLETE_OWL_RECONCILE)) {
+				modeFound = true;
+				convertStatedRelationshipsToOwlReferenceSetAndReconcile(args);
 			}
 			if (!modeFound || args.contains(ARG_RF2_TO_OWL)) {
 				rf2ToOwl(args);
@@ -86,7 +95,7 @@ public class Application {
 		Set<File> snapshotFiles = getSnapshotFiles(args);
 		File deltaFile = getDeltaFiles(args);
 
-		File resultsFile = new File("classification-results-" + DATETIME_FORMAT.format(new Date()) + ".zip");
+		File resultsFile = new File("classification-results-" + DATETIME_FORMAT.format(new Date()) + ZIP);
 		new SnomedReasonerService().classify(
 				"command-line",
 				snapshotFiles,
@@ -144,20 +153,21 @@ public class Application {
 
 	private void statedRelationshipsToOwlReferenceSet(List<String> args) throws IOException, OWLOntologyCreationException, ConversionException {
 		// Parameter validation
-		Set<File> snapshotFiles = getSnapshotFiles(args);
-		assertTrue("Expecting one snapshot RF2 file.", snapshotFiles.size() == 1);
+		Set<File>  snapshotFiles = getSnapshotFiles(args);
+		assertTrue("Expecting one snapshot RF2 file.", snapshotFiles.size() == 1);;
+		
 		File deltaFile = getDeltaFiles(args);
 
 		String effectiveDate = getEffectiveDate(args);
-		String outputFilePath = "complete-owl-axiom-delta-" + effectiveDate + ".zip";
+		String outputFilePath = COMPLETE_OWL_AXIOM_DELTA + effectiveDate + ZIP;
 		File completeOwlDeltaZip = new File(outputFilePath);
+		StatedRelationshipToOwlRefsetService service = new StatedRelationshipToOwlRefsetService();
 
 		// Create zip stream
 		try (FileInputStream snapshotStream = new FileInputStream(snapshotFiles.iterator().next());
-			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(deltaFile);
+			OptionalFileInputStream deltaStream = new OptionalFileInputStream(deltaFile);
 			 FileOutputStream archiveOutputStream = new FileOutputStream(completeOwlDeltaZip)) {
-
-			new StatedRelationshipToOwlRefsetService().convertStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(
+			service.convertStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(
 					snapshotStream,
 					deltaStream,
 					archiveOutputStream,
@@ -167,6 +177,39 @@ public class Application {
 
 		} catch (ConversionException | OWLOntologyCreationException e) {
 			System.out.println("Failed to convert stated relationships to OWL Axioms");
+			e.printStackTrace();
+			throw e;
+		} catch (IOException e) {
+			System.err.println("Failed to read from or write to files.");
+			e.printStackTrace();
+			throw e;
+		}
+	}
+	
+	private void convertStatedRelationshipsToOwlReferenceSetAndReconcile(List<String> args) throws IOException, ConversionException, OWLOntologyCreationException {
+		// Parameter validation
+		Collection<File> snapshotFiles = getSnapshotFileAsList(args);
+		assertTrue("Expecting two snapshot RF2 file.", snapshotFiles.size() == 2);
+
+		String effectiveDate = getEffectiveDate(args);
+		String outputFilePath = COMPLETE_OWL_AXIOM_DELTA + effectiveDate + ZIP;
+		File completeOwlDeltaZip = new File(outputFilePath);
+		StatedRelationshipToOwlRefsetService service = new StatedRelationshipToOwlRefsetService();
+		
+		// Create zip stream
+		Iterator<File> iterator = snapshotFiles.iterator();
+		try (FileInputStream authroingSnapshotStream = new FileInputStream(iterator.next());
+			FileInputStream publishedOwlSnapshotStream = new FileInputStream(iterator.next());
+			FileOutputStream archiveOutputStream = new FileOutputStream(completeOwlDeltaZip)) {
+			service.convertStatedRelationshipsToOwlReRefsetAndReconcileWithPublishedArchive(
+					authroingSnapshotStream,
+					publishedOwlSnapshotStream,
+					archiveOutputStream,
+					effectiveDate);
+			System.out.println("Delta archive successfully written to " + outputFilePath);
+
+		} catch (ConversionException | OWLOntologyCreationException e) {
+			System.out.println("Failed to convert stated relationships to OWL Axioms and reconcile");
 			e.printStackTrace();
 			throw e;
 		} catch (IOException e) {
@@ -200,6 +243,16 @@ public class Application {
 						pad("") + "Results are written to a zip file containing:\n" +
 						pad("") + " - OWL Axiom reference set delta of all axioms which were previously stated relationships\n" +
 						pad("") + " - Stated relationship delta with all relationships which were previously active marked as inactive.\n" +
+						"\n" +
+						
+						pad(ARG_RF2_STATED_TO_COMPLETE_OWL_RECONCILE) +
+						"Convert mid authoring cycle RF2 snapshot stated relationships to complete OWL Axiom reference set and reconcile with published version to genereate delta changes.\n" +
+						pad("") + "Two snapshot archives must be required. The first one should be the mid authoring cycle snapshot and the second one is the published complete owl snapshot archive.\n"+
+						pad("") + "Stated relationships are converted to OWL Axiom reference set entries.\n" +
+						pad("") + "These converted OWL Axioms are then reconciled with published version.\n" +
+						pad("") + "Results are written to a zip file containing:\n" +
+						pad("") + " - OWL Axiom reference set delta consisting of newly added or modified axioms converted from stated relationships.\n" +
+						pad("") + " - Published OWL Axiom reference set uuid will be used for an updated axiom.\n" +
 						"\n" +
 
 						pad(ARG_RF2_SNAPSHOT_ARCHIVES + " <path>") +
@@ -259,7 +312,7 @@ public class Application {
 	}
 
 	private File getDeltaFiles(List<String> args) {
-		Set<File> deltaFiles = gatherFiles(getParameterValue(ARG_RF2_AUTHORING_DELTA_ARCHIVE, args));
+		List<File> deltaFiles = gatherFiles(getParameterValue(ARG_RF2_AUTHORING_DELTA_ARCHIVE, args));
 		if (deltaFiles.isEmpty()) {
 			return null;
 		}
@@ -267,12 +320,17 @@ public class Application {
 		return deltaFiles.iterator().next();
 	}
 
-	private Set<File> getSnapshotFiles(List<String> args) {
+	private List<File> getSnapshotFileAsList(List<String> args) {
 		return gatherFiles(getRequiredParameterValue(ARG_RF2_SNAPSHOT_ARCHIVES, args));
 	}
 
-	private Set<File> gatherFiles(String filePaths) {
-		Set<File> rf2ArchiveFiles = new HashSet<>();
+	
+	private Set<File> getSnapshotFiles(List<String> args) {
+		return new HashSet<>(gatherFiles(getRequiredParameterValue(ARG_RF2_SNAPSHOT_ARCHIVES, args)));
+	}
+
+	private List<File> gatherFiles(String filePaths) {
+		List<File> rf2ArchiveFiles = new ArrayList<>();
 		if (filePaths != null) {
 			String[] rf2ArchivePathStrings = filePaths.split("\\,");
 			for (String rf2ArchivePath : rf2ArchivePathStrings) {
