@@ -97,12 +97,9 @@ public class ReasonerTaxonomyWalker {
 			long propertyId = OntologyHelper.getConceptId(objectProperty);
 			if (Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG.equals(propertyId)) {
 				topLevelObjectProperty = objectProperty;
-
-				// Manually join object attributes to the main SNOMED hierarchy of the reasoner taxonomy to make them navigable
-				taxonomy.addEntry(new ReasonerTaxonomyEntry(Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG, Collections.singleton(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG)));
-
 				break;
 			}
+
 			// The 'Concept model *object* attribute' was not present before Jan 2018 so fall back to the 'Concept model attribute' for object properties.
 			if (Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG.equals(propertyId)) {
 				topLevelObjectProperty = objectProperty;
@@ -117,10 +114,6 @@ public class ReasonerTaxonomyWalker {
 			long propertyId = OntologyHelper.getConceptId(dataProperty);
 			if (Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG.equals(propertyId)) {
 				topDataProperty = dataProperty;
-
-				// Manually join data attributes to the main SNOMED hierarchy of the reasoner taxonomy to make them navigable
-				taxonomy.addEntry(new ReasonerTaxonomyEntry(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG, Collections.singleton(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG)));
-
 				break;
 			}
 		}
