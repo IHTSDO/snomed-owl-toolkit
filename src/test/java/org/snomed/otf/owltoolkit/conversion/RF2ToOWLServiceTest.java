@@ -59,6 +59,8 @@ public class RF2ToOWLServiceTest {
 						"Declaration(Class(:410662002))\n" +
 						"Declaration(Class(:723594008))\n" +
 						"Declaration(Class(:723596005))\n" +
+						"Declaration(Class(:762705008))\n" +
+						"Declaration(Class(:762706009))\n" +
 						"Declaration(Class(:900000000000441003))\n" +
 						"Declaration(ObjectProperty(:363698007))\n" +
 						"Declaration(ObjectProperty(:609096000))\n" +
@@ -118,6 +120,14 @@ public class RF2ToOWLServiceTest {
 						"AnnotationAssertion(rdfs:label :723596005 \"All SNOMED CT content (foundation metadata concept)\"^^xsd:string)\n" +
 						"SubClassOf(:723596005 :723594008)\n" +
 						"\n" +
+						"# Class: <http://snomed.info/id/762705008> (<http://snomed.info/id/762705008>)\n" +
+						"\n" +
+						"SubClassOf(:762705008 :410662002)\n" +
+						"\n" +
+						"# Class: <http://snomed.info/id/762706009> (<http://snomed.info/id/762706009>)\n" +
+						"\n" +
+						"SubClassOf(:762706009 :410662002)\n" +
+						"\n" +
 						"# Class: <http://snomed.info/id/900000000000441003> (SNOMED CT Model Component (metadata))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :900000000000441003 \"SNOMED CT Model Component (metadata)\"^^xsd:string)\n" +
@@ -166,6 +176,8 @@ public class RF2ToOWLServiceTest {
 						"Declaration(Class(:410662002))\n" +
 						"Declaration(Class(:723594008))\n" +
 						"Declaration(Class(:723596005))\n" +
+						"Declaration(Class(:762705008))\n" +
+						"Declaration(Class(:762706009))\n" +
 						"Declaration(Class(:900000000000441003))\n" +
 						"Declaration(ObjectProperty(:363698007))\n" +
 						"Declaration(ObjectProperty(:609096000))\n" +
@@ -236,6 +248,14 @@ public class RF2ToOWLServiceTest {
 						"AnnotationAssertion(rdfs:label :723596005 \"All SNOMED CT content (foundation metadata concept)\"^^xsd:string)\n" +
 						"SubClassOf(:723596005 :723594008)\n" +
 						"\n" +
+						"# Class: <http://snomed.info/id/762705008> (<http://snomed.info/id/762705008>)\n" +
+						"\n" +
+						"SubClassOf(:762705008 :410662002)\n" +
+						"\n" +
+						"# Class: <http://snomed.info/id/762706009> (<http://snomed.info/id/762706009>)\n" +
+						"\n" +
+						"SubClassOf(:762706009 :410662002)\n" +
+						"\n" +
 						"# Class: <http://snomed.info/id/900000000000441003> (SNOMED CT Model Component (metadata))\n" +
 						"\n" +
 						"AnnotationAssertion(rdfs:label :900000000000441003 \"SNOMED CT Model Component (metadata)\"^^xsd:string)\n" +
@@ -288,6 +308,8 @@ public class RF2ToOWLServiceTest {
 						"Declaration(Class(:723594008))\n" +
 						"Declaration(Class(:723596005))\n" +
 						"Declaration(Class(:76145000))\n" +
+						"Declaration(Class(:762705008))\n" +
+						"Declaration(Class(:762706009))\n" +
 						"Declaration(Class(:84301002))\n" +
 						"Declaration(Class(:900000000000441003))\n" +
 
@@ -395,6 +417,14 @@ public class RF2ToOWLServiceTest {
 						"\n" +
 						"AnnotationAssertion(rdfs:label :723596005 \"All SNOMED CT content (foundation metadata concept)\"^^xsd:string)\n" +
 						"SubClassOf(:723596005 :723594008)\n" +
+						"\n" +
+						"# Class: <http://snomed.info/id/762705008> (<http://snomed.info/id/762705008>)\n" +
+						"\n" +
+						"SubClassOf(:762705008 :410662002)\n" +
+						"\n" +
+						"# Class: <http://snomed.info/id/762706009> (<http://snomed.info/id/762706009>)\n" +
+						"\n" +
+						"SubClassOf(:762706009 :410662002)\n" +
 						"\n" +
 						"# Class: <http://snomed.info/id/900000000000441003> (SNOMED CT Model Component (metadata))\n" +
 						"\n" +

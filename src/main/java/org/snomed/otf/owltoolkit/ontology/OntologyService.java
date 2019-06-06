@@ -113,7 +113,7 @@ public class OntologyService {
 		Set<Long> descendants = snomedTaxonomy.getDescendants(conceptModelObjectAttribute);
 		for (Long objectAttributeId : descendants) {
 			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(objectAttributeId)) {
-				if (relationship.getTypeId() == Concepts.IS_A_LONG && (relationship.getDestinationId() != Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG) || !conceptModelObjectAttributePresent) {
+				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
 					axiomsMap.computeIfAbsent(objectAttributeId, (id) -> new HashSet<>())
 							.add(createOwlSubObjectPropertyOfAxiom(objectAttributeId, relationship.getDestinationId()));
 				}
@@ -133,6 +133,14 @@ public class OntologyService {
 
 		// Create axioms of all other Snomed concepts
 		Set<Long> attributeIds = snomedTaxonomy.getDescendants(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG);
+
+		// Link the top object and data property into the class hierarchy.
+		// The top object and data properties will be represented as an OWL Property and as a Class to ensure that this link comes out in the NNF.
+		// "The OWL 2 specification allows different entities with the same IRI to co-exist in an ontology" (thanks @apeteri)
+		// Removing them from the attributeIds here set will ensure Class axioms are created.
+		attributeIds.remove(Concepts.CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG);
+		attributeIds.remove(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG);
+
 		for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
 
 			// Convert any stated relationships to axioms
