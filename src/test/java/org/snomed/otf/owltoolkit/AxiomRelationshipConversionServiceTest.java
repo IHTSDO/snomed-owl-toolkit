@@ -24,7 +24,7 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
-	public void testGCIPrimitiveTwoGroupsOneRelationshipInEach() throws ConversionException {
+	public void testGCITwoGroupsOneRelationshipInEach() throws ConversionException {
 		String axiom =
 				"SubClassOf(" +
 					"ObjectIntersectionOf(" +
@@ -127,7 +127,7 @@ public class AxiomRelationshipConversionServiceTest {
 	public void testAdditionalAxiomPrimitiveWithSingleRelationship() throws ConversionException {
 		String axiom = "SubClassOf(:118956008 :123037004)";
 
-		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(118956008L, axiom);
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
 		assertEquals(118956008, representation.getLeftHandSideNamedConcept().longValue());
 
@@ -135,22 +135,24 @@ public class AxiomRelationshipConversionServiceTest {
 				"0 116680003=123037004",
 				toString(representation.getRightHandSideRelationships()));
 
+		assertEquals(118956008, representation.getLeftHandSideNamedConcept().longValue());
+
 		// Test converting relationships back to an axiom
 		String recreatedAxiom = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
 		assertEquals(axiom, recreatedAxiom);
 	}
 
 	@Test
-	public void testGCIPrimitiveWithSingleRelationship() throws ConversionException {
+	public void testAxiomPrimitiveWithSingleRelationshipWithoutGivingReferencedComponentId() throws ConversionException {
 		String axiom = "SubClassOf(:118956008 :123037004)";
 
-		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(123037004L, axiom);
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
 		assertEquals(
-				"0 116680003=118956008",
-				toString(representation.getLeftHandSideRelationships()));
+				"0 116680003=123037004",
+				toString(representation.getRightHandSideRelationships()));
 
-		assertEquals(123037004, representation.getRightHandSideNamedConcept().longValue());
+		assertEquals(118956008, representation.getLeftHandSideNamedConcept().longValue());
 
 		// Test converting relationships back to an axiom
 		String recreatedAxiom = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
@@ -161,7 +163,7 @@ public class AxiomRelationshipConversionServiceTest {
 	public void testAttributeIsARelationship() throws ConversionException {
 		String axiom = "SubObjectPropertyOf(:363698007 :762705008)";
 
-		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(363698007L, axiom);
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
 		assertNotNull(representation);
 
@@ -176,7 +178,7 @@ public class AxiomRelationshipConversionServiceTest {
 	public void testAttributePropertyChain() throws ConversionException {
 		String axiom = "SubObjectPropertyOf(ObjectPropertyChain(:246093002 :738774007) :246093002)";
 
-		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(246093002L, axiom);
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
 		assertNull(representation);
 	}
@@ -196,7 +198,7 @@ public class AxiomRelationshipConversionServiceTest {
 					")" +
 				")";
 
-		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(9846003L, axiom);
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
 		assertEquals(9846003L, representation.getLeftHandSideNamedConcept().longValue());
 

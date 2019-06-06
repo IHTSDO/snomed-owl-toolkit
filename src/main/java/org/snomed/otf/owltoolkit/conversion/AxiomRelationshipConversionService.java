@@ -33,9 +33,9 @@ public class AxiomRelationshipConversionService {
 
 	/**
 	 * Use this constructor to enable generating SubObjectPropertyOf and SubDataPropertyOf axioms from relationships.
-	 * @param ungroupedAttributes
-	 * @param objectAttributes
-	 * @param dataAttributes
+	 * @param ungroupedAttributes A set of concept identifiers from the referencedComponentIds of rows in the MRCM Attribute Domain reference set which have group=0.
+	 * @param objectAttributes A set of concept identifiers from the descendants of 762705008 |Concept model object attribute (attribute)|.
+	 * @param dataAttributes A set of concept identifiers from the descendants of 762706009 |Concept model data attribute (attribute)|.
 	 */
 	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes, Collection<Long> objectAttributes, Collection<Long> dataAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
@@ -46,46 +46,27 @@ public class AxiomRelationshipConversionService {
 
 	/**
 	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
-	 * Currently supported axiom types are SubClassOf and EquivalentClasses.
+	 * Currently supported axiom types are SubClassOf, EquivalentClasses and SubObjectPropertyOf.
 	 *
 	 * @param axiomExpression The Axiom expression to convert.
 	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
 	public AxiomRepresentation convertAxiomToRelationships(String axiomExpression) throws ConversionException {
-		return convertAxiomToRelationships(null, axiomExpression);
-	}
-
-	/**
-	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
-	 * Currently supported axiom types are SubClassOf and EquivalentClasses.
-	 *
-	 * @param referencedComponentId Specifying a referencedComponentId will force the other side of the axiom to be returned as relationships even if only a single named concept is on that side.
-	 * @param axiomExpression The Axiom expression to convert.
-	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
-	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
-	 */
-	public AxiomRepresentation convertAxiomToRelationships(Long referencedComponentId, String axiomExpression) throws ConversionException {
 		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(axiomExpression);
-		return convertAxiomToRelationships(referencedComponentId, owlAxiom);
+		return convertAxiomToRelationships(owlAxiom);
 	}
 
 	/**
 	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
-	 * Currently supported axiom types are SubClassOf and EquivalentClasses.
+	 * Currently supported axiom types are SubClassOf, EquivalentClasses and SubObjectPropertyOf.
 	 *
-	 * @param referencedComponentId Specifying a referencedComponentId will force the other side of the axiom to be returned as relationships even if only a single named concept is on that side.
 	 * @param owlAxiom The Axiom expression to convert.
 	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
-	public AxiomRepresentation convertAxiomToRelationships(Long referencedComponentId, OWLAxiom owlAxiom) throws ConversionException {
+	public AxiomRepresentation convertAxiomToRelationships(OWLAxiom owlAxiom) throws ConversionException {
 		AxiomType<?> axiomType = owlAxiom.getAxiomType();
-
-		if (Concepts.ROOT_LONG.equals(referencedComponentId) && axiomType == AxiomType.SUBCLASS_OF) {
-			LOGGER.debug("Skipping axiom of root concept which we assume points to 'Thing'.");
-			return null;
-		}
 
 		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES && axiomType != AxiomType.SUB_OBJECT_PROPERTY) {
 			LOGGER.debug("Only SubClassOf, EquivalentClasses and SubObjectPropertyOf can be converted to relationships. " +
@@ -117,7 +98,7 @@ public class AxiomRelationshipConversionService {
 			OWLEquivalentClassesAxiom equivalentClassesAxiom = (OWLEquivalentClassesAxiom) owlAxiom;
 			Set<OWLClassExpression> classExpressions = equivalentClassesAxiom.getClassExpressions();
 			if (classExpressions.size() != 2) {
-				throw new ConversionException("Expecting EquivalentClasses expression to contain 2 class expressions, got " + classExpressions.size() + " - axiom '" + owlAxiom.toString() + "'.");
+				throw new ConversionException("Expecting EquivalentClasses expression to contain 2 expressions, got " + classExpressions.size() + " - axiom '" + owlAxiom.toString() + "'.");
 			}
 			Iterator<OWLClassExpression> iterator = classExpressions.iterator();
 			leftHandExpression = iterator.next();
@@ -131,29 +112,18 @@ public class AxiomRelationshipConversionService {
 		}
 
 		Long leftNamedClass = getNamedClass(owlAxiom, leftHandExpression, "left");
-		if (leftNamedClass != null) {
-			if (referencedComponentId != null && !referencedComponentId.equals(leftNamedClass)) {
-				// Force the named concept which is not the referencedComponentId to be returned as a set of relationships.
-				representation.setLeftHandSideRelationships(newSingleIsARelationship(leftNamedClass));
-			} else {
-				representation.setLeftHandSideNamedConcept(leftNamedClass);
-			}
-		} else {
-			// If not a named class it must be an expression which can be converted to a set of relationships
-			representation.setLeftHandSideRelationships(getRelationships(leftHandExpression));
-		}
-
 		Long rightNamedClass = getNamedClass(owlAxiom, rightHandExpression, "right");
-		if (rightNamedClass != null) {
-			if (referencedComponentId != null && !referencedComponentId.equals(rightNamedClass)) {
-				// Force the named concept which is not the referencedComponentId to be returned as a set of relationships.
-				representation.setRightHandSideRelationships(newSingleIsARelationship(rightNamedClass));
-			} else {
-				representation.setRightHandSideNamedConcept(rightNamedClass);
-			}
+		if (leftNamedClass != null) {
+			// Normal axiom
+			representation.setLeftHandSideNamedConcept(leftNamedClass);
+			representation.setRightHandSideRelationships(rightNamedClass != null ? newSingleIsARelationship(rightNamedClass) : getRelationships(rightHandExpression));
 		} else {
-			// If not a named class it must be an expression which can be converted to a set of relationships
-			representation.setRightHandSideRelationships(getRelationships(rightHandExpression));
+			// GCI
+			representation.setLeftHandSideRelationships(getRelationships(leftHandExpression));
+			if (rightNamedClass == null) {
+				throw new ConversionException("Axioms with expressions on both sides are not supported.");
+			}
+			representation.setRightHandSideNamedConcept(rightNamedClass);
 		}
 
 		return representation;
@@ -177,7 +147,7 @@ public class AxiomRelationshipConversionService {
 		for (Long conceptId : conceptAxiomMap.keySet()) {
 			Set<OWLAxiom> axioms = conceptAxiomMap.get(conceptId);
 			for (OWLAxiom axiom : axioms) {
-				AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(conceptId, axiom);
+				AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom);
 				if (axiomRepresentation != null) {
 					conceptAxiomStatements.computeIfAbsent(conceptId, id -> new HashSet<>()).add(axiomRepresentation);
 				}
