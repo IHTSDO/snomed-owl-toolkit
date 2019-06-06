@@ -8,7 +8,7 @@ target
 /local*
 _*
 /RF2
-tmp
+tmp*
 work
 log.log
 /SnomedCT_*
