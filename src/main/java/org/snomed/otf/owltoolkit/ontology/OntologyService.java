@@ -100,8 +100,8 @@ public class OntologyService {
 		manager.setOntologyFormat(ontology, getFunctionalSyntaxDocumentFormat());
 		return ontology;
 	}
-
-	public Map<Long, Set<OWLAxiom>> createAxiomsFromStatedRelationships(SnomedTaxonomy snomedTaxonomy) {
+	
+	public Map<Long, Set<OWLAxiom>> createAxiomsFromStatedRelationships(SnomedTaxonomy snomedTaxonomy, Set<Long> conceptIds) {
 		Map<Long, Set<OWLAxiom>> axiomsMap = new Long2ObjectOpenHashMap<>();
 
 		// Create axioms of concept model attributes
@@ -112,6 +112,9 @@ public class OntologyService {
 
 		Set<Long> descendants = snomedTaxonomy.getDescendants(conceptModelObjectAttribute);
 		for (Long objectAttributeId : descendants) {
+			if (conceptIds != null && !conceptIds.contains(objectAttributeId)) {
+				continue;
+			}
 			for (Relationship relationship : snomedTaxonomy.getStatedRelationships(objectAttributeId)) {
 				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
 					axiomsMap.computeIfAbsent(objectAttributeId, (id) -> new HashSet<>())
@@ -122,6 +125,9 @@ public class OntologyService {
 
 		if (snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG)) {
 			for (Long dataAttributeId : snomedTaxonomy.getDescendants(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG)) {
+				if (conceptIds != null && !conceptIds.contains(dataAttributeId)) {
+					continue;
+				}
 				for (Relationship relationship : snomedTaxonomy.getStatedRelationships(dataAttributeId)) {
 					if (relationship.getTypeId() == Concepts.IS_A_LONG) {
 						axiomsMap.computeIfAbsent(dataAttributeId, (id) -> new HashSet<>())
@@ -142,7 +148,9 @@ public class OntologyService {
 		attributeIds.remove(Concepts.CONCEPT_MODEL_DATA_ATTRIBUTE_LONG);
 
 		for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
-
+			if (conceptIds != null && !conceptIds.contains(conceptId)) {
+				continue;
+			}
 			// Convert any stated relationships to axioms
 			boolean primitive = snomedTaxonomy.isPrimitive(conceptId);
 			Collection<Relationship> statedRelationships = snomedTaxonomy.getStatedRelationships(conceptId);
@@ -164,6 +172,10 @@ public class OntologyService {
 		return axiomsMap;
 	}
 
+	public Map<Long, Set<OWLAxiom>> createAxiomsFromStatedRelationships(SnomedTaxonomy snomedTaxonomy) {
+		return createAxiomsFromStatedRelationships(snomedTaxonomy, null);
+	}
+	
 	public void saveOntology(OWLOntology ontology, OutputStream outputStream) throws OWLOntologyStorageException {
 		manager.getOntologyStorers().add(new SnomedFunctionalSyntaxStorerFactory());
 
@@ -329,4 +341,5 @@ public class OntologyService {
 			throw new ReasonerServiceRuntimeException(message);
 		}
 	}
+
 }

@@ -1,10 +1,12 @@
 package org.snomed.otf.owltoolkit.conversion;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.conversion.StatedRelationshipToOwlRefsetService.AxiomChangesGenerator;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
+import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
 import org.springframework.util.StreamUtils;
@@ -24,22 +26,24 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 
 public class StatedRelationshipToOwlRefsetServiceTest {
+	
+	private StatedRelationshipToOwlRefsetService service ;
+	
+	@Before
+	public void setUp() {
+		service = new StatedRelationshipToOwlRefsetService();
+		// Set up sequential identifiers for testing
+		AtomicInteger sequentialTestId = new AtomicInteger(1);
+		service.setIdentifierSupplier(() -> sequentialTestId.getAndIncrement() + "");
+	}
 
 	@Test
 	public void convertStatedRelationshipsToOwlRefset() throws IOException, OWLOntologyCreationException, ConversionException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 		File rF2DeltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Add_Diabetes_delta");
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-		StatedRelationshipToOwlRefsetService service = new StatedRelationshipToOwlRefsetService();
-
-		// Set up sequential identifiers for testing
-		AtomicInteger sequentialTestId = new AtomicInteger(1);
-		service.setIdentifierSupplier(() -> sequentialTestId.getAndIncrement() + "");
-
 		service.convertStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new FileInputStream(baseRF2SnapshotZip), new OptionalFileInputStream(rF2DeltaZip),
 				byteArrayOutputStream, "20180931");
-
 
 		// Read files from zip
 		String owlRefset;
@@ -97,13 +101,6 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_CompleteOwl_snapshot");
 
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-		StatedRelationshipToOwlRefsetService service = new StatedRelationshipToOwlRefsetService();
-
-		// Set up sequential identifiers for testing
-		AtomicInteger sequentialTestId = new AtomicInteger(1);
-		service.setIdentifierSupplier(() -> sequentialTestId.getAndIncrement() + "");
-
 		service.convertStatedRelationshipsToOwlReRefsetAndReconcileWithPublishedArchive(new FileInputStream(midCycleSnapshotZip), new FileInputStream(baseRF2SnapshotZip), byteArrayOutputStream, "20190731");
 
 		String owlRefset;
@@ -126,6 +123,54 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 				owlRefset);
 	}
 
+	@Test
+	public void convertExtensionStatedRelationshipsToOwlAxiomRefset() throws Exception {
+		File extensionPreviousSnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Extension_snapshot");
+		File extensionCurrentDeltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Empty_delta");
+		File intRF2CompleteOwlSnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_CompleteOwl_snapshot");
+		
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		service.convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new InputStreamSet(new FileInputStream(intRF2CompleteOwlSnapshotZip), new FileInputStream(extensionPreviousSnapshotZip)), 
+				new OptionalFileInputStream(extensionCurrentDeltaZip), byteArrayOutputStream, "20190901");
+		
+		String owlRefset;
+		String statedRelationships;
+		String statedRelationshipsNotConverted;
+		try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()))) {
+			ZipEntry nextEntry = zipInputStream.getNextEntry();
+			assertEquals("sct2_StatedRelationship_Delta_INT_20190901.txt", nextEntry.getName());
+			statedRelationships = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			nextEntry = zipInputStream.getNextEntry();
+			assertEquals("sct2_sRefset_OWLAxiomDelta_INT_20190901.txt", nextEntry.getName());
+			owlRefset = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			nextEntry = zipInputStream.getNextEntry();
+			assertEquals("sct2_StatedRelationships_Not_Converted_20190901.txt", nextEntry.getName());
+			statedRelationshipsNotConverted = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+		}
+
+		assertFalse("Output should not contain the snomed axiom prefix", owlRefset.contains("<http://snomed.info/id/"));
+
+		assertEquals(
+				"id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\towlExpression\n" +
+				"1\t\t1\t900101001\t733073007\t900101001\tSubClassOf(:900101001 :900000000000441003)\n" + 
+				"2\t\t1\t900101001\t733073007\t18736003\tSubClassOf(:18736003 ObjectIntersectionOf(:12481008 :76145000 ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :129287005) ObjectSomeValuesFrom(:405813007 :84301002))) ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :281615006) ObjectSomeValuesFrom(:405813007 :25342003)))))\n",
+				owlRefset);
+		
+		assertEquals(
+				"id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId\n" +
+				"600001001\t\t0\t900101001\t900101001\t900000000000441003\t0\t116680003\t900000000000010007\t900000000000451002\n" +
+				"3992921024		0	900101001	18736003	76145000	0	116680003	900000000000010007	900000000000451002\n" +
+				"3992922028		0	900101001	18736003	12481008	0	116680003	900000000000010007	900000000000451002\n" +
+				"4340130021		0	900101001	18736003	281615006	1	260686004	900000000000010007	900000000000451002\n" + 
+				"4340131020		0	900101001	18736003	25342003	1	405813007	900000000000010007	900000000000451002\n" +
+				"4341684028		0	900101001	18736003	84301002	2	405813007	900000000000010007	900000000000451002\n" + 
+				"4479068021		0	900101001	18736003	129287005	2	260686004	900000000000010007	900000000000451002\n",
+				statedRelationships);
+		
+		assertEquals("id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId\n",
+				statedRelationshipsNotConverted);
+	}
+	
 	@Test
 	public void testChangesWithTwoAxioms() throws Exception {
 		AxiomChangesGenerator generator = new AxiomChangesGenerator();

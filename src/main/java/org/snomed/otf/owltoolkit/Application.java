@@ -154,8 +154,6 @@ public class Application {
 	private void statedRelationshipsToOwlReferenceSet(List<String> args) throws IOException, OWLOntologyCreationException, ConversionException {
 		// Parameter validation
 		Set<File>  snapshotFiles = getSnapshotFiles(args);
-		assertTrue("Expecting one snapshot RF2 file.", snapshotFiles.size() == 1);;
-		
 		File deltaFile = getDeltaFiles(args);
 
 		String effectiveDate = getEffectiveDate(args);
@@ -164,15 +162,25 @@ public class Application {
 		StatedRelationshipToOwlRefsetService service = new StatedRelationshipToOwlRefsetService();
 
 		// Create zip stream
-		try (FileInputStream snapshotStream = new FileInputStream(snapshotFiles.iterator().next());
+		Iterator<File> iterator = snapshotFiles.iterator();
+		try (FileInputStream snapshotStream = new FileInputStream(iterator.next());
 			OptionalFileInputStream deltaStream = new OptionalFileInputStream(deltaFile);
-			 FileOutputStream archiveOutputStream = new FileOutputStream(completeOwlDeltaZip)) {
-			service.convertStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(
-					snapshotStream,
-					deltaStream,
-					archiveOutputStream,
-					effectiveDate
-			);
+			FileOutputStream archiveOutputStream = new FileOutputStream(completeOwlDeltaZip)) {
+			if (snapshotFiles.size() == 1) {
+				service.convertStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(
+						snapshotStream,
+						deltaStream,
+						archiveOutputStream,
+						effectiveDate
+				);
+			} else {
+				try ( FileInputStream extensionSnapshotStream = new FileInputStream(iterator.next())) {
+					service.convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new InputStreamSet(snapshotStream, extensionSnapshotStream), 
+							deltaStream,
+							archiveOutputStream,
+							effectiveDate);
+				}
+			}
 			System.out.println("Delta archive successfully written to " + outputFilePath);
 
 		} catch (ConversionException | OWLOntologyCreationException e) {

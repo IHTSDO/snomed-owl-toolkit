@@ -51,7 +51,7 @@ public class SnomedTaxonomyBuilder {
 			.withRefset(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)
 			.withFullRefsetMemberObjects()
 			.withoutDescriptions();
-
+	
 	static {
 		// Giving reference set filename patterns avoids reading them all
 		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_sRefset_OWL.*");
