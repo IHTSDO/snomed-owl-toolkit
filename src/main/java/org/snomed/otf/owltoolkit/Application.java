@@ -175,10 +175,11 @@ public class Application {
 				);
 			} else {
 				try ( FileInputStream extensionSnapshotStream = new FileInputStream(iterator.next())) {
-					service.convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new InputStreamSet(snapshotStream, extensionSnapshotStream), 
+					File statFile = service.convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new InputStreamSet(snapshotStream, extensionSnapshotStream), 
 							deltaStream,
 							archiveOutputStream,
 							effectiveDate);
+					System.out.println("Extension stated relationships are not converted into axioms are written to " + statFile.getAbsolutePath());
 				}
 			}
 			System.out.println("Delta archive successfully written to " + outputFilePath);

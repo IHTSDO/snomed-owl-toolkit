@@ -117,8 +117,8 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 				"2de0e672-1231-40fb-ae9b-5d69454c6274\t\t1\t900000000000207008\t733073007\t276856001\tSubClassOf(:276856001 ObjectIntersectionOf(:362965005 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
 				"1\t\t1\t900000000000012004\t733073007\t762705008\tSubClassOf(:762705008 :410662002)\n" +
 				"2\t\t1\t900000000000207008\t733073007\t8801005\tSubClassOf(:8801005 :73211009)\n" +
-				"3\t\t1\t900000000000207008\t733073007\t73211009\tSubClassOf(:73211009 :362969004)\n" +
-				"4\t\t1\t900000000000012004\t733073007\t762706009\tSubClassOf(:762706009 :410662002)\n" +
+				"3\t\t1\t900000000000012004\t733073007\t762706009\tSubClassOf(:762706009 :410662002)\n" +
+				"4\t\t1\t900000000000207008\t733073007\t73211009\tSubClassOf(:73211009 :362969004)\n" +
 				"f64a5e6d-a8d6-4432-857e-999cce35b9ac\t\t0\t900000000000207008\t733073007\t362969004\tEquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n",
 				owlRefset);
 	}
@@ -130,7 +130,7 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 		File intRF2CompleteOwlSnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_CompleteOwl_snapshot");
 		
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		service.convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new InputStreamSet(new FileInputStream(intRF2CompleteOwlSnapshotZip), new FileInputStream(extensionPreviousSnapshotZip)), 
+		File result = service.convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new InputStreamSet(new FileInputStream(intRF2CompleteOwlSnapshotZip), new FileInputStream(extensionPreviousSnapshotZip)), 
 				new OptionalFileInputStream(extensionCurrentDeltaZip), byteArrayOutputStream, "20190901");
 		
 		String owlRefset;
@@ -143,9 +143,8 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 			nextEntry = zipInputStream.getNextEntry();
 			assertEquals("sct2_sRefset_OWLAxiomDelta_INT_20190901.txt", nextEntry.getName());
 			owlRefset = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
-			nextEntry = zipInputStream.getNextEntry();
-			assertEquals("sct2_StatedRelationships_Not_Converted_20190901.txt", nextEntry.getName());
-			statedRelationshipsNotConverted = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			assertEquals("sct2_StatedRelationships_Not_Converted.txt", result.getName());
+			statedRelationshipsNotConverted = StreamUtils.copyToString(new FileInputStream(result), Charset.forName("UTF-8"));
 		}
 
 		assertFalse("Output should not contain the snomed axiom prefix", owlRefset.contains("<http://snomed.info/id/"));

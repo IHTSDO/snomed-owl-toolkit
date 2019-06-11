@@ -116,6 +116,17 @@ ontologyAfter="ontology-after-conversion.owl"
 echo "- Generated $ontologyAfter"
 echo
 
+echo "--"
+echo "-- Checking extension stated relationships are not converted into axioms"
+echo "--"
+if [ "`wc -l sct2_StatedRelationships_Not_Converted.txt | sed 's/^ *\([0-9]*\).*/\1/g'`" -eq 1 ]; then
+  echo "- All extension stated relationships are converted into axioms."
+else
+  echo "Found extension stated relationships are not converted into axioms due to overriding the International stated view."
+  echo "Please check the contents of sct2_StatedRelationships_Not_Converted.txt"
+fi
+echo
+
 
 echo "--"
 echo "-- Diffing Ontology files"

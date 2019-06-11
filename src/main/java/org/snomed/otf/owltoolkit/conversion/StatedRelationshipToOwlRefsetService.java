@@ -42,7 +42,7 @@ public class StatedRelationshipToOwlRefsetService {
 	private static final String TAB = "\t";
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 	
-	public void convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(InputStreamSet snapshotInputStreamSet,
+	public File convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(InputStreamSet snapshotInputStreamSet,
 			OptionalFileInputStream deltaStream,
 			OutputStream rf2DeltaZipResults,
 			String effectiveDate) throws ConversionException, OWLOntologyCreationException, IOException {
@@ -76,15 +76,23 @@ public class StatedRelationshipToOwlRefsetService {
 			activeExtensionConcepts.removeAll(processor.getActiveInternationalConcepts());
 			logger.info("Total active extension concepts:" + activeExtensionConcepts.size());
 			convertStatedRelationshipsToOwlRefsetForExtension(snomedTaxonomy, activeExtensionConcepts, zipOutputStream, processor.getExtensionModuleId());
-			outputExtensionStatedRelationshipsWithInternationalSource(zipOutputStream, processor, snomedTaxonomy, effectiveDate);
+			zipOutputStream.closeEntry();
+			return outputExtensionStatedRelationshipsNotConverted(processor, snomedTaxonomy, effectiveDate);
 		}
 	}
 
 	
-	private void outputExtensionStatedRelationshipsWithInternationalSource(ZipOutputStream zipOutputStream, ExtensionComponentProcessor processor, SnomedTaxonomy snomedTaxonomy, String effectiveDate) throws IOException {
-		zipOutputStream.closeEntry();
-		zipOutputStream.putNextEntry(new ZipEntry("sct2_StatedRelationships_Not_Converted_" + effectiveDate + TXT));
-		try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream))) {
+	/**
+	 * @param processor
+	 * @param snomedTaxonomy
+	 * @param effectiveDate
+	 * @return A text file containing stated relationships from 
+	 * the extension which have not been converted into Axioms due to override international stated view.
+	 * @throws IOException
+	 */
+	private File outputExtensionStatedRelationshipsNotConverted(ExtensionComponentProcessor processor, SnomedTaxonomy snomedTaxonomy, String effectiveDate) throws IOException {
+		File notConverted = new File("sct2_StatedRelationships_Not_Converted" + TXT);
+		try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(notConverted)))) {
 			writer.write(RF2Headers.RELATIONSHIP_HEADER);
 			writer.newLine();
 			for (Long conceptId : processor.getActiveInternationalConcepts()) {
@@ -96,6 +104,7 @@ public class StatedRelationshipToOwlRefsetService {
 				}
 			}
 		}
+		return notConverted;
 	}
 
 	public void convertStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(InputStream snomedRf2SnapshotArchive, OptionalFileInputStream deltaStream,
