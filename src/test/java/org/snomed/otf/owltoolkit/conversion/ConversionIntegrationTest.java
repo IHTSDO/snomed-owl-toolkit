@@ -56,7 +56,7 @@ public class ConversionIntegrationTest {
 			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(null);
 			 FileOutputStream outputStream = new FileOutputStream(additionalOwlAxioms)) {
 
-			SnomedTaxonomy snomedTaxonomy = statedRelationshipToOwlRefsetService.readSnomedTaxonomy(snapshotStream, deltaStream, new ImpotentComponentFactory(), new ImpotentComponentFactory());
+			SnomedTaxonomy snomedTaxonomy = statedRelationshipToOwlRefsetService.readSnomedTaxonomy(new InputStreamSet(snapshotStream), deltaStream, new ImpotentComponentFactory(), new ImpotentComponentFactory());
 			outputStream.write((RF2Headers.OWL_EXPRESSION_REFERENCE_SET_HEADER + "\n").getBytes(StandardCharsets.UTF_8));
 			statedRelationshipToOwlRefsetService.convertStatedRelationshipsToOwlRefset(snomedTaxonomy, outputStream);
 		}

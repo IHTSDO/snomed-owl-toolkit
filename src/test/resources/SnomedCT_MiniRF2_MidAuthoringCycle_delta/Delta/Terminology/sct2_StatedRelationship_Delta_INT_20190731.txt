@@ -1,0 +1,21 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+#Following are new changes added for new concepts
+# Diabetes mellitus - is a - Disorder of endocrine system
+110001001	20190731	1	900000000000207008	73211009	362969004	0	116680003	900000000000010007	900000000000451002
+
+# Secondary diabetes mellitus - is a - Diabetes mellitus
+100104001	20190731	1	900000000000207008	8801005	73211009	0	116680003	900000000000010007	900000000000451002
+
+# Disorder of endocrine system - is a -Disorder of body system
+220001002	20190731	1	900000000000207008	362969004	362965005	0	116680003	900000000000010007	900000000000451002
+
+# Modifying existing concept and add new attribute
+
+# Endocrine andrology disorder - is a - Disorder of endocrine gonad (disorder)
+3906194024	20190731	1	900000000000207008	276856001	362965005	0	116680003	900000000000010007	900000000000451002
+
+# Endocrine andrology disorder - is a - Disorder of endocrine gonad (disorder)
+3906194025	20190731	1	900000000000207008	276856001	113331007	0	363698007	900000000000010007	900000000000451002

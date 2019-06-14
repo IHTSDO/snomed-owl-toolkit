@@ -1,0 +1,14 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+# New added for mid authoring cycle
+# Diabetes mellitus
+73211009	20190731	1	900000000000207008	900000000000074008
+
+# Secondary diabetes mellitus
+8801005	20190731	1	900000000000207008	900000000000074008
+
+# Inactivation testing
+# Endocrine andrology disorder
+362969004	20190731	0	900000000000207008	900000000000074008

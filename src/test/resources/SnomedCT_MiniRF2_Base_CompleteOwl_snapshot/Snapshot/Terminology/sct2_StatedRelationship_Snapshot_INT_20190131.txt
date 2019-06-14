@@ -38,6 +38,3 @@ id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId
 
 # Disorder of endocrine system - Finding site - Structure of endocrine system
 100010001	20190131	0	900000000000207008	362969004	113331007	0	363698007	900000000000010007	900000000000451002
-
-#Endocrine andrology disorder - is a - Disorder of endocrine gonad (disorder)
-3906194024	20190131	0	900000000000207008	276856001	127345001	0	116680003	900000000000010007	900000000000451002

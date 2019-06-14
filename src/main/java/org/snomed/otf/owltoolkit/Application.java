@@ -199,6 +199,9 @@ public class Application {
 		// Parameter validation
 		Collection<File> snapshotFiles = getSnapshotFileAsList(args);
 		assertTrue("Expecting two snapshot RF2 file.", snapshotFiles.size() == 2);
+		
+		File deltaFile = getDeltaFiles(args);
+		assertTrue("RF2 delta can't be null", deltaFile != null);
 
 		String effectiveDate = getEffectiveDate(args);
 		String outputFilePath = COMPLETE_OWL_AXIOM_DELTA + effectiveDate + ZIP;
@@ -208,10 +211,12 @@ public class Application {
 		// Create zip stream
 		Iterator<File> iterator = snapshotFiles.iterator();
 		try (FileInputStream authroingSnapshotStream = new FileInputStream(iterator.next());
+			FileInputStream midCylceDeltaStream = new FileInputStream(deltaFile);
 			FileInputStream publishedOwlSnapshotStream = new FileInputStream(iterator.next());
 			FileOutputStream archiveOutputStream = new FileOutputStream(completeOwlDeltaZip)) {
 			service.convertStatedRelationshipsToOwlReRefsetAndReconcileWithPublishedArchive(
 					authroingSnapshotStream,
+					midCylceDeltaStream,
 					publishedOwlSnapshotStream,
 					archiveOutputStream,
 					effectiveDate);

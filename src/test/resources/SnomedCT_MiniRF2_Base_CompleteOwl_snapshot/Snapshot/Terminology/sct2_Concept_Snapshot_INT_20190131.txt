@@ -38,6 +38,3 @@ id	effectiveTime	active	moduleId	definitionStatusId
 
 # Disorder of endocrine system
 362969004	20170131	1	900000000000207008	900000000000073002
-
-# Endocrine andrology disorder (disorder)
-276856001	20020131	1	900000000000207008	900000000000074008

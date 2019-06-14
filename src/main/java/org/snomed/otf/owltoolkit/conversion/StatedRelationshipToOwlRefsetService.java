@@ -132,7 +132,7 @@ public class StatedRelationshipToOwlRefsetService {
 				}
 				return null;
 			});
-			SnomedTaxonomy snomedTaxonomy = readSnomedTaxonomy(snomedRf2SnapshotArchive, deltaStream, publishedStatedRelationshipInactivator, axiomCopier);
+			SnomedTaxonomy snomedTaxonomy = readSnomedTaxonomy(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream, publishedStatedRelationshipInactivator, axiomCopier);
 			axiomCopier.complete();
 			
 			convertStatedRelationshipsToOwlRefset(snomedTaxonomy, zipOutputStream);
@@ -141,6 +141,7 @@ public class StatedRelationshipToOwlRefsetService {
 	}
 	
 	public void convertStatedRelationshipsToOwlReRefsetAndReconcileWithPublishedArchive(InputStream snomedRf2SnapshotArchive,
+			InputStream rf2MidCycleDeltaArchive,
 			InputStream snomedRf2CompleteOwlSnapshotArchive,
 			OutputStream rf2DeltaZipResults,
 			String effectiveDate) throws ConversionException, OWLOntologyCreationException, IOException {
@@ -158,8 +159,7 @@ public class StatedRelationshipToOwlRefsetService {
 				}
 				return null;
 			});
-			axiomCopier.setExtractEffectiveTime(effectiveDate);
-			SnomedTaxonomy snomedTaxonomy = readSnomedTaxonomy(snomedRf2SnapshotArchive, new OptionalFileInputStream(null), axiomCopier, null);
+			SnomedTaxonomy snomedTaxonomy = readSnomedTaxonomy(snomedRf2SnapshotArchive, rf2MidCycleDeltaArchive, axiomCopier);
 			axiomCopier.complete();
 			// Fetch attributes which are not grouped within the MRCM Attribute Domain International reference set.
 			Set<Long> neverGroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
@@ -278,12 +278,9 @@ public class StatedRelationshipToOwlRefsetService {
 		}
 	}
 	
-	SnomedTaxonomy readSnomedTaxonomy(InputStream snomedRf2SnapshotArchive, OptionalFileInputStream deltaStream,
-			ComponentFactory publishedStatedRelationshipInactivator, ComponentFactory axiomDeltaCopier) throws ConversionException {
-
+	SnomedTaxonomy readSnomedTaxonomy(InputStream snomedRf2SnapshotArchive, InputStream deltaStream, ComponentFactory axiomDeltaCopier) throws ConversionException {
 		try {
-			return new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream.getInputStream().orElse(null),
-					publishedStatedRelationshipInactivator, axiomDeltaCopier, false);
+			return new SnomedTaxonomyBuilder().build(new InputStreamSet(snomedRf2SnapshotArchive), deltaStream, null, axiomDeltaCopier, false);
 		} catch (ReleaseImportException e) {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}
@@ -545,26 +542,21 @@ public class StatedRelationshipToOwlRefsetService {
 		private boolean entryStarted;
 		private BufferedWriter writer;
 		private final List<IOException> exceptionsThrown;
-		private String effectiveTime;
-
+		
 		AxiomCopier(Supplier<BufferedWriter> startFunction) {
 			exceptionsThrown = new ArrayList<>();
 			this.startFunction = startFunction;
 		}
 		
-		public void setExtractEffectiveTime(String effectiveTime) {
-			this.effectiveTime = effectiveTime;
-		}
-
 		@Override
 		public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 			// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
-			if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && (this.effectiveTime == null || this.effectiveTime.equals(effectiveTime))) {
+			if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET)) {
 				try {
 					startEntry();
 					writer.write(id);
 					writer.write(TAB);
-					writer.write(effectiveTime);
+					//don't need effective time so that can be imported as delta
 					writer.write(TAB);
 					writer.write(active);
 					writer.write(TAB);

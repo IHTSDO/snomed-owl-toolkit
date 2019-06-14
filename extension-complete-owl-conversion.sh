@@ -27,7 +27,7 @@ previous_snapshot=$1
 int_snapshot=$2
 delta=$3
 if [ ! -f $owlToolkitJar ]; then
-  echo "SNOMED OWL Toolit jar not found!"
+  echo "SNOMED OWL Toolkit jar not found!"
   exit 1;
 fi
 if [ ! -f $previous_snapshot ]; then

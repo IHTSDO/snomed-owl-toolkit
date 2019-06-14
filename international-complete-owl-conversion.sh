@@ -26,7 +26,7 @@ owlToolkitJar="`ls target/snomed-owl-toolkit*-executable.jar | tail -n1`"
 snapshot=$1
 delta=$2
 if [ ! -f $owlToolkitJar ]; then
-  echo "SNOMED OWL Toolit jar not found!"
+  echo "SNOMED OWL Toolkit jar not found!"
   exit 1;
 fi
 if [ ! -f $snapshot ]; then

@@ -97,11 +97,12 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 
 	@Test
 	public void convertAndReconcileStatedRelationshipsToOwlRefset() throws IOException, OWLOntologyCreationException, ConversionException {
-		File midCycleSnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_MidAuthoringCycle_snapshot");
-		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_CompleteOwl_snapshot");
+		File baseRf2SnapshoZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File midCycleDeltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_MidAuthoringCycle_delta");
+		File compleOwlSnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_CompleteOwl_snapshot");
 
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		service.convertStatedRelationshipsToOwlReRefsetAndReconcileWithPublishedArchive(new FileInputStream(midCycleSnapshotZip), new FileInputStream(baseRF2SnapshotZip), byteArrayOutputStream, "20190731");
+		service.convertStatedRelationshipsToOwlReRefsetAndReconcileWithPublishedArchive(new FileInputStream(baseRf2SnapshoZip), new FileInputStream(midCycleDeltaZip), new FileInputStream(compleOwlSnapshotZip), byteArrayOutputStream, "20190731");
 
 		String owlRefset;
 		try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()))) {
@@ -113,13 +114,10 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 		assertFalse("Output should not contain the snomed axiom prefix", owlRefset.contains("<http://snomed.info/id/"));
 		assertEquals(
 				"id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\towlExpression\n" +
-				"e35258b4-15d8-4fb2-bea5-dcc6b5e7de62\t20190731\t1\t900000000000207008\t733073007\t8801005\tSubClassOf(ObjectIntersectionOf(:73211009 ObjectSomeValuesFrom(:roleGroup ObjectSomeValuesFrom(:100106001 :100102001))) :8801005)\n" +
-				"2de0e672-1231-40fb-ae9b-5d69454c6274\t\t1\t900000000000207008\t733073007\t276856001\tSubClassOf(:276856001 ObjectIntersectionOf(:362965005 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
-				"1\t\t1\t900000000000012004\t733073007\t762705008\tSubClassOf(:762705008 :410662002)\n" +
-				"2\t\t1\t900000000000207008\t733073007\t8801005\tSubClassOf(:8801005 :73211009)\n" +
-				"3\t\t1\t900000000000012004\t733073007\t762706009\tSubClassOf(:762706009 :410662002)\n" +
-				"4\t\t1\t900000000000207008\t733073007\t73211009\tSubClassOf(:73211009 :362969004)\n" +
-				"f64a5e6d-a8d6-4432-857e-999cce35b9ac\t\t0\t900000000000207008\t733073007\t362969004\tEquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n",
+				"e35258b4-15d8-4fb2-bea5-dcc6b5e7de62\t\t1\t900000000000207008\t733073007\t8801005\tSubClassOf(ObjectIntersectionOf(:73211009 ObjectSomeValuesFrom(:roleGroup ObjectSomeValuesFrom(:100106001 :100102001))) :8801005)\n" +
+				"1\t\t1\t900000000000207008\t733073007\t8801005\tSubClassOf(:8801005 :73211009)\n" +
+				"2\t\t1\t900000000000207008\t733073007\t73211009\tSubClassOf(:73211009 :362969004)\n" +
+				"2b75cd59-24c6-46e4-8565-0ab3da7f0ab3\t\t0\t900000000000207008\t733073007\t362969004\tEquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n",
 				owlRefset);
 	}
 
@@ -186,5 +184,4 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 		OWLAxiom change = generator.findChanges(axiomsIdMap, previous, current);
 		assertNull("It should be no changes.", change);
 	}
-
 }
