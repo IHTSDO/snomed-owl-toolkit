@@ -101,15 +101,8 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 		if (ACTIVE.equals(active) && !ADDITIONAL_RELATIONSHIP.equals(characteristicTypeId)) {// Ignore additional relationships
 
-			boolean universal = UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId);
 			int unionGroup = 0;
-
-			// TODO: is this correct? Is there a better way?
-			// From Snow Owl import logic:
-			// Universal "has active ingredient" relationships should be put into a union group
-			if (Concepts.HAS_ACTIVE_INGREDIENT.equals(typeId) && universal) {
-				unionGroup = 1;
-			}
+			boolean universal = UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId);
 
 			int effectiveTimeInt = !Strings.isNullOrEmpty(effectiveTime) ? Integer.parseInt(effectiveTime) : effectiveTimeNow;
 			snomedTaxonomy.addOrModifyRelationship(
