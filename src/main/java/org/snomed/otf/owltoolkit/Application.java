@@ -46,15 +46,12 @@ public class Application {
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
 
 	private boolean deleteOntologyFileOnExit;
-	private static boolean debugOutput;
 
 	public static void main(String[] argsArray) {
 		try {
 			new Application().run(argsArray);
 		} catch (Exception e) {
-			if (debugOutput) {
-				e.printStackTrace();
-			}
+			e.printStackTrace();
 			System.exit(1);
 		}
 		System.exit(0);
@@ -62,8 +59,6 @@ public class Application {
 
 	public void run(String[] argsArray) throws IOException, ConversionException, ReasonerServiceException, OWLOntologyCreationException {
 		List<String> args = Lists.newArrayList(argsArray);
-
-		debugOutput = args.contains(ARG_DEBUG);
 
 		boolean modeFound = false;
 		if (args.isEmpty() || args.contains(ARG_HELP)) {
