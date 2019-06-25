@@ -13,6 +13,7 @@
 		<owlapi.version>4.1.3</owlapi.version>
 		<elk-owlapi.version>0.4.3</elk-owlapi.version>
 		<slf4j.version>1.7.25</slf4j.version>
+		<snomed.boot.version>2.0.1-SNAPSHOT</snomed.boot.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,13 +24,7 @@
 		<dependency>
 			<groupId>org.snomed.otf</groupId>
 			<artifactId>snomed-boot</artifactId>
-			<version>1.12.0</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.google.collections</groupId>
-					<artifactId>google-collections</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>${snomed.boot.version}</version>
 		</dependency>
 
 		<!-- OWL API -->
@@ -68,7 +63,14 @@
 			<version>1.7.12</version>
 			<scope>provided</scope>
 		</dependency>
-
+		
+		<!-- Utilities -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>4.3.20.RELEASE</version>
+		</dependency>
+		
 		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>
