@@ -331,7 +331,9 @@ public class Application {
 			return null;
 		}
 		assertTrue("Expecting a single delta archive file, got " + deltaFiles.size(), deltaFiles.size() == 1);
-		return deltaFiles.iterator().next();
+		File delta = deltaFiles.iterator().next();
+		assertTrue("Specified delta archive file cannot be read: " + delta, delta.canRead());
+		return delta;
 	}
 
 	private List<File> getSnapshotFileAsList(List<String> args) {
