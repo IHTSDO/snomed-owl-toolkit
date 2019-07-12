@@ -43,7 +43,7 @@ public class SnomedTaxonomy {
 	private Map<Long, Set<Relationship>> conceptInferredRelationshipMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Relationship>> conceptInactiveInferredRelationshipMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<OWLAxiom>> conceptAxiomMap = new Long2ObjectOpenHashMap<>();
-	private Map<Long, Set<Long>> statedSubTypesMap = new Long2ObjectOpenHashMap<>();
+	private Map<Long, Set<Long>> inferredSubTypesMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
 	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
 	private Map<Long, String> conceptFsnTermMap = new Long2ObjectOpenHashMap<>();
@@ -91,13 +91,13 @@ public class SnomedTaxonomy {
 			// add relationship
 			if (stated) {
 				conceptStatedRelationshipMap.computeIfAbsent(conceptId, k -> new HashSet<>()).add(relationship);
-				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
-					statedSubTypesMap.computeIfAbsent(relationship.getDestinationId(), k -> new HashSet<>()).add(conceptId);
-				}
 				statedRelationshipsById.put(relationship.getRelationshipId(), relationship);
 			} else {
 				conceptInferredRelationshipMap.computeIfAbsent(conceptId, k -> new HashSet<>()).add(relationship);
 				inferredRelationshipsById.put(relationship.getRelationshipId(), relationship);
+				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
+					inferredSubTypesMap.computeIfAbsent(relationship.getDestinationId(), k -> new HashSet<>()).add(conceptId);
+				}
 			}
 		}
 	}
@@ -158,7 +158,7 @@ public class SnomedTaxonomy {
 	}
 
 	public Set<Long> getSubTypeIds(long conceptId) {
-		Set<Long> longs = statedSubTypesMap.get(conceptId);
+		Set<Long> longs = inferredSubTypesMap.get(conceptId);
 		return longs != null ? longs : Collections.emptySet();
 	}
 
