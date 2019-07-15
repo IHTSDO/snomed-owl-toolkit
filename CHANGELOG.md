@@ -5,6 +5,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 The change log format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2.7.1 Release - 2019-07-15
+
+Feature release with scripts to support complete OWL conversion.
+
+### Features
+- Script for conversion of extensions using stated relationships to OWL axiom reference set.
+- Script for mid-cycle conversion of International Edition (internal use only).
+
+### Improvements
+- Prevent MRCM ungrouped attributes being grouped during axiom authoring.
+
+### Fixes
+- Deserialised axiom representation for object properties set to primitive.
+- Issue #26 Not grouped attribute list incomplete when using complete OWL International release
+- Remove hardcoded active ingredient union grouping.
+
+
 ## 2.6.0 Release - 2019-06-06
 
 Minor changes after feedback from the Modelling Advisory Group on the International Alpha release.
