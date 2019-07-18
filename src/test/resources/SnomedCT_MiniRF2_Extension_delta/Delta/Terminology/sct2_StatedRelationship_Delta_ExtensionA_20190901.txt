@@ -1,0 +1,9 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+
+# Extension A Module - is a - Model Component
+3992921025	20190901	1	900101001	18736004	76145000	0	116680003	900000000000010007	900000000000451002
+# Extension module overriding International concept
+3992921026	20190901	1	900101001	404684003	138875005	0	116680003	900000000000010007	900000000000451002

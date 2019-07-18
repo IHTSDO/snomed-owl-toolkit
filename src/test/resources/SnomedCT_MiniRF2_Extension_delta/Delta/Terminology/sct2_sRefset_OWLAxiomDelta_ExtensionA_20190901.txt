@@ -1,0 +1,2 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+c569b572-1197-49a6-84b6-c44e98f0c0b6		1	900101001	733073007	555321000005104	SubClassOf(:555321000005104 :385207009)

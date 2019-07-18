@@ -1,0 +1,2 @@
+id	effectiveTime	active	moduleId	conceptId	languageCode	typeId	term	caseSignificanceId
+746272016	20190901	1	900101001	18736004	en	900000000000003001	Eustachian tube disorder (disorder)	900000000000448009

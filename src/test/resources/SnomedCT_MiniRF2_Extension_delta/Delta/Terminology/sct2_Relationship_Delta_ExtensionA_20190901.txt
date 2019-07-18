@@ -1,0 +1,18 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+
+# Extension A Module - is a - Model Component
+700001001	20180231	1	900101001	900101001	900000000000441003	0	116680003	900000000000011006	900000000000451002
+
+# Anthrax (disorder) - is a - Clinical finding
+600101001	20160231	1	900101001	409498004	404684003	0	116680003	900000000000011006	900000000000451002
+
+# Anthrax (disorder) - Causative agent - Bacillus anthracis
+# Equivalent inference as Base in different role group
+600202001	20180231	1	900101001	409498004	21927003	2	246075003	900000000000011006	900000000000451002
+
+# Anthrax (disorder) - Pathological process - Infectious process
+# Equivalent inference as Base in different role group
+600203001	20180231	1	900101001	409498004	441862004	2	370135005	900000000000011006	900000000000451002

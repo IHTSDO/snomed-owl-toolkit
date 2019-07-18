@@ -3,12 +3,17 @@
 #
 # This script is for use by the SNOMED International team to convert extension releases to Complete OWL for managed service members.
 # The script provides an automated repeatable process to support testing and production upgrade of extensions to SNOMED International 20190731 edition.
-# The inputs are the previous release zip, the SNOMED International complete OWL 20190731 release zip file, and the current release delta zip containing stated relationships and some OWL axioms.
-# The output is a delta zip for the current release containing all stated relationships from the previous release as inactive
-# and a set of OWL axioms generated from all stated relationships plus those in the current release.
-# Note: OWL axioms generated are for the extension module concepts only. Any concepts donated to the International Edition will be excluded as these exist in the International release already.
+# The inputs are the previous release zip, the SNOMED International complete OWL 20190731 release zip file, and the current release delta zip(optional) containing stated relationships and some OWL axioms.
+# The output is a delta zip with filename starting complete-owl-axiom-delta containing the conversion results. 
+#  1. Inactive stated relationships for those being converted into axioms
+#  2. Active OWL axiom reference sets (OWL axioms generated from active stated relationships plus any newly authoring axioms in the current authoring cycle)
+# 
+#Note: This script is used to convert stated relationships with extension module source concepts only. 
+# Any concepts donated to the International Edition will be excluded as the axiom reference sets for these exist in the International complete OWL release already.
+# Any extension stated relationships overriding International concepts (i.e stated relationships having International concepts as source) will not be converted into axioms by this script.
+# Please check sct2_StatedRelationships_Not_Converted.txt file for the full list of stated relationships. These should be converted manually using additional axioms or GCIs.
+# 
 #
-
 
 # Make script stop if any line fails
 set -e;

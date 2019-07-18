@@ -124,7 +124,7 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 	@Test
 	public void convertExtensionStatedRelationshipsToOwlAxiomRefset() throws Exception {
 		File extensionPreviousSnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Extension_snapshot");
-		File extensionCurrentDeltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Empty_delta");
+		File extensionCurrentDeltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Extension_delta");
 		File intRF2CompleteOwlSnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_CompleteOwl_snapshot");
 		
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -136,11 +136,12 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 		String statedRelationshipsNotConverted;
 		try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()))) {
 			ZipEntry nextEntry = zipInputStream.getNextEntry();
+			assertEquals("sct2_sRefset_OWLAxiomDelta_INT_20190901.txt", nextEntry.getName());
+			owlRefset = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			nextEntry = zipInputStream.getNextEntry();
 			assertEquals("sct2_StatedRelationship_Delta_INT_20190901.txt", nextEntry.getName());
 			statedRelationships = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
 			nextEntry = zipInputStream.getNextEntry();
-			assertEquals("sct2_sRefset_OWLAxiomDelta_INT_20190901.txt", nextEntry.getName());
-			owlRefset = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
 			assertEquals("sct2_StatedRelationships_Not_Converted.txt", result.getName());
 			statedRelationshipsNotConverted = StreamUtils.copyToString(new FileInputStream(result), Charset.forName("UTF-8"));
 		}
@@ -149,22 +150,27 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 
 		assertEquals(
 				"id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\towlExpression\n" +
+				"c569b572-1197-49a6-84b6-c44e98f0c0b6\t\t1\t900101001\t733073007\t555321000005104\tSubClassOf(:555321000005104 :385207009)\n" + 
 				"1\t\t1\t900101001\t733073007\t900101001\tSubClassOf(:900101001 :900000000000441003)\n" + 
-				"2\t\t1\t900101001\t733073007\t18736003\tSubClassOf(:18736003 ObjectIntersectionOf(:12481008 :76145000 ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :129287005) ObjectSomeValuesFrom(:405813007 :84301002))) ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :281615006) ObjectSomeValuesFrom(:405813007 :25342003)))))\n",
+				"2\t\t1\t900101001\t733073007\t18736003\tSubClassOf(:18736003 ObjectIntersectionOf(:12481008 :76145000 ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :129287005) ObjectSomeValuesFrom(:405813007 :84301002))) ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :281615006) ObjectSomeValuesFrom(:405813007 :25342003)))))\n" +
+				"3\t\t1\t900101001\t733073007\t18736004\tSubClassOf(:18736004 :76145000)\n",
 				owlRefset);
 		
 		assertEquals(
 				"id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId\n" +
-				"600001001\t\t0\t900101001\t900101001\t900000000000441003\t0\t116680003\t900000000000010007\t900000000000451002\n" +
-				"3992921024		0	900101001	18736003	76145000	0	116680003	900000000000010007	900000000000451002\n" +
-				"3992922028		0	900101001	18736003	12481008	0	116680003	900000000000010007	900000000000451002\n" +
-				"4340130021		0	900101001	18736003	281615006	1	260686004	900000000000010007	900000000000451002\n" + 
-				"4340131020		0	900101001	18736003	25342003	1	405813007	900000000000010007	900000000000451002\n" +
-				"4341684028		0	900101001	18736003	84301002	2	405813007	900000000000010007	900000000000451002\n" + 
-				"4479068021		0	900101001	18736003	129287005	2	260686004	900000000000010007	900000000000451002\n",
+				"4340131020\t\t0\t900101001\t18736003\t25342003\t1\t405813007\t900000000000010007\t900000000000451002\n" +
+				"3992922028\t\t0\t900101001\t18736003\t12481008\t0\t116680003\t900000000000010007\t900000000000451002\n" +
+				"4479068021\t\t0\t900101001\t18736003\t129287005\t2\t260686004\t900000000000010007\t900000000000451002\n" +
+				"4341684028\t\t0\t900101001\t18736003\t84301002\t2\t405813007\t900000000000010007\t900000000000451002\n" + 
+				"4340130021\t\t0\t900101001\t18736003\t281615006\t1\t260686004\t900000000000010007\t900000000000451002\n" + 
+				"3992921024\t\t0\t900101001\t18736003\t76145000\t0\t116680003\t900000000000010007\t900000000000451002\n" +
+				"3992921025\t\t0\t900101001\t18736004\t76145000\t0\t116680003\t900000000000010007\t900000000000451002\n" +
+				"600001001\t\t0\t900101001\t900101001\t900000000000441003\t0\t116680003\t900000000000010007\t900000000000451002\n",
 				statedRelationships);
 		
-		assertEquals("id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId\n",
+		assertEquals(
+				"id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId\n" +
+				"3992921026\t\t1\t900101001\t404684003\t138875005\t0\t116680003\t900000000000010007\t900000000000451002\n",
 				statedRelationshipsNotConverted);
 	}
 	
