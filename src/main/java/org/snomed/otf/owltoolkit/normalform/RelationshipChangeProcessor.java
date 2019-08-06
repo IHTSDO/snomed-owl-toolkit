@@ -92,9 +92,13 @@ public class RelationshipChangeProcessor {
 							}
 						}
 						if (relationshipsInGroupCount == 1) {
-							// Update existing relationship rather than creating new
-							updatedRelationshipNewOldMap.put(sortedNew.get(y), oldSubject);
-							continue;
+							//check that new relationship with group change exists already or not
+							int z = Collections.binarySearch(sortedOld, sortedNew.get(y), RELATIONSHIP_COMPARATOR_ALL_FIELDS);
+							if (z < 0) {
+								// Update existing relationship rather than creating new
+								updatedRelationshipNewOldMap.put(sortedNew.get(y), oldSubject);
+								continue;
+							}
 						}
 						// We keep the relationship ID when just the relationship group number changes
 						// but if the triple joins another group of relationships we need to make this one inactive and recreate.
