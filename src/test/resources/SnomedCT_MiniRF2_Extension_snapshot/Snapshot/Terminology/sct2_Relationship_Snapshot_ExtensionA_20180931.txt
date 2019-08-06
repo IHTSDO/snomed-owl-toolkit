@@ -16,3 +16,7 @@ id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId
 # Anthrax (disorder) - Pathological process - Infectious process
 # Equivalent inference as Base in different role group
 600203001	20180231	1	900101001	409498004	441862004	2	370135005	900000000000011006	900000000000451002
+
+200111001	20170131	0	900101001	362969004	113331007	0	363698007	900000000000011006	900000000000451002
+# Different relationship id in extension prior being donated to the International edition
+600204001	20130131	1	900101001	362969004	113331007	0	363698007	900000000000011006	900000000000451002
