@@ -5,11 +5,11 @@
 # The script provides an automated repeatable process to support testing and production conversion of mid cycle authoring delta into OWL axioms reference set.
 # The inputs are the snapshot export archive from TermServer with stated relationships(used for OWL conversion), the SNOMED International complete OWL 20190731 release file and the mid cycle authoring delta export archive.
 # The mid cycle authoring delta export will contain stated relationships and some OWL axioms.
-# The output is a delta containing a set of OWL axioms converted from mid cycle authoring with stated relationships. 
-# These OWL axiom reference set components are reconciled with the published complete OWL axioms reference sets. 
-# Note: 
+# The output is a delta containing a set of OWL axioms converted from mid cycle authoring with stated relationships.
+# These OWL axiom reference set components are reconciled with the published complete OWL axioms reference sets.
+# Note:
 #1.The same uuid is used for an update.
-# 2.OWL axioms are inactive for inacivated concepts. 
+# 2.OWL axioms are inactive for inacivated concepts.
 # 3.New axioms are generated for new concepts with brand new UUIDs.
 #
 
@@ -51,8 +51,8 @@ fi
 
 snapshot=$termServer_export_snapshot,$published_owl_snapshot
 echo "Jar: $owlToolkitJar"
-echo "Snapshot files: $snapshot" 
-echo "Delta file: $delta" 
+echo "Snapshot files: $snapshot"
+echo "Delta file: $delta"
 echo
 
 echo "--"
@@ -98,7 +98,15 @@ head -n1 */Delta/Terminology/sct2_StatedRelationship_Delta* > stated_tmp.txt
 cat stated_tmp.txt > */Delta/Terminology/sct2_StatedRelationship_Delta*
 rm stated_tmp.txt
 echo "- Replacing OWL delta"
-cat sct2_sRefset_OWL* > */Delta/Terminology/sct2_sRefset_OWL*
+# First make one OWL refset file - termserver is exporting OWLAxiom and OWLOntology separately
+cd */Delta/Terminology/
+# OWLOntology delta will be blank - remove
+rm sct2_sRefset_OWLOntology*
+# Rename OWLAxiom to OWLExpression
+mv sct2_sRefset_OWLAxiomDelta_INT_20190701.txt sct2_sRefset_OWLExpressionDelta_INT_20190701.txt
+cd -
+# Append conversion output to export delta
+cat sct2_sRefset_OWL* > */Delta/Terminology/sct2_sRefset_OWLExpression*
 echo "- Creating zip"
 completeOWL=SnomedCT_CompleteOWLDelta.zip
 zip -r $completeOWL S*
