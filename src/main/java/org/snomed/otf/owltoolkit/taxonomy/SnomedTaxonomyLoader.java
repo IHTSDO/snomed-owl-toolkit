@@ -156,7 +156,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			if (ACTIVE.equals(active)) {
 				try {
 					addActiveAxiom(id, referencedComponentId, otherValues[0]);
-				} catch (OWLException | OWLRuntimeException | IllegalArgumentException e) {
+				} catch (OWLException | OWLRuntimeException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
 					owlParsingExceptionThrown = e;
 					owlParsingExceptionMemberId = id;
 				}

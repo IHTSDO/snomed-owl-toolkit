@@ -16,6 +16,7 @@
 package org.snomed.otf.owltoolkit.taxonomy;
 
 import com.google.common.collect.Sets;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.semanticweb.owlapi.model.OWLAxiom;
@@ -25,6 +26,7 @@ import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -38,11 +40,14 @@ public class SnomedTaxonomy {
 	private Set<Long> fullyDefinedConceptIds = new LongOpenHashSet();
 	private Map<Long, Relationship> statedRelationshipsById = new HashMap<>();
 	private Map<Long, Relationship> inferredRelationshipsById = new HashMap<>();
-	private Map<String, OWLAxiom> axiomsById = new HashMap<>();
 	private Map<Long, Set<Relationship>> conceptStatedRelationshipMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Relationship>> conceptInferredRelationshipMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Relationship>> conceptInactiveInferredRelationshipMap = new Long2ObjectOpenHashMap<>();
-	private Map<Long, Set<OWLAxiom>> conceptAxiomMap = new Long2ObjectOpenHashMap<>();
+
+	// Axiom maps must be syncronised because international and extension refset memebers are loaded in parallel
+	private Map<Long, Set<OWLAxiom>> conceptAxiomMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
+	private Map<String, OWLAxiom> axiomsById = new ConcurrentHashMap<>();
+
 	private Map<Long, Set<Long>> inferredSubTypesMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
 	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
