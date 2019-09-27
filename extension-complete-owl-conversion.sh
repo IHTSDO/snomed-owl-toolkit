@@ -4,15 +4,15 @@
 # This script is for use by the SNOMED International team to convert extension releases to Complete OWL for managed service members.
 # The script provides an automated repeatable process to support testing and production upgrade of extensions to SNOMED International 20190731 edition.
 # The inputs are the previous release zip, the SNOMED International complete OWL 20190731 release zip file, and the current release delta zip(optional) containing stated relationships and some OWL axioms.
-# The output is a delta zip with filename starting complete-owl-axiom-delta containing the conversion results. 
+# The output is a delta zip with filename starting complete-owl-axiom-delta containing the conversion results.
 #  1. Inactive stated relationships for those being converted into axioms
 #  2. Active OWL axiom reference sets (OWL axioms generated from active stated relationships plus any newly authoring axioms in the current authoring cycle)
-# 
-#Note: This script is used to convert stated relationships with extension module source concepts only. 
+#
+#Note: This script is used to convert stated relationships with extension module source concepts only.
 # Any concepts donated to the International Edition will be excluded as the axiom reference sets for these exist in the International complete OWL release already.
 # Any extension stated relationships overriding International concepts (i.e stated relationships having International concepts as source) will not be converted into axioms by this script.
 # Please check sct2_StatedRelationships_Not_Converted.txt file for the full list of stated relationships. These should be converted manually using additional axioms or GCIs.
-# 
+#
 #
 
 # Make script stop if any line fails
@@ -50,7 +50,7 @@ fi
 
 snapshot=$previous_snapshot,$int_snapshot
 echo "Jar: $owlToolkitJar"
-echo "Snapshot files: $snapshot" 
+echo "Snapshot files: $snapshot"
 echo "Delta: $delta"
 echo
 
@@ -58,14 +58,14 @@ echo
 echo "--"
 echo "-- Classifying (before conversion)"
 echo "--"
-java -jar $owlToolkitJar -classify -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $delta;
+java -Xms4g -Xmx8g -jar $owlToolkitJar -classify -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $delta;
 echo
 
 
 echo "--"
 echo "-- Generating Ontology file (before conversion)"
 echo "--"
-java -jar $owlToolkitJar -rf2-to-owl -without-annotations -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $delta;
+java -Xms4g -Xmx8g -jar $owlToolkitJar -rf2-to-owl -without-annotations -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $delta;
 ontologyBefore="`ls -rt ontology-* | tail -n1`"
 if [ ! -f $ontologyBefore ]; then
   echo "Can not find generated ontology file"
@@ -80,7 +80,7 @@ echo
 echo "--"
 echo "-- Converting to Complete OWL"
 echo "--"
-java -jar $owlToolkitJar -rf2-stated-to-complete-owl -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $delta;
+java -Xms4g -Xmx8g -jar $owlToolkitJar -rf2-stated-to-complete-owl -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $delta;
 conversionDelta="`ls -rt complete-owl-axiom-delta* | tail -n1`"
 echo "- Created $conversionDelta"
 echo
@@ -110,7 +110,7 @@ echo
 echo "--"
 echo "-- Generating Ontology file (after conversion)"
 echo "--"
-java -jar $owlToolkitJar -rf2-to-owl -without-annotations -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $completeOWL;
+java -Xms4g -Xmx8g -jar $owlToolkitJar -rf2-to-owl -without-annotations -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $completeOWL;
 ontologyAfter="`ls -rt ontology-* | tail -n1`"
 if [ ! -f $ontologyAfter ]; then
   echo "Can not find generated ontology file"
@@ -149,5 +149,5 @@ echo
 echo "--"
 echo "-- Classifying Complete OWL"
 echo "--"
-java -jar $owlToolkitJar -classify -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $completeOWL;
+java -Xms4g -Xmx8g -jar $owlToolkitJar -classify -rf2-snapshot-archives $snapshot -rf2-authoring-delta-archive $completeOWL;
 echo
