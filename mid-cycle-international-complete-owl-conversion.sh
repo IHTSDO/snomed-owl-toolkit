@@ -93,15 +93,16 @@ mkdir work
 unzip $delta '**/Delta/*' -d work
 cd work
 unzip ../$conversionDelta
-echo "- Replacing Stated Relationship delta with empty data"
+echo "- Clearing Stated and Inferred Relationship rows"
 head -n1 */Delta/Terminology/sct2_StatedRelationship_Delta* > stated_tmp.txt
 cat stated_tmp.txt > */Delta/Terminology/sct2_StatedRelationship_Delta*
+cat stated_tmp.txt > */Delta/Terminology/sct2_Relationship_Delta*
 rm stated_tmp.txt
 echo "- Replacing OWL delta"
 # First make one OWL refset file - termserver is exporting OWLAxiom and OWLOntology separately
 cd */Delta/Terminology/
 # OWLOntology delta will be blank - remove
-rm sct2_sRefset_OWLOntology*
+rm -r sct2_sRefset_OWLOntology*
 # Rename OWLAxiom to OWLExpression
 mv sct2_sRefset_OWLAxiomDelta_INT_20190701.txt sct2_sRefset_OWLExpressionDelta_INT_20190701.txt
 cd -
