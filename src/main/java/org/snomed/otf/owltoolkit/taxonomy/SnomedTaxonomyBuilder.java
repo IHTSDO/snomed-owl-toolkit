@@ -33,15 +33,24 @@ public class SnomedTaxonomyBuilder {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
-			.withStatedRelationships()
+			.withoutDescriptions()
 			.withInactiveConcepts()
 			.withFullRelationshipObjects()
+			.withStatedRelationships()
+			.withFullRefsetMemberObjects()
+			// Inactive relationships needed when loading the snapshot for ID reuse.
+			.withInactiveRelationships()
 			.withRefset(OWL_ONTOLOGY_REFERENCE_SET)
 			.withRefset(OWL_AXIOM_REFERENCE_SET)
 			.withRefset(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)
-			.withFullRefsetMemberObjects()
-			.withoutDescriptions()
-			.withInactiveRelationships();
+			// Giving reference set filename patterns avoids reading them all
+			.withIncludedReferenceSetFilenamePattern(".*_sRefset_OWL.*")
+			.withIncludedReferenceSetFilenamePattern(".*_cissccRefset_MRCMAttributeDomain.*");
+
+	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE_PLUS_LANGUAGE = SNAPSHOT_LOADING_PROFILE
+			.withFullDescriptionObjects()
+			.withAllRefsets()// We don't know what the ID of the language reference set is going to be.
+			.withIncludedReferenceSetFilenamePattern("der2_cRefset_Language.*");
 	
 	
 	private static final LoadingProfile OWL_SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
@@ -52,13 +61,11 @@ public class SnomedTaxonomyBuilder {
 			.withFullRefsetMemberObjects()
 			.withoutDescriptions();
 	
-	static {
-		// Giving reference set filename patterns avoids reading them all
-		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_sRefset_OWL.*");
-		SNAPSHOT_LOADING_PROFILE.getIncludedReferenceSetFilenamePatterns().add(".*_cissccRefset_MRCMAttributeDomain.*");
-	}
-
 	private static final LoadingProfile DELTA_LOADING_PROFILE = SNAPSHOT_LOADING_PROFILE
+			.withInactiveRelationships()
+			.withInactiveRefsetMembers();
+
+	private static final LoadingProfile DELTA_LOADING_PROFILE_PLUS_LANGUAGE = SNAPSHOT_LOADING_PROFILE_PLUS_LANGUAGE
 			.withInactiveRelationships()
 			.withInactiveRefsetMembers();
 
@@ -69,9 +76,9 @@ public class SnomedTaxonomyBuilder {
 	public SnomedTaxonomy build(
 			InputStreamSet snomedRf2SnapshotArchives,
 			InputStream currentReleaseRf2DeltaArchive,
-			boolean includeFSNs) throws ReleaseImportException {
+			boolean includeDescriptions) throws ReleaseImportException {
 
-		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, null, includeFSNs);
+		return build(snomedRf2SnapshotArchives, currentReleaseRf2DeltaArchive, null, null, includeDescriptions);
 	}
 
 	public SnomedTaxonomy buildWithAxiomRefset(InputStreamSet snomedRf2OwlSnapshotArchive) throws ReleaseImportException {
@@ -102,7 +109,7 @@ public class SnomedTaxonomyBuilder {
 			InputStream currentReleaseRf2DeltaArchive,
 			ComponentFactory snapshotComponentFactoryTap,
 			ComponentFactory deltaComponentFactoryTap,
-			boolean includeFSNs) throws ReleaseImportException {
+			boolean includeDescriptions) throws ReleaseImportException {
 
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
@@ -112,7 +119,7 @@ public class SnomedTaxonomyBuilder {
 		ReleaseImporter releaseImporter = new ReleaseImporter();
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(
 				snomedRf2SnapshotArchives.getFileInputStreams(),
-				includeFSNs ? SNAPSHOT_LOADING_PROFILE.withFullDescriptionObjects() : SNAPSHOT_LOADING_PROFILE,
+				includeDescriptions ? SNAPSHOT_LOADING_PROFILE_PLUS_LANGUAGE : SNAPSHOT_LOADING_PROFILE,
 				snomedTaxonomyLoader);
 		snomedTaxonomyLoader.reportErrors();
 		logger.info("Loaded release snapshot");
@@ -124,7 +131,7 @@ public class SnomedTaxonomyBuilder {
 
 			releaseImporter.loadDeltaReleaseFiles(
 					currentReleaseRf2DeltaArchive,
-					includeFSNs ? DELTA_LOADING_PROFILE.withFullDescriptionObjects() : DELTA_LOADING_PROFILE,
+					includeDescriptions ? DELTA_LOADING_PROFILE_PLUS_LANGUAGE : DELTA_LOADING_PROFILE,
 					snomedTaxonomyLoader);
 			snomedTaxonomyLoader.reportErrors();
 			logger.info("Loaded delta");

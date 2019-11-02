@@ -51,7 +51,8 @@ public class SnomedTaxonomy {
 	private Map<Long, Set<Long>> inferredSubTypesMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
 	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
-	private Map<Long, String> conceptFsnTermMap = new Long2ObjectOpenHashMap<>();
+	private Map<Long, Set<Description>> conceptDescriptionMap = new Long2ObjectOpenHashMap<>();
+	private Map<Long, Description> descriptionMap = new Long2ObjectOpenHashMap<>();
 
 	public static final Set<Long> DEFAULT_NEVER_GROUPED_ROLE_IDS = Collections.unmodifiableSet(Sets.newHashSet(
 			parseLong(Concepts.PART_OF),
@@ -243,12 +244,23 @@ public class SnomedTaxonomy {
 		}
 	}
 
-	public void addFsn(String conceptId, String term) {
-		conceptFsnTermMap.put(parseLong(conceptId), term);
+	void addDescription(String conceptId, String id, String term, String typeId, String languageCode) {
+		Description description = new Description(id, term, typeId, languageCode);
+		conceptDescriptionMap.computeIfAbsent(parseLong(conceptId), key -> new HashSet<>()).add(description);
+		descriptionMap.put(parseLong(id), description);
 	}
 
-	public String getConceptFsnTerm(Long conceptId) {
-		return conceptFsnTermMap.get(conceptId);
+	void removeDescription(String conceptId, String id) {
+		conceptDescriptionMap.computeIfAbsent(parseLong(conceptId), key -> new HashSet<>())
+				.remove(new Description(id));
+	}
+
+	void setDescriptionAcceptability(String descriptionId, String refsetId, String acceptabilityId, boolean active) {
+		descriptionMap.get(parseLong(descriptionId)).setAcceptability(parseLong(refsetId), parseLong(acceptabilityId), active);
+	}
+
+	public Set<Description> getConceptDescriptions(Long conceptId) {
+		return conceptDescriptionMap.getOrDefault(conceptId, Collections.emptySet());
 	}
 
 	public void addUngroupedRole(Long contentType, Long attributeId) {
@@ -304,5 +316,5 @@ public class SnomedTaxonomy {
 	public Map<String, OWLAxiom> getAxiomsById() {
 		return axiomsById;
 	}
-	
+
 }

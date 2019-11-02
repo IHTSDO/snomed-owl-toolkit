@@ -11,7 +11,11 @@ A classification REST API using this toolkit is available, see the [Classificati
   - Works on the command line
   - Uses MRCM Attribute Domain Reference Set for grouping information
   - Uses OWL Axiom Reference Set
-  - Can include FSN annotations
+  - Includes all descriptions:
+    - Fully Specified Names as rdfs:label
+    - Preferred Synonyms as skos:prefLabel
+    - Other Synonyms as skos:altLabel
+    - Text Definitions as skos:definition
   - Support for Snomed Editions and Extensions
   - *For Java integration see RF2ToOWLService.java*
 - Classify Snomed
@@ -85,7 +89,7 @@ Optional parameters for OWL conversion:
  -version <version>                     (Optional) Date for the ontology version e.g. 20180731.
                                         Defaults to today's date.
 
- -without-annotations                   (Optional) Flag to omit Fully Specified Name annotations from the ontology
+ -without-annotations                   (Optional) Flag to omit description annotations from the ontology
                                         resulting in a smaller file size.
 ```
 
@@ -97,6 +101,9 @@ Using the executable jar supply a zip file which contains RF2 snapshot files as 
 java -jar snomed-owl-toolkit*executable.jar -rf2-to-owl -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
 ```
 After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
+
+Description dialects will be set for language reference sets included in the [language-refset-dialect-map.properties](src/main/resources/language-refset-dialect-map.properties) file. 
+The jar file will need rebuilding in order for changes to that file to be included. Feel free to raise a pull request to add your language reference sets to this project.
 
 ### Snomed RF2 Classification
 Run the classification process.

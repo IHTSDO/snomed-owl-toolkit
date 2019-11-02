@@ -39,6 +39,10 @@ public class Concepts {
 	public static final String DEFINING_RELATIONSHIP = "900000000000006009";
 
 	public static final String FSN = "900000000000003001";
+	public static final String SYNONYM = "900000000000013009";
+	public static final String DEFINITION = "900000000000550004";
+	public static final String PREFERRED = "900000000000548007";
+	public static final Long PREFERRED_Long = parseLong(PREFERRED);
 
 	public static final String ALL_PRECOORDINATED_CONTENT = "723594008";
 

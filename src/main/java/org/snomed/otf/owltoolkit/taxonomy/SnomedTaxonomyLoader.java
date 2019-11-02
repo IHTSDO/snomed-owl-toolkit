@@ -30,6 +30,7 @@ import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
 import static java.lang.Long.parseLong;
@@ -152,8 +153,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	@Override
 	public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
+		boolean activeBool = ACTIVE.equals(active);
 		if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && owlParsingExceptionThrown == null) {
-			if (ACTIVE.equals(active)) {
+			if (activeBool) {
 				try {
 					addActiveAxiom(id, referencedComponentId, otherValues[0]);
 				} catch (OWLException | OWLRuntimeException | IllegalArgumentException | ArrayIndexOutOfBoundsException e) {
@@ -167,13 +169,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			}
 		} else if (refsetId.equals(Concepts.OWL_ONTOLOGY_REFERENCE_SET)) {
 			if (Concepts.OWL_ONTOLOGY_NAMESPACE.equals(referencedComponentId)) {
-				if (ACTIVE.equals(active)) {
+				if (activeBool) {
 					snomedTaxonomy.addOntologyNamespace(id, otherValues[0]);
 				} else {
 					snomedTaxonomy.removeOntologyNamespace(id);
 				}
 			} else if (Concepts.OWL_ONTOLOGY_HEADER.equals(referencedComponentId)) {
-				if (ACTIVE.equals(active)) {
+				if (activeBool) {
 					snomedTaxonomy.addOntologyHeader(id, otherValues[0]);
 				} else {
 					snomedTaxonomy.removeOntologyHeader(id);
@@ -186,11 +188,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			long attributeId = parseLong(referencedComponentId);
 			boolean ungrouped = otherValues[1].equals("0");
 			Long contentTypeId = parseLong(otherValues[5]);
-			if (ACTIVE.equals(active) && ungrouped) {
+			if (activeBool && ungrouped) {
 				snomedTaxonomy.addUngroupedRole(contentTypeId, attributeId);
 			} else {
 				snomedTaxonomy.removeUngroupedRole(contentTypeId, attributeId);
 			}
+		} else if (fieldNames.length == 7 && fieldNames[6].equals("acceptabilityId")) {
+			snomedTaxonomy.setDescriptionAcceptability(referencedComponentId, refsetId, otherValues[0], activeBool);
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
@@ -209,8 +213,10 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	@Override
 	public void newDescriptionState(String id, String effectiveTime, String active, String moduleId, String conceptId, String languageCode, String typeId, String term, String caseSignificanceId) {
-		if (ACTIVE.equals(active) && typeId.equals(Concepts.FSN)) {
-			snomedTaxonomy.addFsn(conceptId, term);
+		if (ACTIVE.equals(active)) {
+			snomedTaxonomy.addDescription(conceptId, id, term, typeId, languageCode);
+		} else {
+			snomedTaxonomy.removeDescription(conceptId, id);
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {

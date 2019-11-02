@@ -28,11 +28,14 @@ import org.snomed.otf.owltoolkit.ontology.render.SnomedFunctionalSyntaxDocumentF
 import org.snomed.otf.owltoolkit.ontology.render.SnomedFunctionalSyntaxStorerFactory;
 import org.snomed.otf.owltoolkit.ontology.render.SnomedPrefixManager;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceRuntimeException;
+import org.snomed.otf.owltoolkit.taxonomy.Description;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Long.parseLong;
 
@@ -47,8 +50,14 @@ public class OntologyService {
 	public static final String ROLE_GROUP_OUTDATED_CONSTANT = "roleGroup";
 	public static final String SNOMED_ROLE_GROUP_SHORT_URI = COLON + ROLE_GROUP_SCTID;
 	public static final String SNOMED_ROLE_GROUP_FULL_URI = SNOMED_CORE_COMPONENTS_URI + ROLE_GROUP_SCTID;
-
 	public static final String CORE_COMPONENT_NAMESPACE_PATTERN = "<http://snomed.info/id/([0-9]+)>";
+
+	// SKOS URIs
+	private static final String SKOS_PREFIX = "skos";
+	private static final String SKOS_URI = "http://www.w3.org/2004/02/skos/core#";
+	private static final String SKOS_PREF_LABEL_URI = SKOS_URI + "prefLabel";
+	private static final String SKOS_ALT_LABEL_URI = SKOS_URI + "altLabel";
+	private static final String SKOS_DEFINITION_LABEL_URI = SKOS_URI + "definition";
 
 	private final OWLOntologyManager manager;
 	private OWLDataFactory factory;
@@ -64,12 +73,17 @@ public class OntologyService {
 	}
 
 	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy) throws OWLOntologyCreationException {
-		return createOntology(snomedTaxonomy, null, null);
+		return createOntology(snomedTaxonomy, null, null, false);
 	}
 
-	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy, String ontologyUri, String versionDate) throws OWLOntologyCreationException {
+	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy, String ontologyUri, String versionDate, boolean includeDescriptions) throws OWLOntologyCreationException {
 
 		Map<Long, Set<OWLAxiom>> axiomsFromStatedRelationships = createAxiomsFromStatedRelationships(snomedTaxonomy);
+
+		Map<Long, String> langRefsetToDialectMap = null;
+		if (includeDescriptions) {
+			langRefsetToDialectMap = loadLanguageRefsetToDialectMap();
+		}
 
 		Set<OWLAxiom> axioms = new HashSet<>();
 		for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
@@ -80,8 +94,9 @@ public class OntologyService {
 			// Add axioms generated from stated relationships
 			axioms.addAll(axiomsFromStatedRelationships.getOrDefault(conceptId, Collections.emptySet()));
 
-			// Add FSN annotation
-			addFSNAnnotation(conceptId, snomedTaxonomy, axioms);
+			if (includeDescriptions) {
+				addDescriptionAnnotations(conceptId, snomedTaxonomy, axioms, langRefsetToDialectMap);
+			}
 		}
 
 		OWLOntology ontology;
@@ -100,7 +115,7 @@ public class OntologyService {
 		manager.setOntologyFormat(ontology, getFunctionalSyntaxDocumentFormat());
 		return ontology;
 	}
-	
+
 	public Map<Long, Set<OWLAxiom>> createAxiomsFromStatedRelationships(SnomedTaxonomy snomedTaxonomy, Set<Long> conceptIds) {
 		Map<Long, Set<OWLAxiom>> axiomsMap = new Long2ObjectOpenHashMap<>();
 
@@ -189,12 +204,14 @@ public class OntologyService {
 		SnomedPrefixManager prefixManager = getSnomedPrefixManager();
 		owlDocumentFormat.setPrefixManager(prefixManager);
 		owlDocumentFormat.setDefaultPrefix(SNOMED_CORE_COMPONENTS_URI);
+		owlDocumentFormat.setPrefix(SKOS_PREFIX, SKOS_URI);
 		return owlDocumentFormat;
 	}
 
 	public SnomedPrefixManager getSnomedPrefixManager() {
 		SnomedPrefixManager prefixManager = new SnomedPrefixManager();
 		prefixManager.setDefaultPrefix(SNOMED_CORE_COMPONENTS_URI);
+		prefixManager.setPrefix(SKOS_PREFIX, SKOS_URI);
 		return prefixManager;
 	}
 
@@ -325,21 +342,77 @@ public class OntologyService {
 		return factory.getOWLClass(COLON + conceptId, prefixManager);
 	}
 
-	private void addFSNAnnotation(Long conceptId, SnomedTaxonomy snomedTaxonomy, Set<OWLAxiom> axioms) {
-		String conceptFsnTerm = snomedTaxonomy.getConceptFsnTerm(conceptId);
-		if (conceptFsnTerm != null) {
-			axioms.add(factory.getOWLAnnotationAssertionAxiom(factory.getRDFSLabel(), IRI.create(SNOMED_CORE_COMPONENTS_URI + conceptId), factory.getOWLLiteral(conceptFsnTerm)));
+	private void addDescriptionAnnotations(Long conceptId, SnomedTaxonomy snomedTaxonomy, Set<OWLAxiom> axioms, Map<Long, String> langRefsetToDialectMap) {
+		for (Description description : snomedTaxonomy.getConceptDescriptions(conceptId)) {
+			String typeId = description.getTypeId();
+			String term = description.getTerm();
+			Map<Long, Long> acceptabilityMap = description.getAcceptabilityMap();
+			String languageAndDialect = getLanguageDialect(langRefsetToDialectMap, description.getLanguageCode(), acceptabilityMap);
+
+			if (Concepts.FSN.equals(typeId)) {
+				// Add FSN as "rdfs:label"
+				axioms.add(factory.getOWLAnnotationAssertionAxiom(
+						factory.getRDFSLabel(),
+						IRI.create(SNOMED_CORE_COMPONENTS_URI + conceptId),
+						factory.getOWLLiteral(term, languageAndDialect)));
+			} else {
+				// Use SKOS for other descriptions:
+				String labelUri = null;
+				if (Concepts.SYNONYM.equals(typeId)) {
+					if (acceptabilityMap.values().contains(Concepts.PREFERRED_Long)) {
+						// Add preferred synonym as "skos:prefLabel"
+						labelUri = SKOS_PREF_LABEL_URI;
+					} else {
+						// Add other synonym as "skos:altLabel"
+						labelUri = SKOS_ALT_LABEL_URI;
+					}
+				} else if (Concepts.DEFINITION.equals(typeId)) {
+					// Add Text Definition as "skos:definition"
+					labelUri = SKOS_DEFINITION_LABEL_URI;
+				}
+
+				if (labelUri != null) {
+					axioms.add(factory.getOWLAnnotationAssertionAxiom(
+							factory.getOWLAnnotationProperty(IRI.create(labelUri)),
+							IRI.create(SNOMED_CORE_COMPONENTS_URI + conceptId),
+							factory.getOWLLiteral(term, languageAndDialect)));
+				}
+			}
 		}
 	}
 
-	public DefaultPrefixManager getPrefixManager() {
-		return prefixManager;
+	private String getLanguageDialect(Map<Long, String> langRefsetToDialectMap, String language, Map<Long, Long> acceptabilityMap) {
+		// If term is preferred in multiple dialects we will not add the dialect to the language-dialect string.
+		List<Map.Entry<Long, Long>> prefferedLangRefsets = acceptabilityMap.entrySet().stream()
+				.filter((entry) -> Concepts.PREFERRED_Long.equals(entry.getValue())).collect(Collectors.toList());
+		if (prefferedLangRefsets.size() == 1) {
+			Long preferredInLanRefset = prefferedLangRefsets.get(0).getKey();
+			String dialect = langRefsetToDialectMap.get(preferredInLanRefset);
+			if (dialect != null) {
+				language += "-" + dialect;
+			}
+		}
+		return language;
 	}
 
 	private void assertTrue(String message, boolean bool) {
 		if (!bool) {
 			throw new ReasonerServiceRuntimeException(message);
 		}
+	}
+
+	private Map<Long, String> loadLanguageRefsetToDialectMap() throws OWLOntologyCreationException {
+		Map<Long, String> map = new Long2ObjectOpenHashMap<>();
+		try {
+			Properties properties = new Properties();
+			properties.load(OntologyService.class.getResourceAsStream("/language-refset-dialect-map.properties"));
+			for (String key : properties.stringPropertyNames()) {
+				map.put(parseLong(key), properties.getProperty(key));
+			}
+		} catch (IOException e) {
+			throw new OWLOntologyCreationException("Failed to load map of language reference set to dialect code.", e);
+		}
+		return map;
 	}
 
 }

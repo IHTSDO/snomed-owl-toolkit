@@ -116,7 +116,7 @@ public class Application {
 
 		String versionDate = getEffectiveDate(args);
 
-		boolean includeFSNs = !args.contains(ARG_WITHOUT_ANNOTATIONS);
+		boolean includeDescriptions = !args.contains(ARG_WITHOUT_ANNOTATIONS);
 
 		System.out.println();
 		System.out.println("Creating Ontology using the following options:");
@@ -124,7 +124,7 @@ public class Application {
 		System.out.println("  Delta archive: " + (deltaFile == null ? "-none-" : deltaFile));
 		System.out.println("  Ontology URI: " + ontologyUri);
 		System.out.println("  Ontology Version: " + versionDate);
-		System.out.println("  Include FSN Annotations: " + includeFSNs);
+		System.out.println("  Include Description Annotations: " + includeDescriptions);
 		System.out.println();
 
 		// Conversion
@@ -137,7 +137,7 @@ public class Application {
 			 OptionalFileInputStream deltaStream = new OptionalFileInputStream(deltaFile);
 			 FileOutputStream outputStream = new FileOutputStream(ontologyOutputFile)) {
 
-			new RF2ToOWLService().convertRF2ArchiveToOWL(ontologyUri, versionDate, includeFSNs, snapshotStreams, deltaStream, outputStream);
+			new RF2ToOWLService().convertRF2ArchiveToOWL(ontologyUri, versionDate, includeDescriptions, snapshotStreams, deltaStream, outputStream);
 		} catch (IOException e) {
 			System.err.println("Failed to close input or output stream.");
 			e.printStackTrace();
