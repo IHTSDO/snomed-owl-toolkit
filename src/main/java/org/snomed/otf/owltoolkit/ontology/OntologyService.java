@@ -21,6 +21,8 @@ import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.domain.Relationship;
@@ -35,6 +37,7 @@ import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static java.lang.Long.parseLong;
@@ -58,11 +61,13 @@ public class OntologyService {
 	private static final String SKOS_PREF_LABEL_URI = SKOS_URI + "prefLabel";
 	private static final String SKOS_ALT_LABEL_URI = SKOS_URI + "altLabel";
 	private static final String SKOS_DEFINITION_LABEL_URI = SKOS_URI + "definition";
+	public static final String LANGUAGE_REFSET_DIALECT_MAP_PROPERTIES = "language-refset-dialect-map.properties";
 
 	private final OWLOntologyManager manager;
 	private OWLDataFactory factory;
 	private DefaultPrefixManager prefixManager;
 	private final Set<Long> ungroupedAttributes;
+	private AtomicLong missingDialectWarnings;
 
 	public OntologyService(Set<Long> ungroupedAttributes) {
 		this.ungroupedAttributes = ungroupedAttributes;
@@ -70,6 +75,7 @@ public class OntologyService {
 		factory = new OWLDataFactoryImpl();
 		prefixManager = new DefaultPrefixManager();
 		prefixManager.setDefaultPrefix(SNOMED_CORE_COMPONENTS_URI);
+		missingDialectWarnings = new AtomicLong();
 	}
 
 	public OWLOntology createOntology(SnomedTaxonomy snomedTaxonomy) throws OWLOntologyCreationException {
@@ -347,7 +353,7 @@ public class OntologyService {
 			String typeId = description.getTypeId();
 			String term = description.getTerm();
 			Map<Long, Long> acceptabilityMap = description.getAcceptabilityMap();
-			String languageAndDialect = getLanguageDialect(langRefsetToDialectMap, description.getLanguageCode(), acceptabilityMap);
+			String languageAndDialect = getLanguageDialect(langRefsetToDialectMap, description.getLanguageCode(), acceptabilityMap, typeId);
 
 			if (Concepts.FSN.equals(typeId)) {
 				// Add FSN as "rdfs:label"
@@ -359,7 +365,7 @@ public class OntologyService {
 				// Use SKOS for other descriptions:
 				String labelUri = null;
 				if (Concepts.SYNONYM.equals(typeId)) {
-					if (acceptabilityMap.values().contains(Concepts.PREFERRED_Long)) {
+					if (acceptabilityMap.values().contains(Concepts.PREFERRED_LONG)) {
 						// Add preferred synonym as "skos:prefLabel"
 						labelUri = SKOS_PREF_LABEL_URI;
 					} else {
@@ -381,15 +387,28 @@ public class OntologyService {
 		}
 	}
 
-	private String getLanguageDialect(Map<Long, String> langRefsetToDialectMap, String language, Map<Long, Long> acceptabilityMap) {
-		// If term is preferred in multiple dialects we will not add the dialect to the language-dialect string.
-		List<Map.Entry<Long, Long>> prefferedLangRefsets = acceptabilityMap.entrySet().stream()
-				.filter((entry) -> Concepts.PREFERRED_Long.equals(entry.getValue())).collect(Collectors.toList());
-		if (prefferedLangRefsets.size() == 1) {
-			Long preferredInLanRefset = prefferedLangRefsets.get(0).getKey();
+	private String getLanguageDialect(Map<Long, String> langRefsetToDialectMap, String language, Map<Long, Long> acceptabilityMap, String typeId) {
+		// If term is preferred/acceptable in multiple dialects we will not add the dialect to the language-dialect string.
+		List<Map.Entry<Long, Long>> preferredLangRefsets = acceptabilityMap.entrySet().stream()
+				.filter((entry) -> Concepts.PREFERRED_LONG.equals(entry.getValue())).collect(Collectors.toList());
+		if (preferredLangRefsets.isEmpty() && typeId.equals(Concepts.SYNONYM)) {
+			// Not a preferred synonym, let's collect acceptable entries
+			preferredLangRefsets = acceptabilityMap.entrySet().stream()
+					.filter((entry) -> Concepts.ACCEPTABLE_LONG.equals(entry.getValue())).collect(Collectors.toList());
+		}
+		if (preferredLangRefsets.size() == 1) {
+			Long preferredInLanRefset = preferredLangRefsets.get(0).getKey();
 			String dialect = langRefsetToDialectMap.get(preferredInLanRefset);
 			if (dialect != null) {
-				language += "-" + dialect;
+				if (!dialect.isEmpty()) {// Some language reference sets do not require a dialect
+					language += "-" + dialect;
+				}
+			} else {
+				if (missingDialectWarnings.incrementAndGet() < 50) {
+					Logger logger = LoggerFactory.getLogger(getClass());
+					logger.warn("Please add language reference set {} to {} and recompile. " +
+							"The dialect ISO code could not be appended to the annotations because it was not found.", preferredInLanRefset, LANGUAGE_REFSET_DIALECT_MAP_PROPERTIES);
+				}
 			}
 		}
 		return language;
@@ -405,7 +424,7 @@ public class OntologyService {
 		Map<Long, String> map = new Long2ObjectOpenHashMap<>();
 		try {
 			Properties properties = new Properties();
-			properties.load(OntologyService.class.getResourceAsStream("/language-refset-dialect-map.properties"));
+			properties.load(OntologyService.class.getResourceAsStream("/" + LANGUAGE_REFSET_DIALECT_MAP_PROPERTIES));
 			for (String key : properties.stringPropertyNames()) {
 				map.put(parseLong(key), properties.getProperty(key));
 			}

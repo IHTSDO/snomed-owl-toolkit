@@ -16,6 +16,7 @@ A classification REST API using this toolkit is available, see the [Classificati
     - Preferred Synonyms as skos:prefLabel
     - Other Synonyms as skos:altLabel
     - Text Definitions as skos:definition
+    - Language and dialect markup
   - Support for Snomed Editions and Extensions
   - *For Java integration see RF2ToOWLService.java*
 - Classify Snomed

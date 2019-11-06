@@ -51,8 +51,8 @@ public class SnomedTaxonomy {
 	private Map<Long, Set<Long>> inferredSubTypesMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
 	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
-	private Map<Long, Set<Description>> conceptDescriptionMap = new Long2ObjectOpenHashMap<>();
-	private Map<Long, Description> descriptionMap = new Long2ObjectOpenHashMap<>();
+	private Map<Long, Set<Description>> conceptDescriptionMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
+	private Map<Long, Description> descriptionMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 
 	public static final Set<Long> DEFAULT_NEVER_GROUPED_ROLE_IDS = Collections.unmodifiableSet(Sets.newHashSet(
 			parseLong(Concepts.PART_OF),
