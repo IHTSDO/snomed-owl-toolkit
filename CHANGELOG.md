@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 The change log format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 2.7.2 Fix Release - 2019-09-27
+
+### Fixes
+- Fix thread safety issue when classifying large Extensions using the axiom reference set.
+- Prevent duplicate self-grouped relationships when converting Extensions to OWL axiom reference set.
+- Fixes to International mid-cycle OWL conversion script (for internal use).
+
+
 ## 2.7.1 Release - 2019-07-15
 
 Feature release with scripts to support complete OWL conversion.
