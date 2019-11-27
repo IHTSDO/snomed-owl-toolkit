@@ -47,6 +47,10 @@ public class RF2ToOWLService {
 			throw new ConversionException("Failed to load RF2 archive.", e);
 		}
 
+		if (snomedTaxonomy.getStatedRelationships().isEmpty() && snomedTaxonomy.getAxiomCount() == 0) {
+			throw new ConversionException("No Stated Relationships or Axioms were found. An Ontology file can not be produced.");
+		}
+
 		String ontologyUri;
 		if (ontologyUriOverride != null && !ontologyUriOverride.isEmpty()) {
 			ontologyUri = ontologyUriOverride;
