@@ -128,7 +128,8 @@ public class Application {
 		System.out.println();
 
 		// Conversion
-		String outputFilePath = "ontology-" + DATETIME_FORMAT.format(new Date()) + ".owl";
+		String fileNameDate = getParameterValue(ARG_VERSION, args) != null ? versionDate : DATETIME_FORMAT.format(new Date());
+		String outputFilePath = "ontology-" + fileNameDate + ".owl";
 		File ontologyOutputFile = new File(outputFilePath);
 		if (deleteOntologyFileOnExit) {
 			ontologyOutputFile.deleteOnExit();
