@@ -1,0 +1,13 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# Add attribute Due (attribute)
+42752001		1	900000000000012004	900000000000074008
+
+# Add attribute After (attribute)
+255234002		1	900000000000012004	900000000000074008
+
+# Add attribute Due to and after (attribute)
+20000090004		1	900000000000012004	900000000000074008

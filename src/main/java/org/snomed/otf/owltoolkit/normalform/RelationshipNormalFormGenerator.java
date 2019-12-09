@@ -171,6 +171,12 @@ public final class RelationshipNormalFormGenerator {
 	}
 
 	private Set<Relationship> getInferredNonIsAFragmentsInNormalForm(Long conceptId) {
+
+		if (reasonerTaxonomy.getAttributeIds().contains(conceptId)) {
+			// Attributes have no attributes, only parents.
+			return Collections.emptySet();
+		}
+
 		final Set<Long> directSuperTypes = reasonerTaxonomy.getParents(conceptId);
 
 		// Step 2: get all non IS-A relationships from ancestors and remove redundancy, then cache the results for later use

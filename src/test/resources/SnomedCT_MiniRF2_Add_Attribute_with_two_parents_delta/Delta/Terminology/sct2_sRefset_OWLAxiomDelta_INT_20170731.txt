@@ -1,0 +1,12 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+
+# Due to - is a - Concept model object attribute
+77e0e214-40de-412f-8038-940910bfb668		1	900000000000012004	733073007	42752001	SubObjectPropertyOf(:42752001 :762705008)
+
+# After - is a - Concept model object attribute
+c092a28e-7abe-4c50-8d87-ea3c6205a62b		1	900000000000012004	733073007	255234002	SubObjectPropertyOf(:255234002 :762705008)
+
+# Due to and after - is a - Due to
+472b150b-b937-4860-9989-9cc555859e1b		1	900000000000012004	733073007	42752001	SubObjectPropertyOf(:20000090004 :42752001)
+# Due to and after - is a - After
+97128a86-b399-4c39-b3e7-50c74cb9c57b		1	900000000000012004	733073007	42752001	SubObjectPropertyOf(:20000090004 :255234002)

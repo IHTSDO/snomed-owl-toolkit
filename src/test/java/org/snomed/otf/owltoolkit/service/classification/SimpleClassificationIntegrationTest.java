@@ -143,6 +143,32 @@ public class SimpleClassificationIntegrationTest {
 
 	@Test
 	/*
+		New attribute with two parents
+	 */
+	public void testClassifyAttributeWithTwoParents() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Add_Attribute_with_two_parents_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results - stated relationship also inferred
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		assertEquals(5, lines.size());
+		assertTrue(lines.contains("1\t\t42752001\t762705008\t0\t116680003\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("1\t\t255234002\t762705008\t0\t116680003\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("1\t\t20000090004\t42752001\t0\t116680003\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("1\t\t20000090004\t255234002\t0\t116680003\t900000000000011006\t900000000000451002"));
+
+		// No equivalent concepts
+		List<String> equivalence = readEquivalentConceptLinesTrim(results);
+		assertEquals(1, equivalence.size());
+	}
+
+	@Test
+	/*
 		Assert that inferred is-a relationships are made redundant for newly inactive attributes
 	 */
 	public void testClassifyInactiveAttribute() throws IOException, ReasonerServiceException {
