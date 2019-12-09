@@ -256,7 +256,12 @@ public class SnomedTaxonomy {
 	}
 
 	void setDescriptionAcceptability(String descriptionId, String refsetId, String acceptabilityId, boolean active) {
-		descriptionMap.get(parseLong(descriptionId)).setAcceptability(parseLong(refsetId), parseLong(acceptabilityId), active);
+		Description description = descriptionMap.get(parseLong(descriptionId));
+		if (description == null) {
+			LOGGER.warn("Reference set {} references description {} which is not active or does not exist.", refsetId, descriptionId);
+			return;
+		}
+		description.setAcceptability(parseLong(refsetId), parseLong(acceptabilityId), active);
 	}
 
 	public Set<Description> getConceptDescriptions(Long conceptId) {
