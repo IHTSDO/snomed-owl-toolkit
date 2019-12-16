@@ -37,6 +37,7 @@ public class SnomedTaxonomy {
 	private Map<String, String> ontologyNamespaces = new HashMap<>();
 	private Map<String, String> ontologyHeader = new HashMap<>();
 	private Set<Long> allConceptIds = new LongOpenHashSet();
+	private Map<Long, Long> conceptModuleMap = new Long2ObjectOpenHashMap<>();
 	private Set<Long> fullyDefinedConceptIds = new LongOpenHashSet();
 	private Map<Long, Relationship> statedRelationshipsById = new HashMap<>();
 	private Map<Long, Relationship> inferredRelationshipsById = new HashMap<>();
@@ -175,6 +176,10 @@ public class SnomedTaxonomy {
 
 	public Set<Long> getAllConceptIds() {
 		return allConceptIds;
+	}
+
+	public Map<Long, Long> getConceptModuleMap() {
+		return conceptModuleMap;
 	}
 
 	public Set<Long> getFullyDefinedConceptIds() {

@@ -1,8 +1,10 @@
 package org.snomed.otf.owltoolkit;
 
 import com.google.common.collect.Lists;
+import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
+import org.snomed.otf.owltoolkit.conversion.OWLAxiomToStatedRelationshipService;
 import org.snomed.otf.owltoolkit.conversion.RF2ToOWLService;
 import org.snomed.otf.owltoolkit.conversion.StatedRelationshipToOwlRefsetService;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
@@ -11,10 +13,7 @@ import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,6 +35,7 @@ public class Application {
 	private static final String ARG_RF2_TO_OWL = "-rf2-to-owl";
 	private static final String ARG_CLASSIFY = "-classify";
 	private static final String ARG_RF2_STATED_TO_COMPLETE_OWL = "-rf2-stated-to-complete-owl";
+	private static final String ARG_RF2_OWL_TO_STATED = "-rf2-owl-to-stated";
 	private static final String ARG_RF2_SNAPSHOT_ARCHIVES = "-rf2-snapshot-archives";
 	private static final String ARG_RF2_AUTHORING_DELTA_ARCHIVE = "-rf2-authoring-delta-archive";
 	private static final String ARG_RF2_STATED_TO_COMPLETE_OWL_RECONCILE = "-rf2-stated-to-complete-owl-reconcile";
@@ -44,6 +44,7 @@ public class Application {
 	private static final String ARG_WITHOUT_ANNOTATIONS = "-without-annotations";
 	private static final SimpleDateFormat DATETIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
+	private static final String STATED_RELATIONSHIP_SNAPSHOT = "sct2_StatedRelationship_Snapshot.txt";
 
 	private boolean deleteOntologyFileOnExit;
 
@@ -57,7 +58,7 @@ public class Application {
 		System.exit(0);
 	}
 
-	public void run(String[] argsArray) throws IOException, ConversionException, ReasonerServiceException, OWLOntologyCreationException {
+	public void run(String[] argsArray) throws IOException, ConversionException, ReasonerServiceException, OWLOntologyCreationException, ReleaseImportException {
 		List<String> args = Lists.newArrayList(argsArray);
 
 		boolean modeFound = false;
@@ -76,6 +77,9 @@ public class Application {
 			} else if (args.contains(ARG_RF2_STATED_TO_COMPLETE_OWL)) {
 				modeFound = true;
 				statedRelationshipsToOwlReferenceSet(args);
+			} else if (args.contains(ARG_RF2_OWL_TO_STATED)) {
+				modeFound = true;
+				owlReferenceSetToStatedRelationships(args);
 			} else if (args.contains(ARG_RF2_STATED_TO_COMPLETE_OWL_RECONCILE)) {
 				modeFound = true;
 				convertStatedRelationshipsToOwlReferenceSetAndReconcile(args);
@@ -149,7 +153,7 @@ public class Application {
 
 	private void statedRelationshipsToOwlReferenceSet(List<String> args) throws IOException, OWLOntologyCreationException, ConversionException {
 		// Parameter validation
-		Set<File>  snapshotFiles = getSnapshotFiles(args);
+		Set<File> snapshotFiles = getSnapshotFiles(args);
 		File deltaFile = getDeltaFiles(args);
 
 		String effectiveDate = getEffectiveDate(args);
@@ -171,7 +175,7 @@ public class Application {
 				);
 			} else {
 				try ( FileInputStream extensionSnapshotStream = new FileInputStream(iterator.next())) {
-					File statFile = service.convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new InputStreamSet(snapshotStream, extensionSnapshotStream), 
+					File statFile = service.convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(new InputStreamSet(snapshotStream, extensionSnapshotStream),
 							deltaStream,
 							archiveOutputStream,
 							effectiveDate);
@@ -190,7 +194,35 @@ public class Application {
 			throw e;
 		}
 	}
-	
+
+	private void owlReferenceSetToStatedRelationships(List<String> args) throws IOException, ReleaseImportException, ConversionException {
+		/*
+		 * WARNING: Converting Axioms to Stated Relationships will result in a loss of semantic information.
+		 * The stated relationships will not classify correctly.
+		 * This function is to create a stated file for statistical purposes only.
+		 */
+		// Parameter validation
+		Set<File> snapshotFiles = getSnapshotFiles(args);
+		File deltaFile = getDeltaFiles(args);
+		try (InputStreamSet snapshotFilesSet = new InputStreamSet(snapshotFiles);
+			 FileOutputStream statedRelationshipOutputStream = new FileOutputStream(new File(STATED_RELATIONSHIP_SNAPSHOT))) {
+
+			FileInputStream deltaInputStream = deltaFile != null ? new FileInputStream(deltaFile) : null;
+			try {
+				new OWLAxiomToStatedRelationshipService()
+						.convertAxiomsToStatedRelationships(snapshotFilesSet, deltaInputStream, statedRelationshipOutputStream);
+			} catch (ReleaseImportException e) {
+				e.printStackTrace();
+				throw e;
+			} finally {
+				if (deltaInputStream != null) {
+					deltaInputStream.close();
+				}
+			}
+			System.out.println("Created " + STATED_RELATIONSHIP_SNAPSHOT);
+		}
+	}
+
 	private void convertStatedRelationshipsToOwlReferenceSetAndReconcile(List<String> args) throws IOException, ConversionException, OWLOntologyCreationException {
 		// Parameter validation
 		Collection<File> snapshotFiles = getSnapshotFileAsList(args);

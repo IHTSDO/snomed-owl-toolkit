@@ -30,7 +30,6 @@ import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 
 import static java.lang.Long.parseLong;
@@ -68,8 +67,8 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 	@Override
 	public void newConceptState(String conceptId, String effectiveTime, String active, String moduleId, String definitionStatusId) {
+		long id = parseLong(conceptId);
 		if (ACTIVE.equals(active)) {
-			long id = parseLong(conceptId);
 			snomedTaxonomy.getAllConceptIds().add(id);
 			if (Concepts.FULLY_DEFINED.equals(definitionStatusId)) {
 				snomedTaxonomy.getFullyDefinedConceptIds().add(id);
@@ -81,7 +80,6 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				snomedTaxonomy.getInactivatedConcepts().remove(id);
 			}
 		} else {
-			long id = parseLong(conceptId);
 			// This will take inactive concepts from both snapshot and delta
 			snomedTaxonomy.getInactivatedConcepts().add(id);
 			if (loadingDelta) {
@@ -89,6 +87,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				snomedTaxonomy.getAllConceptIds().remove(id);
 				snomedTaxonomy.getFullyDefinedConceptIds().remove(id);
 			}
+		}
+		if (!Strings.isNullOrEmpty(moduleId)) {
+			snomedTaxonomy.getConceptModuleMap().put(id, parseLong(moduleId));
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {

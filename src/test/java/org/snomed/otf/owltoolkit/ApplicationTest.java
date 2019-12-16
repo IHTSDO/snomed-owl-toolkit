@@ -1,5 +1,6 @@
 package org.snomed.otf.owltoolkit;
 
+import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.junit.Before;
 import org.junit.Test;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -155,7 +156,7 @@ public class ApplicationTest {
 			Application application = new Application();
 			application.deleteOntologyFileOnExit();// Automatic file cleanup
 			application.run(args);
-		} catch (ConversionException | IOException | IllegalArgumentException | ReasonerServiceException | OWLOntologyCreationException e) {
+		} catch (ConversionException | IOException | IllegalArgumentException | ReasonerServiceException | OWLOntologyCreationException | ReleaseImportException e) {
 			// Swallow all
 		} finally {
 			System.setErr(originalErrorStream);
