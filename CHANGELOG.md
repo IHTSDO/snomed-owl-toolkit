@@ -5,7 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 The change log format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 2.9.0 Release - 2020-01-02
-Feature release. OWL Ontology file conversion now includes all descriptions including translated content.
+Minor improvements release.
 
 ### Features
 - Enable classification of attributes with multiple parents.
