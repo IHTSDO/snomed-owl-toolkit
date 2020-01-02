@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The change log format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.9.0 Release - 2020-01-02
+Feature release. OWL Ontology file conversion now includes all descriptions including translated content.
+
+### Features
+- Enable classification of attributes with multiple parents.
+- Generate stated relationship looking file from axioms for stats (for internal use).
+
+### Improvements
+- Issue #19 Warn when no stated relationships or axioms present.
+- Issue #29 Ontology file generation uses version argument in filename.
+- Issue #31 Log warning and prevent NPE if lang refset uses inactive description.
+
+
 ## 2.8.0 Release - 2019-11-18
 Feature release. OWL Ontology file conversion now includes all descriptions including translated content.
 
@@ -11,6 +24,7 @@ Feature release. OWL Ontology file conversion now includes all descriptions incl
 - Issue #14: Include all descriptions in OWL Ontology file conversion using RDFS and SKOS annotations.
   - Descriptions in all languages will be included if present in the loaded RF2.
   - Use `language-refset-dialect-map.properties` file to control dialect codes used in conversion.
+
 
 ## 2.7.2 Fix Release - 2019-09-27
 
