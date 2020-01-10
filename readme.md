@@ -99,7 +99,7 @@ Convert Snomed RF2 files to an OWL ontology file with functional syntax.
 
 Using the executable jar supply a zip file which contains RF2 snapshot files as an argument.
 ```bash
-java -jar snomed-owl-toolkit*executable.jar -rf2-to-owl -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
+java -Xms4g -jar snomed-owl-toolkit*executable.jar -rf2-to-owl -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
 ```
 After about a minute the OWL ontology file will be written to `ontology-xxxx.owl` including a timestamp in the name.
 
@@ -111,7 +111,7 @@ Run the classification process.
 
 Using the executable jar supply a zip file which contains RF2 snapshot files as an argument.
 ```bash
-java -jar snomed-owl-toolkit*executable.jar -classify -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
+java -Xms4g -jar snomed-owl-toolkit*executable.jar -classify -rf2-snapshot-archives SnomedCT_InternationalRF2.zip
 ```
 After about one and a half minutes an RF2 delta archive will be written to `classification-results-xxxx.zip` including a timestamp in the name.
 
