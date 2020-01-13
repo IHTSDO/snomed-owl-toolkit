@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 #
-# This script is for use by the SNOMED International team to convert extension releases to Complete OWL for managed service members.
+# This script is for converting a SNOMED CT extension using stated relationships to Complete OWL using axioms.
+#
 # The script provides an automated repeatable process to support testing and production upgrade of extensions to SNOMED International 20190731 edition.
 # The inputs are the previous release zip, the SNOMED International complete OWL 20190731 release zip file, and the current release delta zip(optional) containing stated relationships and some OWL axioms.
 # The output is a delta zip with filename starting complete-owl-axiom-delta containing the conversion results.
@@ -127,7 +128,7 @@ echo "--"
 if [ "`wc -l sct2_StatedRelationships_Not_Converted.txt | sed 's/^ *\([0-9]*\).*/\1/g'`" -eq 1 ]; then
   echo "- All extension stated relationships are converted into axioms."
 else
-  echo "Found extension stated relationships are not converted into axioms due to overriding the International stated view."
+  echo "Some extension stated relationships are not converted into axioms due to overriding the International stated view."
   echo "Please check the contents of sct2_StatedRelationships_Not_Converted.txt"
 fi
 echo
