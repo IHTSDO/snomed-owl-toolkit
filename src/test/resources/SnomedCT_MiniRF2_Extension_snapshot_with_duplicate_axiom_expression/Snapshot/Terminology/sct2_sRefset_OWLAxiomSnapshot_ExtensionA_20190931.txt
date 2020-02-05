@@ -1,0 +1,4 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+
+# Duplicate axiom - same OWL expression as an axiom in the International Edition but with a different UUID so different record.
+562a2dfc-0a1b-42a8-a62e-42929e800adc	20190931	1	900000000000207008	733073007	362969004	EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))

@@ -87,8 +87,8 @@ public class SimpleExtensionClassificationIntegrationTest {
 		assertTrue("Logically equal inferred relationship in extension is made redundant.",
 				lines.contains("600203001\t\t0\t\t409498004\t441862004\t2\t370135005\t900000000000011006\t900000000000451002"));
 	}
-	
-	
+
+
 	@Test
 	public void testClassifyExtensionWithIntOWL() throws IOException, ReasonerServiceException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_CompleteOwl_snapshot");
@@ -102,5 +102,19 @@ public class SimpleExtensionClassificationIntegrationTest {
 		List<String> lines = readInferredRelationshipLinesTrim(results);
 		assertEquals(8, lines.size());
 		assertTrue("Self grouped non IS-A in extension overriding International version should be inacitvated", lines.contains("600204001\t\t0\t\t362969004\t113331007\t0\t363698007\t900000000000011006\t900000000000451002"));
+	}
+
+	@Test
+	public void testDuplicateAxiomInactivation() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_CompleteOwl_snapshot");
+		File extensionRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Extension_snapshot_with_duplicate_axiom_expression");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Extension_delta_remove_duplicate_axiom");
+		assertNotNull(snomedReasonerService);
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", Sets.newHashSet(baseRF2SnapshotZip, extensionRF2SnapshotZip), deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		assertEquals("No classification change - only header line", 1, lines.size());
 	}
 }
