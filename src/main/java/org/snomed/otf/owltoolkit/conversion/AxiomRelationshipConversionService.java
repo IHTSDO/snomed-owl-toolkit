@@ -4,8 +4,7 @@ import org.semanticweb.owlapi.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
-import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
-import org.snomed.otf.owltoolkit.domain.Relationship;
+import org.snomed.otf.owltoolkit.domain.*;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
@@ -55,6 +54,26 @@ public class AxiomRelationshipConversionService {
 	public AxiomRepresentation convertAxiomToRelationships(String axiomExpression) throws ConversionException {
 		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(axiomExpression);
 		return convertAxiomToRelationships(owlAxiom);
+	}
+	
+	/**
+	 * Converts an OWL Axiom expression String to an ObjectPropertyAxiomRepresentation 
+	 * indicating if transient, reflexive or the head of a role chain.
+	 * @param axiomExpression The Axiom expression to convert.
+	 * @return ObjectPropertyAxiomRepresentation with the details of the expression or null if the axiom type is not supported.
+	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
+	 */
+	public ObjectPropertyAxiomRepresentation asObjectPropertyAxiom(String axiomExpression) throws ConversionException {
+		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(axiomExpression);
+		ObjectPropertyAxiomRepresentation axiom = new ObjectPropertyAxiomRepresentation(axiomExpression);
+		if (owlAxiom.getAxiomType() == AxiomType.TRANSITIVE_OBJECT_PROPERTY) {
+			axiom.setTransitive(true);
+		} else if (owlAxiom.getAxiomType() == AxiomType.REFLEXIVE_OBJECT_PROPERTY) {
+			axiom.setReflexive(true);
+		} else if (owlAxiom.getAxiomType() == AxiomType.SUB_PROPERTY_CHAIN_OF) {
+			axiom.setPropertyChain(true);
+		}
+		return axiom;
 	}
 
 	/**
