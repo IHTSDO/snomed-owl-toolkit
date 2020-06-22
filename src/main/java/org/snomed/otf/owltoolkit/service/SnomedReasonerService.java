@@ -41,7 +41,10 @@ import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 import org.snomed.otf.owltoolkit.util.TimerUtil;
 
 import java.io.*;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Map;
+import java.util.Set;
 
 import static java.lang.Long.parseLong;
 
@@ -156,7 +159,7 @@ public class SnomedReasonerService {
 		AxiomRelationshipConversionService axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedRoles);
 		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap;
 		try {
-			conceptAxiomStatementMap = axiomRelationshipConversionService.convertAxiomsToRelationships(snomedTaxonomy.getConceptAxiomMap());
+			conceptAxiomStatementMap = axiomRelationshipConversionService.convertAxiomsToRelationships(snomedTaxonomy.getConceptAxiomMap(), true);
 		} catch (ConversionException e) {
 			throw new ReasonerServiceException("Failed to convert OWL Axiom Expressions into relationships for normal form generation.", e);
 		}

@@ -35,7 +35,7 @@ public class AdditionalAxiomClassificationIntegrationTest {
 	private SnomedReasonerService snomedReasonerService = new SnomedReasonerService();
 
 	@Test
-	public void testClassifyGCI() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
+	public void testClassifyAdditionalAxiom() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Triangle_Additional_Axiom_delta");
 		assertNotNull(snomedReasonerService);

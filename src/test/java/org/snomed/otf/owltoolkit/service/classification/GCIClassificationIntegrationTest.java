@@ -24,7 +24,9 @@ import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 import static org.snomed.otf.owltoolkit.service.SnomedReasonerService.ELK_REASONER_FACTORY;
@@ -78,6 +80,24 @@ public class GCIClassificationIntegrationTest {
 		assertTrue("Inferred relationship. Diabetes due to cystic fibrosis - Finding site - Structure of endocrine system",
 				lines.contains("1\t\t100104001\t113331007\t0\t363698007\t900000000000011006\t900000000000451002"));
 
+	}
+
+	@Test
+	public void testClassifyNestedGCI() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File nestedSnapshot = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Nested_GCI_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		Set<File> snapshots = new HashSet<>();
+		snapshots.add(baseRF2SnapshotZip);
+		snapshots.add(nestedSnapshot);
+		snomedReasonerService.classify("", snapshots, null, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		assertEquals("Just check the job completes", 1, lines.size());
 	}
 
 }

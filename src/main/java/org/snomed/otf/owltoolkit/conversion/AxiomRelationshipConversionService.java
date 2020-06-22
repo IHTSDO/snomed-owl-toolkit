@@ -162,14 +162,23 @@ public class AxiomRelationshipConversionService {
 	 * @return
 	 * @throws ConversionException
 	 */
-	public Map<Long, Set<AxiomRepresentation>> convertAxiomsToRelationships(Map<Long, Set<OWLAxiom>> conceptAxiomMap) throws ConversionException {
+	public Map<Long, Set<AxiomRepresentation>> convertAxiomsToRelationships(Map<Long, Set<OWLAxiom>> conceptAxiomMap, boolean ignoreGCIAxioms) throws ConversionException {
 		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatements = new HashMap<>();
 		for (Long conceptId : conceptAxiomMap.keySet()) {
 			Set<OWLAxiom> axioms = conceptAxiomMap.get(conceptId);
 			for (OWLAxiom axiom : axioms) {
-				AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom);
-				if (axiomRepresentation != null) {
-					conceptAxiomStatements.computeIfAbsent(conceptId, id -> new HashSet<>()).add(axiomRepresentation);
+				boolean ignore = false;
+				if (ignoreGCIAxioms && axiom instanceof OWLSubClassOfAxiom) {
+					OWLSubClassOfAxiom classOfAxiom = (OWLSubClassOfAxiom) axiom;
+					ignore = classOfAxiom.isGCI();
+				}
+				if (!ignore) {
+					AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom);
+					if (axiomRepresentation != null) {
+						conceptAxiomStatements.computeIfAbsent(conceptId, id -> new HashSet<>()).add(axiomRepresentation);
+					}
+				} else {
+					System.out.println("Ignoring axiom " + axiom.toString());
 				}
 			}
 		}

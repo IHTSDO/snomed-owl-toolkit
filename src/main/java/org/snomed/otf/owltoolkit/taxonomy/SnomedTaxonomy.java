@@ -45,7 +45,7 @@ public class SnomedTaxonomy {
 	private Map<Long, Set<Relationship>> conceptInferredRelationshipMap = new Long2ObjectOpenHashMap<>();
 	private Map<Long, Set<Relationship>> conceptInactiveInferredRelationshipMap = new Long2ObjectOpenHashMap<>();
 
-	// Axiom maps must be syncronised because international and extension refset memebers are loaded in parallel
+	// Axiom maps must be synchronised because international and extension refset members are loaded in parallel
 	private Map<Long, Set<OWLAxiom>> conceptAxiomMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 	private Map<String, OWLAxiom> axiomsById = new ConcurrentHashMap<>();
 
