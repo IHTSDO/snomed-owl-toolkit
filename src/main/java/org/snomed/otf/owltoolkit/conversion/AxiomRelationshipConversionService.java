@@ -177,8 +177,6 @@ public class AxiomRelationshipConversionService {
 					if (axiomRepresentation != null) {
 						conceptAxiomStatements.computeIfAbsent(conceptId, id -> new HashSet<>()).add(axiomRepresentation);
 					}
-				} else {
-					System.out.println("Ignoring axiom " + axiom.toString());
 				}
 			}
 		}
