@@ -164,21 +164,27 @@ public class AxiomRelationshipConversionService {
 	 */
 	public Map<Long, Set<AxiomRepresentation>> convertAxiomsToRelationships(Map<Long, Set<OWLAxiom>> conceptAxiomMap, boolean ignoreGCIAxioms) throws ConversionException {
 		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatements = new HashMap<>();
-		for (Long conceptId : conceptAxiomMap.keySet()) {
-			Set<OWLAxiom> axioms = conceptAxiomMap.get(conceptId);
-			for (OWLAxiom axiom : axioms) {
-				boolean ignore = false;
-				if (ignoreGCIAxioms && axiom instanceof OWLSubClassOfAxiom) {
-					OWLSubClassOfAxiom classOfAxiom = (OWLSubClassOfAxiom) axiom;
-					ignore = classOfAxiom.isGCI();
-				}
-				if (!ignore) {
-					AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom);
-					if (axiomRepresentation != null) {
-						conceptAxiomStatements.computeIfAbsent(conceptId, id -> new HashSet<>()).add(axiomRepresentation);
+		OWLAxiom currentAxiom = null;
+		try {
+			for (Long conceptId : conceptAxiomMap.keySet()) {
+				Set<OWLAxiom> axioms = conceptAxiomMap.get(conceptId);
+				for (OWLAxiom axiom : axioms) {
+					currentAxiom = axiom;
+					boolean ignore = false;
+					if (ignoreGCIAxioms && axiom instanceof OWLSubClassOfAxiom) {
+						OWLSubClassOfAxiom classOfAxiom = (OWLSubClassOfAxiom) axiom;
+						ignore = classOfAxiom.isGCI();
+					}
+					if (!ignore) {
+						AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom);
+						if (axiomRepresentation != null) {
+							conceptAxiomStatements.computeIfAbsent(conceptId, id -> new HashSet<>()).add(axiomRepresentation);
+						}
 					}
 				}
 			}
+		} catch (ConversionException e) {
+			LOGGER.error("Failed to convert axiom \"{}\".", currentAxiom.toString(), e);
 		}
 		return conceptAxiomStatements;
 	}
