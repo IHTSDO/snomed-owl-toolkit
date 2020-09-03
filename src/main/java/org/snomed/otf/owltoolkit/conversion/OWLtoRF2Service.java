@@ -3,21 +3,29 @@ package org.snomed.otf.owltoolkit.conversion;
 import com.google.common.collect.Sets;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
+import org.snomed.otf.owltoolkit.constants.Concepts;
+import org.snomed.otf.owltoolkit.constants.RF2Headers;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 public class OWLtoRF2Service {
 
+	public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
+
 	private Map<Long, String> conceptDescriptions;
 	private Map<Long, Set<OWLAxiom>> conceptAxioms;
+	private Set<Long> definedConcepts;
 
-	public void writeToRF2(InputStream owlFileStream, OutputStream rf2ZipOutputStream) throws OWLException {
+	public void writeToRF2(InputStream owlFileStream, OutputStream rf2ZipOutputStream, Date fileDate) throws OWLException, IOException {
 		OWLOntology owlOntology = OWLManager.createOWLOntologyManager().loadOntologyFromOntologyDocument(owlFileStream);
 
 		conceptDescriptions = new HashMap<>();
 		conceptAxioms = new HashMap<>();
+		definedConcepts = new HashSet<>();
 
 		// Gather all descriptions
 		for (OWLEntity owlEntity : Sets.union(owlOntology.getObjectPropertiesInSignature(), owlOntology.getClassesInSignature())) {
@@ -39,14 +47,15 @@ public class OWLtoRF2Service {
 					OWLClassExpression superClass = subClassOfAxiom.getSuperClass();
 					addAxiom(getFirstConceptIdFromClassList(superClass.getClassesInSignature()), axiom);
 				} else {
-
 					addAxiom(getFirstConceptIdFromClassList(subClass.getClassesInSignature()), axiom);
 				}
 			} else if (axiom instanceof OWLEquivalentClassesAxiom) {
 				OWLEquivalentClassesAxiom equivalentClassesAxiom = (OWLEquivalentClassesAxiom) axiom;
 				Set<OWLClassExpression> classExpressions = equivalentClassesAxiom.getClassExpressions();
 				OWLClass next = (OWLClass) classExpressions.iterator().next();
-				addAxiom(getConceptIdFromUri(next.getIRI().toString()), axiom);
+				long conceptId = getConceptIdFromUri(next.getIRI().toString());
+				addAxiom(conceptId, axiom);
+				definedConcepts.add(conceptId);
 			}
 		}
 
@@ -61,6 +70,28 @@ public class OWLtoRF2Service {
 			System.out.println();
 		}
 
+		String date = SIMPLE_DATE_FORMAT.format(fileDate);
+		try (ZipOutputStream zipOutputStream = new ZipOutputStream(rf2ZipOutputStream)) {
+			try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream))) {
+
+				// Write concept file
+				zipOutputStream.putNextEntry(new ZipEntry(String.format("SnomedCT/Snapshot/sct2_Concept_Snapshot_INT_%s.txt", date)));
+				writer.write(RF2Headers.CONCEPT_HEADER);
+				newline(writer);
+				for (Long conceptId : conceptAxioms.keySet()) {
+					// id      effectiveTime   active  moduleId        definitionStatusId
+					String definitionStatus = definedConcepts.contains(conceptId) ? Concepts.FULLY_DEFINED : Concepts.PRIMITIVE;
+					writer.write(String.join("\t", conceptId.toString(), "", "1", Concepts.SNOMED_CT_CORE_MODULE, definitionStatus));
+					newline(writer);
+				}
+			}
+
+		}
+	}
+
+	private void newline(BufferedWriter writer) throws IOException {
+		writer.write("\r");// Add windows line ending before newline
+		writer.newLine();
 	}
 
 	private void getDescriptions(Long conceptId, IRI iri, OWLOntology owlOntology) {
