@@ -1,6 +1,7 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import com.google.common.collect.Sets;
+import org.semanticweb.elk.util.collections.Pair;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
 import org.snomed.otf.owltoolkit.constants.Concepts;
@@ -11,6 +12,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static java.lang.String.format;
 
 public class OWLtoRF2Service {
 
@@ -59,23 +62,11 @@ public class OWLtoRF2Service {
 			}
 		}
 
-		System.out.println("all axioms:");
-		for (Long conceptId : conceptAxioms.keySet()) {
-			System.out.println("Concept: " + conceptId);
-			System.out.println("Description: " + conceptDescriptions.get(conceptId));
-			System.out.println("Axioms: ");
-			for (OWLAxiom owlAxiom : conceptAxioms.get(conceptId)) {
-				System.out.println(owlAxiom.toString());
-			}
-			System.out.println();
-		}
-
 		String date = SIMPLE_DATE_FORMAT.format(fileDate);
 		try (ZipOutputStream zipOutputStream = new ZipOutputStream(rf2ZipOutputStream)) {
 			try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream))) {
-
 				// Write concept file
-				zipOutputStream.putNextEntry(new ZipEntry(String.format("SnomedCT/Snapshot/sct2_Concept_Snapshot_INT_%s.txt", date)));
+				zipOutputStream.putNextEntry(new ZipEntry(format("SnomedCT/Snapshot/Terminology/sct2_Concept_Snapshot_INT_%s.txt", date)));
 				writer.write(RF2Headers.CONCEPT_HEADER);
 				newline(writer);
 				for (Long conceptId : conceptAxioms.keySet()) {
@@ -84,6 +75,55 @@ public class OWLtoRF2Service {
 					writer.write(String.join("\t", conceptId.toString(), "", "1", Concepts.SNOMED_CT_CORE_MODULE, definitionStatus));
 					newline(writer);
 				}
+				writer.flush();
+
+				// Write description file with FSNs
+				zipOutputStream.putNextEntry(new ZipEntry(format("SnomedCT/Snapshot/Terminology/sct2_Description_Snapshot-en_INT_%s.txt", date)));
+				writer.write(RF2Headers.DESCRIPTION_HEADER);
+				newline(writer);
+				int dummySequence = 100000000;
+				Map<Pair<Long, String>, String> conceptTermId = new HashMap<>();
+				for (Long conceptId : conceptDescriptions.keySet()) {
+					// id	effectiveTime	active	moduleId	conceptId	languageCode	typeId	term	caseSignificanceId
+					String descriptionId = format("%s011", dummySequence++);
+					String term = conceptDescriptions.get(conceptId);
+					conceptTermId.put(new Pair<>(conceptId, term), descriptionId);
+					writer.write(String.join("\t", descriptionId, "", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", Concepts.FULLY_DEFINED, term, "900000000000448009"));
+					newline(writer);
+				}
+				writer.flush();
+
+				// Write lang refset file for FSNs
+				zipOutputStream.putNextEntry(new ZipEntry(format("SnomedCT/Snapshot/Refset/Language/der2_cRefset_LanguageSnapshot-en_INT_%s.txt", date)));
+				writer.write(RF2Headers.LANGUAGE_REFERENCE_SET_HEADER);
+				newline(writer);
+				for (Long conceptId : conceptDescriptions.keySet()) {
+					String term = conceptDescriptions.get(conceptId);
+					String descriptionId = conceptTermId.get(new Pair(conceptId, term));
+
+					// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	acceptabilityId
+					writer.write(String.join("\t", UUID.randomUUID().toString(), "", "1", Concepts.SNOMED_CT_CORE_MODULE,
+							Concepts.US_LANGUAGE_REFSET, descriptionId, Concepts.PREFERRED));
+					newline(writer);
+				}
+				writer.flush();
+
+				// Write OWL expression refset file
+				zipOutputStream.putNextEntry(new ZipEntry(format("SnomedCT/Snapshot/Terminology/sct2_sRefset_OWLExpressionSnapshot_INT_%s.txt", date)));
+				writer.write(RF2Headers.OWL_EXPRESSION_REFERENCE_SET_HEADER);
+				newline(writer);
+				for (Long conceptId : conceptAxioms.keySet()) {
+					for (OWLAxiom owlAxiom : conceptAxioms.get(conceptId)) {
+						// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+						String axiomString = owlAxiom.toString();
+						axiomString = axiomString.replace("<http://snomed.info/id/", ":");
+						axiomString = axiomString.replace(">", "");
+						writer.write(String.join("\t", UUID.randomUUID().toString(), "", "1", Concepts.SNOMED_CT_CORE_MODULE,
+								Concepts.OWL_AXIOM_REFERENCE_SET, conceptId.toString(), axiomString));
+						newline(writer);
+					}
+				}
+				writer.flush();
 			}
 
 		}

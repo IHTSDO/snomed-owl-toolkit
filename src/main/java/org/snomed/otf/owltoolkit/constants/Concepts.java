@@ -70,4 +70,5 @@ public class Concepts {
 	public static final String IS_MODIFICATION_OF = "738774007";
 	public static final String HAS_DOSE_FORM = "411116001";
 
+	public static final String US_LANGUAGE_REFSET = "900000000000509007";
 }
