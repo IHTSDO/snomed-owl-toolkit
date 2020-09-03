@@ -1,0 +1,117 @@
+#############################################################################################################
+# © International Health Terminology Standards Development Organisation 2002-2019. All rights reserved.
+# SNOMED CT® was originally created by the College of American Pathologists.
+# "SNOMED" and "SNOMED CT" are registered trademarks of International Health Terminology Standards
+# Development Organisation, trading as SNOMED International.
+#
+# SNOMED CT has been created by combining SNOMED RT and a computer based nomenclature and classification
+# known as Clinical Terms Version 3, formerly known as Read Codes Version 3, which was created on behalf of
+# the UK Department of Health and is Crown copyright.
+#
+# This OWL Ontology contains portions of SNOMED CT® distributed by SNOMED International, which is subject to
+# the SNOMED CT® Affiliate License, details of which may be found at
+# https://www.snomed.org/snomed-ct/get-snomed
+#############################################################################################################
+
+Prefix(test:=<http://test.com/test/>)
+Prefix(:=<http://snomed.info/id/>)
+Prefix(owl:=<http://www.w3.org/2002/07/owl#>)
+Prefix(rdf:=<http://www.w3.org/1999/02/22-rdf-syntax-ns#>)
+Prefix(xml:=<http://www.w3.org/XML/1998/namespace>)
+Prefix(xsd:=<http://www.w3.org/2001/XMLSchema#>)
+Prefix(rdfs:=<http://www.w3.org/2000/01/rdf-schema#>)
+Prefix(skos:=<http://www.w3.org/2004/02/skos/core#>)
+
+
+Ontology(<http://snomed.info/sct/900000000000207008>
+<http://snomed.info/sct/900000000000207008/version/20180731>
+
+Declaration(Class(:113331007))
+Declaration(Class(:116680003))
+Declaration(Class(:138875005))
+Declaration(Class(:362969004))
+Declaration(Class(:404684003))
+Declaration(Class(:410662002))
+Declaration(Class(:723594008))
+Declaration(Class(:723596005))
+Declaration(Class(:762705008))
+Declaration(Class(:762706009))
+Declaration(Class(:900000000000441003))
+Declaration(ObjectProperty(:363698007))
+Declaration(ObjectProperty(:609096000))
+Declaration(ObjectProperty(:762705008))
+
+############################
+#   Object Properties
+############################
+
+# Object Property: <http://snomed.info/id/363698007> (Finding site (attribute))
+
+AnnotationAssertion(rdfs:label :363698007 "Finding site (attribute)"@en)
+SubObjectPropertyOf(:363698007 :762705008)
+
+# Bad example of a property chain
+SubObjectPropertyOf(ObjectPropertyChain(:363698007 :609096000) :363698007)
+
+
+############################
+#   Classes
+############################
+
+# Class: <http://snomed.info/id/113331007> (Structure of endocrine system (body structure))
+
+AnnotationAssertion(rdfs:label :113331007 "Structure of endocrine system (body structure)"@en)
+SubClassOf(:113331007 :138875005)
+
+# Class: <http://snomed.info/id/116680003> (Is a (attribute))
+
+AnnotationAssertion(rdfs:label :116680003 "Is a (attribute)"@en)
+SubClassOf(:116680003 :900000000000441003)
+
+# Class: <http://snomed.info/id/138875005> (SNOMED CT Concept (SNOMED RT+CTV3))
+
+AnnotationAssertion(rdfs:label :138875005 "SNOMED CT Concept (SNOMED RT+CTV3)"@en)
+
+# Class: <http://snomed.info/id/362969004> (Disorder of endocrine system (disorder))
+
+AnnotationAssertion(rdfs:label :362969004 "Disorder of endocrine system (disorder)"@en)
+EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))
+
+# Bad example of a GCI
+EquivalentClasses(ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))) :362969004)
+
+# Class: <http://snomed.info/id/404684003> (Clinical finding (finding))
+
+AnnotationAssertion(rdfs:label :404684003 "Clinical finding (finding)"@en)
+SubClassOf(:404684003 :138875005)
+
+# Class: <http://snomed.info/id/410662002> (Concept model attribute (attribute))
+
+AnnotationAssertion(rdfs:label :410662002 "Concept model attribute (attribute)"@en)
+SubClassOf(:410662002 :900000000000441003)
+
+# Class: <http://snomed.info/id/723594008> (All precoordinated SNOMED CT content (foundation metadata concept))
+
+AnnotationAssertion(rdfs:label :723594008 "All precoordinated SNOMED CT content (foundation metadata concept)"@en)
+SubClassOf(:723594008 :900000000000441003)
+
+# Class: <http://snomed.info/id/723596005> (All SNOMED CT content (foundation metadata concept))
+
+AnnotationAssertion(rdfs:label :723596005 "All SNOMED CT content (foundation metadata concept)"@en)
+SubClassOf(:723596005 :723594008)
+
+# Class: <http://snomed.info/id/762705008> (<http://snomed.info/id/762705008>)
+
+SubClassOf(:762705008 :410662002)
+
+# Class: <http://snomed.info/id/762706009> (<http://snomed.info/id/762706009>)
+
+SubClassOf(:762706009 :410662002)
+
+# Class: <http://snomed.info/id/900000000000441003> (SNOMED CT Model Component (metadata))
+
+AnnotationAssertion(rdfs:label :900000000000441003 "SNOMED CT Model Component (metadata)"@en)
+SubClassOf(:900000000000441003 :138875005)
+
+
+)

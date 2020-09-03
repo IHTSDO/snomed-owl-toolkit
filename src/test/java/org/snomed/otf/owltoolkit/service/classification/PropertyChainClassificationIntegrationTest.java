@@ -15,9 +15,7 @@
  */
 package org.snomed.otf.owltoolkit.service.classification;
 
-import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.junit.Test;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
@@ -32,10 +30,10 @@ import static org.snomed.otf.owltoolkit.service.classification.TestFileUtil.read
 
 public class PropertyChainClassificationIntegrationTest {
 
-	private SnomedReasonerService snomedReasonerService = new SnomedReasonerService();
+	private final SnomedReasonerService snomedReasonerService = new SnomedReasonerService();
 
 	@Test
-	public void testClassifyPropertyChain() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
+	public void testClassifyPropertyChain() throws IOException, ReasonerServiceException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Active_Ingredient_Property_Chain_delta");
 		assertNotNull(snomedReasonerService);
