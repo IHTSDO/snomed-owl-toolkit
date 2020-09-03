@@ -128,4 +128,15 @@ public class TestFileUtil {
 
 		Files.move(tempFile.toPath(), existingZipFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 	}
+
+	public static List<String> readFileToString(String filePath) throws IOException {
+		List<String> lines = new ArrayList<>();
+		try (BufferedReader reader = new BufferedReader(new FileReader("src/test/resources/" + filePath))) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				lines.add(line);
+			}
+		}
+		return lines;
+	}
 }
