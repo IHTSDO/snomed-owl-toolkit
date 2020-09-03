@@ -1,5 +1,6 @@
 package org.snomed.otf.owltoolkit.conversion;
 
+import com.google.common.collect.Sets;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.*;
 
@@ -19,27 +20,41 @@ public class OWLtoRF2Service {
 		conceptAxioms = new HashMap<>();
 
 		// Gather all descriptions
-		for (OWLEntity owlEntity : owlOntology.getSignature()) {
+		for (OWLEntity owlEntity : Sets.union(owlOntology.getObjectPropertiesInSignature(), owlOntology.getClassesInSignature())) {
 			IRI iri = owlEntity.getIRI();
 			Long conceptId = getConceptIdFromUri(iri.toString());
 			getDescriptions(conceptId, iri, owlOntology);
 		}
 
+		// Grab all axioms and process by type
 		for (OWLAxiom axiom : owlOntology.getAxioms()) {
-			System.out.println(axiom.getClass());
-			System.out.println(axiom.toString());
-			if (axiom instanceof OWLSubPropertyChainOfAxiom) {
-				OWLSubPropertyChainOfAxiom propertyChainAxiom = (OWLSubPropertyChainOfAxiom) axiom;
-				List<OWLObjectPropertyExpression> propertyChain = propertyChainAxiom.getPropertyChain();
-				OWLObjectPropertyExpression namedAttribute = propertyChain.get(0);
-				addAxiom(getConceptIdFromUri(namedAttribute.getNamedProperty().getIRI().toString()), axiom);
+			if (axiom instanceof OWLObjectPropertyAxiom) {
+				OWLObjectProperty namedConcept = axiom.getObjectPropertiesInSignature().iterator().next();
+				addAxiom(getConceptIdFromUri(namedConcept.getNamedProperty().getIRI().toString()), axiom);
+			} else if (axiom instanceof OWLSubClassOfAxiom) {
+				OWLSubClassOfAxiom subClassOfAxiom = (OWLSubClassOfAxiom) axiom;
+				OWLClassExpression subClass = subClassOfAxiom.getSubClass();
+				if (subClass.isAnonymous()) {
+					// Found GCI axiom
+					OWLClassExpression superClass = subClassOfAxiom.getSuperClass();
+					addAxiom(getFirstConceptIdFromClassList(superClass.getClassesInSignature()), axiom);
+				} else {
+
+					addAxiom(getFirstConceptIdFromClassList(subClass.getClassesInSignature()), axiom);
+				}
+			} else if (axiom instanceof OWLEquivalentClassesAxiom) {
+				OWLEquivalentClassesAxiom equivalentClassesAxiom = (OWLEquivalentClassesAxiom) axiom;
+				Set<OWLClassExpression> classExpressions = equivalentClassesAxiom.getClassExpressions();
+				OWLClass next = (OWLClass) classExpressions.iterator().next();
+				addAxiom(getConceptIdFromUri(next.getIRI().toString()), axiom);
 			}
 		}
 
-
 		System.out.println("all axioms:");
 		for (Long conceptId : conceptAxioms.keySet()) {
-			System.out.println("Concept " + conceptId);
+			System.out.println("Concept: " + conceptId);
+			System.out.println("Description: " + conceptDescriptions.get(conceptId));
+			System.out.println("Axioms: ");
 			for (OWLAxiom owlAxiom : conceptAxioms.get(conceptId)) {
 				System.out.println(owlAxiom.toString());
 			}
@@ -57,9 +72,12 @@ public class OWLtoRF2Service {
 					value = value.substring(1, value.lastIndexOf("\""));
 				}
 				conceptDescriptions.put(conceptId, value);
-				System.out.println(value);
 			}
 		}
+	}
+
+	private Long getFirstConceptIdFromClassList(Set<OWLClass> classesInSignature) {
+		return getConceptIdFromUri(classesInSignature.iterator().next().getIRI().toString());
 	}
 
 	private long getConceptIdFromUri(String uri) {
