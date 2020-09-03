@@ -78,7 +78,7 @@ AnnotationAssertion(rdfs:label :362969004 "Disorder of endocrine system (disorde
 EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))
 
 # Bad example of a GCI
-EquivalentClasses(ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))) :362969004)
+SubClassOf(ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))) :362969004)
 
 # Class: <http://snomed.info/id/404684003> (Clinical finding (finding))
 
