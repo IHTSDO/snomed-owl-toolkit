@@ -32,8 +32,7 @@ public class RelationshipChangeProcessor {
 			.thenComparing(Relationship::getDestinationId)
 			.thenComparing(Relationship::getValueAsString, Comparator.nullsLast(Comparator.naturalOrder()))
 			.thenComparing(Relationship::getGroup)
-			.thenComparing(Relationship::getUnionGroup)
-			.thenComparing(Relationship::isUniversal);
+			.thenComparing(Relationship::getUnionGroup);
 
 	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_WITH_MODULE_ID = Comparator
 			.comparing(Relationship::getTypeId)
@@ -41,15 +40,13 @@ public class RelationshipChangeProcessor {
 			.thenComparing(Relationship::getValueAsString, Comparator.nullsLast(Comparator.naturalOrder()))
 			.thenComparing(Relationship::getGroup)
 			.thenComparing(Relationship::getUnionGroup)
-			.thenComparing(Relationship::isUniversal)
 			.thenComparing(Relationship::getModuleId, Comparator.reverseOrder());
 
 	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_WITHOUT_GROUP = Comparator
 			.comparing(Relationship::getTypeId)
 			.thenComparing(Relationship::getDestinationId)
 			.thenComparing(Relationship::getValueAsString, Comparator.nullsLast(Comparator.naturalOrder()))
-			.thenComparing(Relationship::getUnionGroup)
-			.thenComparing(Relationship::isUniversal);
+			.thenComparing(Relationship::getUnionGroup);
 
 	private final Map<Long, Set<Relationship>> addedStatements;
 	private final Map<Long, Set<Relationship>> removedStatements;
