@@ -21,7 +21,6 @@
 package org.snomed.otf.owltoolkit.normalform.internal;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
 import org.snomed.otf.owltoolkit.domain.Relationship;
@@ -42,7 +41,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public final class RelationshipFragment implements SemanticComparable<RelationshipFragment> {
 
-	private RelationshipNormalFormGenerator relationshipNormalFormGenerator;
+	private final RelationshipNormalFormGenerator relationshipNormalFormGenerator;
 	private final Relationship fragment;
 
 	/**
@@ -58,10 +57,6 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 	public RelationshipFragment(RelationshipNormalFormGenerator relationshipNormalFormGenerator, final Relationship fragment) {
 		this.relationshipNormalFormGenerator = relationshipNormalFormGenerator;
 		this.fragment = checkNotNull(fragment, "fragment");
-	}
-
-	public boolean isUniversal() {
-		return fragment.isUniversal();
 	}
 
 	public long getTypeId() {
@@ -98,9 +93,6 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 			return true;
 		}
 
-		if (isUniversal() != other.isUniversal()) {
-			return false;
-		}
 		if (isConcreteValue() != other.isConcreteValue()) {
 			return false;
 		}
@@ -168,29 +160,6 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 		return false;
 	}
 
-	private boolean isDestinationExhaustive() {
-		return isExhaustive(getDestinationId());
-	}
-
-	private boolean hasCommonExhaustiveSuperType(final RelationshipFragment other) {
-
-		final Set<Long> valueAncestors = relationshipNormalFormGenerator.getReasonerTaxonomy().getAncestors(getDestinationId());
-		final Set<Long> otherValueAncestors = relationshipNormalFormGenerator.getReasonerTaxonomy().getAncestors(other.getDestinationId());
-		final Set<Long> commonAncestors = Sets.intersection(valueAncestors, otherValueAncestors);
-
-		for (Long commonAncestor : commonAncestors) {
-			if (isExhaustive(commonAncestor)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private boolean isExhaustive(final long conceptId) {
-		return relationshipNormalFormGenerator.getSnomedTaxonomy().isExhaustive(conceptId);
-	}
-
 	/**
 	 * Collects all parent concepts reachable from the specified concept. The
 	 * returned set also includes the starting concept.
@@ -238,8 +207,7 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 
 		final RelationshipFragment other = (RelationshipFragment) obj;
 
-		return (isUniversal() == other.isUniversal()) &&
-				(getTypeId() == other.getTypeId()) &&
+		return (getTypeId() == other.getTypeId()) &&
 				(getDestinationId() == other.getDestinationId()) &&
 				(
 						(getValue() == null && other.getValue() == null)
@@ -249,7 +217,7 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(isUniversal(), getTypeId(), getDestinationId(), getValue());
+		return Objects.hashCode(getTypeId(), getDestinationId(), getValue());
 	}
 
 	@Override

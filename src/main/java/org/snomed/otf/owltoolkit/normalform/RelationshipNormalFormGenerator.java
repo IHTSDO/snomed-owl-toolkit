@@ -439,7 +439,6 @@ public final class RelationshipNormalFormGenerator {
 								input.getDestinationId(),
 								groupNumber,
 								unionGroupNumber,
-								input.isUniversal(),
 								-1);
 					} else {
 						return new Relationship(
@@ -450,7 +449,6 @@ public final class RelationshipNormalFormGenerator {
 								relationship.getValue(),
 								groupNumber,
 								unionGroupNumber,
-								input.isUniversal(),
 								-1);
 					}
 				})

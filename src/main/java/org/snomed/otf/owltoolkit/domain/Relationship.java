@@ -25,22 +25,21 @@ public class Relationship {
 	private final long destinationId;
 	private int group;
 	private final int unionGroup;
-	private final boolean universal;
 	private final long characteristicTypeId;
 	private ConcreteValue value;
 
 	public Relationship(final int group, final long typeId, ConcreteValue value) {
-		this(-1, -1, -1, typeId, -1, group, 0, false, -1);
+		this(-1, -1, -1, typeId, value, group, 0, -1);
 		this.value = value;
 	}
 
 
 	public Relationship(final long typeId, final long destinationId) {
-		this(-1, -1, -1, typeId, destinationId, 0, 0, false, -1);
+		this(-1, -1, -1, typeId, destinationId, 0, 0, -1);
 	}
 
 	public Relationship(final int group, final long typeId, final long destinationId) {
-		this(-1, -1, -1, typeId, destinationId, group, 0, false, -1);
+		this(-1, -1, -1, typeId, destinationId, group, 0, -1);
 	}
 
 	public Relationship(long relationshipId,
@@ -50,7 +49,6 @@ public class Relationship {
 			long destinationId,
 			int group,
 			int unionGroup,
-			boolean universal,
 			long characteristicTypeId) {
 		this.relationshipId = relationshipId;
 		this.effectiveTime = effectiveTime;
@@ -59,7 +57,6 @@ public class Relationship {
 		this.destinationId = destinationId;
 		this.group = group;
 		this.unionGroup = unionGroup;
-		this.universal = universal;
 		this.characteristicTypeId = characteristicTypeId;
 		this.value = null;
 	}
@@ -71,8 +68,8 @@ public class Relationship {
 			ConcreteValue value,
 			int group,
 			int unionGroup,
-			boolean universal,
 			long characteristicTypeId) {
+
 		this.relationshipId = relationshipId;
 		this.effectiveTime = effectiveTime;
 		this.moduleId = moduleId;
@@ -80,7 +77,6 @@ public class Relationship {
 		this.value = value;
 		this.group = group;
 		this.unionGroup = unionGroup;
-		this.universal = universal;
 		this.characteristicTypeId = characteristicTypeId;
 		this.destinationId = -1;
 	}
@@ -107,10 +103,6 @@ public class Relationship {
 
 	public int getUnionGroup() {
 		return unionGroup;
-	}
-
-	public boolean isUniversal() {
-		return universal;
 	}
 
 	public long getCharacteristicTypeId() {
@@ -246,7 +238,7 @@ public class Relationship {
 		return relationshipId == that.relationshipId && effectiveTime == that.effectiveTime
 				&& moduleId == that.moduleId && typeId == that.typeId
 				&& destinationId == that.destinationId && group == that.group
-				&& unionGroup == that.unionGroup && universal == that.universal
+				&& unionGroup == that.unionGroup
 				&& characteristicTypeId == that.characteristicTypeId
 				&& Objects.equals(value, that.value);
 	}
@@ -254,7 +246,7 @@ public class Relationship {
 	@Override
 	public int hashCode() {
 		return Objects.hash(relationshipId, effectiveTime, moduleId, typeId, destinationId,
-				group, unionGroup, universal, characteristicTypeId, value);
+				group, unionGroup, characteristicTypeId, value);
 	}
 
 	@Override
