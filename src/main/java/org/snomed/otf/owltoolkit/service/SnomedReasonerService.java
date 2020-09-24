@@ -53,6 +53,7 @@ public class SnomedReasonerService {
 	public static final String ELK_REASONER_FACTORY = "org.semanticweb.elk.owlapi.ElkReasonerFactory";
 
 	private final ClassificationResultsWriter classificationResultsWriter;
+	//private final ClassificationResultsWriter classificationResultsWriterAnnotated;
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
