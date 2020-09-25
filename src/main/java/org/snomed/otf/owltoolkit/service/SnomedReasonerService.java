@@ -52,13 +52,13 @@ public class SnomedReasonerService {
 
 	public static final String ELK_REASONER_FACTORY = "org.semanticweb.elk.owlapi.ElkReasonerFactory";
 
-	private final ClassificationResultsWriter classificationResultsWriter;
-	//private final ClassificationResultsWriter classificationResultsWriterAnnotated;
+	//private final ClassificationResultsWriter classificationResultsWriter;
+	private final ClassificationResultsWriterAnnotated classificationResultsWriter;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	public SnomedReasonerService() {
-		this.classificationResultsWriter = new ClassificationResultsWriter();
+		this.classificationResultsWriter = new ClassificationResultsWriterAnnotated();
 	}
 
 	public void classify(String classificationId,
@@ -200,7 +200,7 @@ public class SnomedReasonerService {
 				formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
 
 		logger.info("Writing results archive");
-		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
+		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), snomedTaxonomy.getConceptDescriptionMap(), resultsRf2DeltaArchive, startDate);
 		timer.checkpoint("Write results to disk");
 		timer.finish();
 	}
