@@ -329,4 +329,8 @@ public class SnomedTaxonomy {
 		return axiomsById;
 	}
 
+	public Map<Long, Set<Description>> getConceptDescriptionMap() {
+		return conceptDescriptionMap;
+	}
+
 }
