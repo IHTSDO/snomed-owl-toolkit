@@ -1,6 +1,7 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.vocab.OWL2Datatype;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
@@ -12,6 +13,7 @@ import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.semanticweb.owlapi.vocab.OWL2Datatype.*;
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.CORE_COMPONENT_NAMESPACE_PATTERN;
 
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.SNOMED_ROLE_GROUP_FULL_URI;
@@ -125,7 +127,6 @@ public class AxiomRelationshipConversionService {
 			rightHandExpression = iterator.next();
 		} else {
 			representation.setPrimitive(true);
-
 			OWLSubClassOfAxiom subClassOfAxiom = (OWLSubClassOfAxiom) owlAxiom;
 			leftHandExpression = subClassOfAxiom.getSubClass();
 			rightHandExpression = subClassOfAxiom.getSuperClass();
@@ -289,8 +290,11 @@ public class AxiomRelationshipConversionService {
 							if (classExpression.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
 								Relationship relationship = extractRelationship((OWLObjectSomeValuesFrom) classExpression, rollingGroupNumber);
 								relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
+							} else if (classExpression.getClassExpressionType() == ClassExpressionType.DATA_HAS_VALUE) {
+								Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) classExpression, rollingGroupNumber);
+								relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
 							} else {
-								throw new ConversionException("Expecting ObjectSomeValuesFrom within ObjectIntersectionOf as part of role group, got " + classExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
+								throw new ConversionException("Expecting ObjectSomeValuesFrom or DataHasValue within ObjectIntersectionOf as part of role group, got " + classExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 							}
 						}
 					} else {
@@ -300,13 +304,55 @@ public class AxiomRelationshipConversionService {
 					Relationship relationship = extractRelationship(someValuesFrom, 0);
 					relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);
 				}
-
+			} else if (operandClassExpressionType == ClassExpressionType.DATA_HAS_VALUE) {
+				Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) operand, 0);
+				relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);
 			} else {
-				throw new ConversionException("Expecting Class or ObjectSomeValuesFrom at second level of expression, got " + operandClassExpressionType + " in expression " + owlClassExpression.toString() + ".");
+				throw new ConversionException("Expecting Class or ObjectSomeValuesFrom or DataHasValue at second level of expression, got " + operandClassExpressionType + " in expression " + owlClassExpression.toString() + ".");
 			}
 		}
 
 		return relationshipGroups;
+	}
+
+	private Relationship extractRelationshipConcreteValue(OWLDataHasValue dataHasValue, int groupNumber) throws ConversionException {
+		OWLDataPropertyExpression property = dataHasValue.getProperty();
+		OWLDataProperty dataProperty = property.asOWLDataProperty();
+		long typeId = OntologyHelper.getConceptId(dataProperty);
+
+		ClassExpressionType classExpressionType = dataHasValue.getClassExpressionType();
+		OWLLiteral filler = dataHasValue.getFiller();
+		OWLDatatype datatype = filler.getDatatype();
+		String value = filler.getLiteral();
+		Relationship.ConcreteValue.Type valueType = null;
+		if (!datatype.isBuiltIn()) {
+			throw new ConversionException(datatype.toString() + " is not an OWL builtIn data type.");
+		}
+		if (datatype.isBuiltIn()) {
+			switch (datatype.getBuiltInDatatype()) {
+				case XSD_DECIMAL :
+					valueType = Relationship.ConcreteValue.Type.DECIMAL;
+					break;
+				case XSD_INTEGER :
+					valueType = Relationship.ConcreteValue.Type.INTEGER;
+					break;
+				case XSD_FLOAT :
+					valueType = Relationship.ConcreteValue.Type.FLOAT;
+					break;
+				case XSD_DOUBLE :
+					valueType = Relationship.ConcreteValue.Type.DOUBLE;
+					break;
+				case XSD_BOOLEAN :
+					valueType = Relationship.ConcreteValue.Type.BOOLEAN;
+					break;
+				case XSD_STRING :
+					valueType = Relationship.ConcreteValue.Type.STRING;
+					break;
+				default :
+					throw new ConversionException("Unsupported OWLDataType " + datatype.toString());
+			}
+		}
+		return new Relationship(groupNumber, typeId, new Relationship.ConcreteValue(valueType, value));
 	}
 
 	private Relationship extractRelationship(OWLObjectSomeValuesFrom someValuesFrom, int groupNumber) throws ConversionException {
