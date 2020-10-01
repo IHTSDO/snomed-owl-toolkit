@@ -21,6 +21,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
+import org.semanticweb.owlapi.vocab.OWL2Datatype;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
@@ -41,6 +42,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static java.lang.Long.parseLong;
+import static org.snomed.otf.owltoolkit.domain.Relationship.*;
 
 @SuppressWarnings("Guava")
 public class OntologyService {
@@ -256,23 +258,13 @@ public class OntologyService {
 				int group = relationship.getGroup();
 				long typeId = relationship.getTypeId();
 				long destinationId = relationship.getDestinationId();
-				if (typeId == Concepts.IS_A_LONG) {
-					terms.add(getOwlClass(destinationId));
-				} else if (group == 0) {
-					if (ungroupedAttributes.contains(typeId)) {
-						// Special cases
-						terms.add(getOwlObjectSomeValuesFrom(typeId, destinationId));
-					} else {
-						// Self grouped relationships in group 0
-						terms.add(getOwlObjectSomeValuesFromGroup(getOwlObjectSomeValuesFrom(typeId, destinationId)));
-					}
-				} else if (ungroupedAttributes.contains(typeId)) {
-						// Prevent MRCM ungrouped attribute from being grouped, even though a group other than 0 was given
-						terms.add(getOwlObjectSomeValuesFrom(typeId, destinationId));
+				ConcreteValue value = relationship.getValue();
+				if (destinationId != -1 && value == null) {
+					processRelationshipsWithDestinationId(group, typeId, destinationId, terms, nonZeroRoleGroups);
+				} else if (value != null && destinationId == -1) {
+					processRelationshipsWithConcreteValue(group, typeId, value, terms, nonZeroRoleGroups);
 				} else {
-					// Collect statements in the same role group into sets
-					nonZeroRoleGroups.computeIfAbsent(group, g -> new HashSet<>())
-							.add(getOwlObjectSomeValuesFrom(typeId, destinationId));
+					throw new IllegalArgumentException("Relationship must not have destination id and concrete value at the same time but got both " + relationship.toString());
 				}
 			}
 		}
@@ -290,6 +282,46 @@ public class OntologyService {
 		}
 
 		return getOnlyValueOrIntersection(terms);
+	}
+
+	private void processRelationshipsWithConcreteValue(int group, long typeId, ConcreteValue value, Set<OWLClassExpression> terms, Map<Integer, Set<OWLClassExpression>> nonZeroRoleGroups) {
+		if (group == 0) {
+			if (ungroupedAttributes.contains(typeId)) {
+				// Special cases
+				terms.add(getOwlDataHasValue(typeId, value));
+			} else {
+				// Self grouped relationships in group 0
+				terms.add(getOwlObjectSomeValuesFromGroup(getOwlDataHasValue(typeId, value)));
+			}
+		} else if (ungroupedAttributes.contains(typeId)) {
+			// Prevent MRCM ungrouped attribute from being grouped, even though a group other than 0 was given
+			terms.add(getOwlDataHasValue(typeId, value));
+		} else {
+			// Collect statements in the same role group into sets
+			nonZeroRoleGroups.computeIfAbsent(group, g -> new HashSet<>())
+					.add(getOwlDataHasValue(typeId, value));
+		}
+	}
+
+	private void processRelationshipsWithDestinationId(int group, long typeId, long destinationId, Set<OWLClassExpression> terms, Map<Integer, Set<OWLClassExpression>> nonZeroRoleGroups) {
+		if (typeId == Concepts.IS_A_LONG) {
+			terms.add(getOwlClass(destinationId));
+		} else if (group == 0) {
+			if (ungroupedAttributes.contains(typeId)) {
+				// Special cases
+				terms.add(getOwlObjectSomeValuesFrom(typeId, destinationId));
+			} else {
+				// Self grouped relationships in group 0
+				terms.add(getOwlObjectSomeValuesFromGroup(getOwlObjectSomeValuesFrom(typeId, destinationId)));
+			}
+		} else if (ungroupedAttributes.contains(typeId)) {
+			// Prevent MRCM ungrouped attribute from being grouped, even though a group other than 0 was given
+			terms.add(getOwlObjectSomeValuesFrom(typeId, destinationId));
+		} else {
+			// Collect statements in the same role group into sets
+			nonZeroRoleGroups.computeIfAbsent(group, g -> new HashSet<>())
+					.add(getOwlObjectSomeValuesFrom(typeId, destinationId));
+		}
 	}
 
 	public Set<PropertyChain> getPropertyChains(OWLOntology owlOntology) {
@@ -346,6 +378,26 @@ public class OntologyService {
 
 	private OWLClass getOwlClass(Long conceptId) {
 		return factory.getOWLClass(COLON + conceptId, prefixManager);
+	}
+
+	private OWLDataHasValue getOwlDataHasValue(long typeId, ConcreteValue value) {
+		OWLLiteral owlLiteral;
+		if (value.isInteger()) {
+			owlLiteral = factory.getOWLLiteral(value.asInt());
+		} else if (value.isFloat()) {
+			owlLiteral = factory.getOWLLiteral(value.asFloat());
+		} else if (value.isDouble()) {
+			owlLiteral = factory.getOWLLiteral(value.asDouble());
+		} else if (value.isBoolean()) {
+			owlLiteral = factory.getOWLLiteral(value.asBoolean());
+		} else if (value.isString()) {
+			owlLiteral = factory.getOWLLiteral(value.asString());
+		} else if (value.isDecimal()) {
+			owlLiteral = factory.getOWLLiteral(value.asString(), OWL2Datatype.XSD_DECIMAL);
+		} else {
+			throw new UnsupportedOperationException("Type is not supported yet." + value.getType());
+		}
+		return factory.getOWLDataHasValue(getOwlDataProperty(typeId), owlLiteral);
 	}
 
 	private void addDescriptionAnnotations(Long conceptId, SnomedTaxonomy snomedTaxonomy, Set<OWLAxiom> axioms, Map<Long, String> langRefsetToDialectMap) {

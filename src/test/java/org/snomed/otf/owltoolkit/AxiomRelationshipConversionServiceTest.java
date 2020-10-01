@@ -13,6 +13,7 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import static org.snomed.otf.owltoolkit.domain.Relationship.*;
 
 public class AxiomRelationshipConversionServiceTest {
 
@@ -20,7 +21,11 @@ public class AxiomRelationshipConversionServiceTest {
 
 	@Before
 	public void setup() {
-		HashSet<Long> ungroupedAttributes = Sets.newHashSet(Concepts.LATERALITY_LONG);
+		HashSet<Long> ungroupedAttributes = Sets.newHashSet(
+				Concepts.LATERALITY_LONG,
+				Long.valueOf(Concepts.HAS_DOSE_FORM),
+				763032000L,
+				3264479001L);
 		axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedAttributes);
 	}
 
@@ -43,7 +48,7 @@ public class AxiomRelationshipConversionServiceTest {
 
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
-		assertEquals(true, representation.isPrimitive());
+		assertTrue(representation.isPrimitive());
 
 		assertEquals(
 				"0 116680003=73211009\n" +
@@ -76,7 +81,7 @@ public class AxiomRelationshipConversionServiceTest {
 
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
-		assertEquals(true, representation.isPrimitive());
+		assertTrue(representation.isPrimitive());
 
 		assertEquals(8801005, representation.getLeftHandSideNamedConcept().longValue());
 
@@ -115,7 +120,7 @@ public class AxiomRelationshipConversionServiceTest {
 
 		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
 
-		assertEquals(false, representation.isPrimitive());
+		assertFalse(representation.isPrimitive());
 
 		assertEquals(10002003, representation.getLeftHandSideNamedConcept().longValue());
 
@@ -147,7 +152,7 @@ public class AxiomRelationshipConversionServiceTest {
 		// Test converting relationships back to an axiom
 		String recreatedAxiom = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
 		assertEquals(axiom, recreatedAxiom);
-		assertEquals(true, representation.isPrimitive());
+		assertTrue(representation.isPrimitive());
 	}
 
 	@Test
@@ -180,7 +185,7 @@ public class AxiomRelationshipConversionServiceTest {
 				toString(representation.getRightHandSideRelationships()));
 
 		assertEquals(363698007, representation.getLeftHandSideNamedConcept().longValue());
-		assertEquals(true, representation.isPrimitive());
+		assertTrue(representation.isPrimitive());
 	}
 
 	@Test
@@ -211,7 +216,7 @@ public class AxiomRelationshipConversionServiceTest {
 
 		assertEquals(9846003L, representation.getLeftHandSideNamedConcept().longValue());
 
-		assertEquals(false, representation.isPrimitive());
+		assertFalse(representation.isPrimitive());
 
 		assertEquals(
 				"0 116680003=39132006\n" +
@@ -274,12 +279,64 @@ public class AxiomRelationshipConversionServiceTest {
 		representation.setLeftHandSideNamedConcept(9846003L);
 		representation.setRightHandSideRelationships(toMap(
 				new Relationship(Concepts.IS_A_LONG, 39132006L),
-				// Attempt to group an ungroupable attribute by placing it in group 1
+				// Attempt to group an ungrouped attribute by placing it in group 1
 				new Relationship(1, Concepts.LATERALITY_LONG, 7771000L)));
 
 		String actual = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
 		assertFalse(actual.contains(OntologyService.ROLE_GROUP_SCTID));
 		assertEquals("EquivalentClasses(:9846003 ObjectIntersectionOf(:39132006 ObjectSomeValuesFrom(:272741003 :7771000)))", actual);
+	}
+
+	@Test
+	public void testAxiomWithConcreteValueToRelationships() throws ConversionException {
+		String axiom = "EquivalentClasses(:322236009 " +
+				"ObjectIntersectionOf(:763158003 ObjectSomeValuesFrom(:411116001 :421026006) " +
+					"ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:732943007 :387517004) " +
+					"ObjectSomeValuesFrom(:732945000 :258684004) ObjectSomeValuesFrom(:732946004 :38112003) ObjectSomeValuesFrom(:732947008 :732936001) " +
+					"ObjectSomeValuesFrom(:762949000 :387517004) DataHasValue(:3264475007 \"500\"^^xsd:decimal))) " +
+				"ObjectSomeValuesFrom(:763032000 :732936001) " +
+				"DataHasValue(:3264479001 \"1\"^^xsd:integer)))";
+
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
+
+		assertEquals(322236009, representation.getLeftHandSideNamedConcept().longValue());
+		assertEquals(
+				"0 116680003=763158003\n" +
+						"0 411116001=421026006\n" +
+						"0 763032000=732936001\n" +
+						"0 3264479001=1\n" +
+						"1 732943007=387517004\n" +
+						"1 732945000=258684004\n" +
+						"1 732946004=38112003\n" +
+						"1 732947008=732936001\n" +
+						"1 762949000=387517004\n" +
+						"1 3264475007=500",
+				toString(representation.getRightHandSideRelationships()));
+
+		assertNull(representation.getRightHandSideNamedConcept());
+
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
+		assertEquals(axiom, recreatedAxiom);
+		assertFalse(representation.isPrimitive());
+	}
+
+	@Test
+	public void testConvertRelationshipConcreteValueToAxiom() {
+		AxiomRepresentation representation = new AxiomRepresentation();
+		representation.setLeftHandSideNamedConcept(322236009L);
+		representation.setRightHandSideRelationships(toMap(
+				new Relationship(Concepts.IS_A_LONG, 763158003L),
+				new Relationship(1, 3264479001L, new ConcreteValue(ConcreteValue.Type.INTEGER, "1")),
+				new Relationship(0, 763032000L, 732936001L),
+				new Relationship(0, 411116001L, 421026006L)
+		));
+
+		String actual = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
+		assertFalse(actual.contains(OntologyService.ROLE_GROUP_SCTID));
+		assertEquals("EquivalentClasses(:322236009 ObjectIntersectionOf(:763158003 ObjectSomeValuesFrom(:411116001 :421026006) " +
+				"ObjectSomeValuesFrom(:763032000 :732936001) DataHasValue(:3264479001 \"1\"^^xsd:integer)))", actual);
+
 	}
 
 	private Map<Integer, List<Relationship>> toMap(Relationship... relationships) {
@@ -298,8 +355,13 @@ public class AxiomRelationshipConversionServiceTest {
 				groupsString.append(relationship.getGroup())
 						.append(" ")
 						.append(relationship.getTypeId())
-						.append("=")
-						.append(relationship.getDestinationId());
+						.append("=");
+						if (relationship.getDestinationId() != -1) {
+							groupsString.append(relationship.getDestinationId());
+						}
+						if (relationship.getValue() != null) {
+							groupsString.append(relationship.getValue().asString());
+						}
 				groupsString.append("\n");
 			}
 		}
