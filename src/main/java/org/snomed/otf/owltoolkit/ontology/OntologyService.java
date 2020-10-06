@@ -381,21 +381,16 @@ public class OntologyService {
 	}
 
 	private OWLDataHasValue getOwlDataHasValue(long typeId, ConcreteValue value) {
+		// Only integer, decimal and string are supported
 		OWLLiteral owlLiteral;
 		if (value.isInteger()) {
 			owlLiteral = factory.getOWLLiteral(value.asInt());
-		} else if (value.isFloat()) {
-			owlLiteral = factory.getOWLLiteral(value.asFloat());
-		} else if (value.isDouble()) {
-			owlLiteral = factory.getOWLLiteral(value.asDouble());
-		} else if (value.isBoolean()) {
-			owlLiteral = factory.getOWLLiteral(value.asBoolean());
 		} else if (value.isString()) {
 			owlLiteral = factory.getOWLLiteral(value.asString());
 		} else if (value.isDecimal()) {
 			owlLiteral = factory.getOWLLiteral(value.asString(), OWL2Datatype.XSD_DECIMAL);
 		} else {
-			throw new UnsupportedOperationException("Type is not supported yet." + value.getType());
+			throw new UnsupportedOperationException("Type is not supported " + value.getType());
 		}
 		return factory.getOWLDataHasValue(getOwlDataProperty(typeId), owlLiteral);
 	}
