@@ -7,6 +7,7 @@ import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.domain.*;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
+import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 
 import java.util.*;
@@ -370,6 +371,10 @@ public class AxiomRelationshipConversionService {
 		return new Relationship(groupNumber, typeId, new Relationship.ConcreteValue(valueType, value));
 	}
 
+	public SnomedTaxonomy getTaxonomyFromLoader() {
+		return snomedTaxonomyLoader.getSnomedTaxonomy();
+	}
+
 	private Relationship extractRelationship(OWLObjectSomeValuesFrom someValuesFrom, int groupNumber) throws ConversionException {
 		OWLObjectPropertyExpression property = someValuesFrom.getProperty();
 		OWLObjectProperty namedProperty = property.getNamedProperty();
@@ -389,4 +394,5 @@ public class AxiomRelationshipConversionService {
 		OWLObjectProperty namedProperty = expression.getNamedProperty();
 		return SNOMED_ROLE_GROUP_FULL_URI.equals(namedProperty.getIRI().toString());
 	}
+
 }

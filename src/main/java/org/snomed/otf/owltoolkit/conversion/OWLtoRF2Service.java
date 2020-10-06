@@ -24,6 +24,7 @@ public class OWLtoRF2Service {
 	private Set<Long> definedConcepts;
 
 	public void writeToRF2(InputStream owlFileStream, OutputStream rf2ZipOutputStream, Date fileDate) throws OWLException, IOException {
+		OWLOntologyManager man = OWLManager.createOWLOntologyManager();
 		OWLOntology owlOntology = OWLManager.createOWLOntologyManager().loadOntologyFromOntologyDocument(owlFileStream);
 
 		conceptDescriptions = new HashMap<>();
@@ -35,6 +36,18 @@ public class OWLtoRF2Service {
 			IRI iri = owlEntity.getIRI();
 			Long conceptId = getConceptIdFromUri(iri.toString());
 			getDescriptions(conceptId, iri, owlOntology);
+		}
+
+		//for each object property, add an OWL axiom stating that the property is a subproperty of the top property - NEEDED FOR TOOLKIT NNF
+		OWLDataFactory df = OWLManager.createOWLOntologyManager().getOWLDataFactory();
+		OWLObjectProperty r = new ArrayList<OWLObjectProperty>(owlOntology.getObjectPropertiesInSignature()).get(0);
+		String iriString = r.getIRI().toString();
+		OWLObjectProperty topProp = df.getOWLObjectProperty(IRI.create(iriString.substring(0, iriString.lastIndexOf("/")+1) + "762705008")); //TODO: check
+		for(OWLObjectProperty prop : owlOntology.getObjectPropertiesInSignature()) {
+			if(!prop.toString().contains("762705008")) {
+				OWLAxiom ax = df.getOWLSubObjectPropertyOfAxiom(prop, topProp);
+				man.addAxiom(owlOntology, ax);
+			}
 		}
 
 		// Grab all axioms and process by type
@@ -72,9 +85,17 @@ public class OWLtoRF2Service {
 				for (Long conceptId : conceptAxioms.keySet()) {
 					// id      effectiveTime   active  moduleId        definitionStatusId
 					String definitionStatus = definedConcepts.contains(conceptId) ? Concepts.FULLY_DEFINED : Concepts.PRIMITIVE;
-					writer.write(String.join("\t", conceptId.toString(), "", "1", Concepts.SNOMED_CT_CORE_MODULE, definitionStatus));
+					writer.write(String.join("\t", conceptId.toString(), "0", "1", Concepts.SNOMED_CT_CORE_MODULE, definitionStatus));
 					newline(writer);
 				}
+				//metadata needed - TODO: clean
+				writer.write(String.join("\t", "138875005", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, definedConcepts.contains(138875005L) ? Concepts.FULLY_DEFINED : Concepts.PRIMITIVE));
+				newline(writer);
+				writer.write(String.join("\t", "900000000000441003", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, definedConcepts.contains(900000000000441003L) ? Concepts.FULLY_DEFINED : Concepts.PRIMITIVE));
+				newline(writer);
+				writer.write(String.join("\t", "410662002", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, definedConcepts.contains(410662002L) ? Concepts.FULLY_DEFINED : Concepts.PRIMITIVE));
+				newline(writer);
+				writer.write(String.join("\t", "762705008", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, definedConcepts.contains(762705008L) ? Concepts.FULLY_DEFINED : Concepts.PRIMITIVE));
 				writer.flush();
 
 				// Write description file with FSNs
@@ -88,7 +109,36 @@ public class OWLtoRF2Service {
 					String descriptionId = format("%s011", dummySequence++);
 					String term = conceptDescriptions.get(conceptId);
 					conceptTermId.put(new Pair<>(conceptId, term), descriptionId);
-					writer.write(String.join("\t", descriptionId, "", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", Concepts.FULLY_DEFINED, term, "900000000000448009"));
+					writer.write(String.join("\t", descriptionId, "0", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", "900000000000003001", term, "900000000000448009"));
+					//writer.write(String.join("\t", descriptionId, "0", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", Concepts.FULLY_DEFINED, term, "900000000000448009"));
+					newline(writer);
+				}
+				//metadata needed - TODO: clean
+				writer.write(String.join("\t", "517382016", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "138875005", "en", Concepts.FULLY_DEFINED, "SNOMED CT Concept (SNOMED RT+CTV3)", "900000000000448009"));
+				newline(writer);
+				writer.write(String.join("\t", "900000000000952015", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "900000000000441003", "en", Concepts.FULLY_DEFINED, "SNOMED CT Model Component (metadata)", "900000000000017005"));
+				newline(writer);
+				writer.write(String.join("\t", "2466114012", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "410662002", "en", Concepts.FULLY_DEFINED, "Concept model attribute (attribute)", "900000000000448009"));
+				newline(writer);
+				writer.write(String.join("\t", "3635487013", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "762705008", "en", Concepts.FULLY_DEFINED, "Concept model object attribute (attribute)", "900000000000448009"));
+				newline(writer);
+				writer.write(String.join("\t", "3635487013", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "762705008", "en", Concepts.FULLY_DEFINED, "Concept model object attribute", "900000000000448009"));
+				newline(writer);
+				writer.write(String.join("\t", "680946014", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "116680003", "en", Concepts.FULLY_DEFINED, "Is a (attribute)", "900000000000448009"));
+				writer.flush();
+
+				// Write "text definition file" -- TODO: check, seems to be needed for printing FSNs?
+				zipOutputStream.putNextEntry(new ZipEntry(format("SnomedCT/Snapshot/Terminology/sct2_TextDefinition_Snapshot-en_INT_%s.txt", date)));
+				writer.write(RF2Headers.DESCRIPTION_HEADER);
+				newline(writer);
+				int dummySequence2 = 100000000;
+				//Map<Pair<Long, String>, String> conceptTermId = new HashMap<>();
+				for (Long conceptId : conceptDescriptions.keySet()) {
+					// id	effectiveTime	active	moduleId	conceptId	languageCode	typeId	term	caseSignificanceId
+					String descriptionId = format("%s011", dummySequence2++);
+					String term = conceptDescriptions.get(conceptId);
+					conceptTermId.put(new Pair<>(conceptId, term), descriptionId);
+					writer.write(String.join("\t", descriptionId, "0", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", "900000000000003001", term, "900000000000448009"));
 					newline(writer);
 				}
 				writer.flush();
@@ -102,7 +152,7 @@ public class OWLtoRF2Service {
 					String descriptionId = conceptTermId.get(new Pair(conceptId, term));
 
 					// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	acceptabilityId
-					writer.write(String.join("\t", UUID.randomUUID().toString(), "", "1", Concepts.SNOMED_CT_CORE_MODULE,
+					writer.write(String.join("\t", UUID.randomUUID().toString(), "0", "1", Concepts.SNOMED_CT_CORE_MODULE,
 							Concepts.US_LANGUAGE_REFSET, descriptionId, Concepts.PREFERRED));
 					newline(writer);
 				}
@@ -118,11 +168,23 @@ public class OWLtoRF2Service {
 						String axiomString = owlAxiom.toString();
 						axiomString = axiomString.replace("<http://snomed.info/id/", ":");
 						axiomString = axiomString.replace(">", "");
-						writer.write(String.join("\t", UUID.randomUUID().toString(), "", "1", Concepts.SNOMED_CT_CORE_MODULE,
+						writer.write(String.join("\t", UUID.randomUUID().toString(), "0", "1", Concepts.SNOMED_CT_CORE_MODULE,
 								Concepts.OWL_AXIOM_REFERENCE_SET, conceptId.toString(), axiomString));
 						newline(writer);
 					}
 				}
+				//needed metadata - TODO: clean
+				writer.write(String.join("\t", UUID.randomUUID().toString(), "0", "1", Concepts.SNOMED_CT_CORE_MODULE, Concepts.OWL_AXIOM_REFERENCE_SET, "762705008", "SubClassOf(:762705008 :410662002)"));
+				newline(writer);
+				writer.write(String.join("\t", UUID.randomUUID().toString(), "0", "1", Concepts.SNOMED_CT_CORE_MODULE, Concepts.OWL_AXIOM_REFERENCE_SET, "410662002", "SubClassOf(:410662002 :900000000000441003)"));
+				newline(writer);
+				writer.write(String.join("\t", UUID.randomUUID().toString(), "0", "1", Concepts.SNOMED_CT_CORE_MODULE, Concepts.OWL_AXIOM_REFERENCE_SET, "900000000000441003", "SubClassOf(:900000000000441003 :138875005)"));
+				writer.flush();
+
+				// Write relationship file (expected, can be empty)
+				zipOutputStream.putNextEntry(new ZipEntry(format("SnomedCT/Snapshot/Terminology/sct2_Relationship_Snapshot_INT_%s.txt", date)));
+				writer.write(RF2Headers.OWL_EXPRESSION_REFERENCE_SET_HEADER);
+				newline(writer);
 				writer.flush();
 			}
 
@@ -130,8 +192,8 @@ public class OWLtoRF2Service {
 	}
 
 	private void newline(BufferedWriter writer) throws IOException {
-		writer.write("\r");// Add windows line ending before newline
-		writer.newLine();
+		writer.write("\r\n");// Add windows line ending before newline
+		//writer.newLine();
 	}
 
 	private void getDescriptions(Long conceptId, IRI iri, OWLOntology owlOntology) {
