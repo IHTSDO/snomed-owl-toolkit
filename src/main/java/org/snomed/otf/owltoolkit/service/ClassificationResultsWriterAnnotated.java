@@ -37,6 +37,7 @@ class ClassificationResultsWriterAnnotated {
     private static final String RELATIONSHIPS_HEADER = "id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId";
     private static final String EQUIVALENT_REFSET_HEADER = "id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\tmapTarget";
     private static final String TAB = "\t";
+    //private static final String TAB = "\t || \t";
 
     void writeResultsRf2Archive(
             RelationshipChangeProcessor changeCollector,
@@ -101,11 +102,11 @@ class ClassificationResultsWriterAnnotated {
                 String relationshipTypeTerm = "";
                 if(relationshipTypeDescriptions != null) {
                     for (Description description : relationshipTypeDescriptions) {
-                        //String typeId = description.getTypeId();
-                        // if (Concepts.FSN.equals(typeId)) {
-                        relationshipTypeTerm = description.getTerm();
-                        System.out.println("Relationship type term: " + relationshipTypeTerm);
-                        //}
+                        String typeId = description.getTypeId();
+                        if (Concepts.FSN.equals(typeId)) {
+                            relationshipTypeTerm = description.getTerm();
+                            System.out.println("Relationship type term: " + relationshipTypeTerm);
+                        }
                     }
                 }
                 writeRelationship(writer,
@@ -151,11 +152,10 @@ class ClassificationResultsWriterAnnotated {
                 String relationshipTypeTerm = "";
                 if(relationshipTypeDescriptions != null) {
                     for (Description description : relationshipTypeDescriptions) {
-                        //String typeId = description.getTypeId();
-                        // if (Concepts.FSN.equals(typeId)) {
-                        relationshipTypeTerm = description.getTerm();
-                        System.out.println("Relationship type term: " + relationshipTypeTerm);
-                        //}
+                        String typeId = description.getTypeId();
+                        if (Concepts.FSN.equals(typeId)) {
+                            relationshipTypeTerm = description.getTerm();
+                        }
                     }
                 }
                 writeRelationship(writer,
@@ -213,10 +213,12 @@ class ClassificationResultsWriterAnnotated {
         writer.flush();
     }
 
+    //private void writeRelationship(BufferedWriter writer, String relationshipId, String active, String sourceTerm, String destinationTerm, Integer group, Long typeId, String existentialRestrictionModifier) throws IOException {
     private void writeRelationship(BufferedWriter writer, String status, String relationshipId, String active, String sourceTerm, String destinationTerm, Integer group, String typeId, String existentialRestrictionModifier) throws IOException {
         //add padding
         writer.write(status);
         writer.write(TAB);
+        //writer.write("\t");
 
         //writer.write(relationshipId);
         //writer.write(TAB);

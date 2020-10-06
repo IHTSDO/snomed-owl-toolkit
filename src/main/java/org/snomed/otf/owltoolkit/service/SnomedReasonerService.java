@@ -52,12 +52,15 @@ public class SnomedReasonerService {
 
 	public static final String ELK_REASONER_FACTORY = "org.semanticweb.elk.owlapi.ElkReasonerFactory";
 
+	//WARREN CHANGE
 	//private final ClassificationResultsWriter classificationResultsWriter;
 	private final ClassificationResultsWriterAnnotated classificationResultsWriter;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	public SnomedReasonerService() {
+		//WARREN CHANGE
+		//this.classificationResultsWriter = new ClassificationResultsWriter();
 		this.classificationResultsWriter = new ClassificationResultsWriterAnnotated();
 	}
 
@@ -85,8 +88,8 @@ public class SnomedReasonerService {
 			boolean outputOntologyFileForDebug) throws ReasonerServiceException {
 
 		try (InputStreamSet previousReleaseRf2SnapshotArchives = new InputStreamSet(previousReleaseRf2SnapshotArchiveFile);
-			 OptionalFileInputStream currentReleaseRf2DeltaArchive = new OptionalFileInputStream(currentReleaseRf2DeltaArchiveFile);
-			 OutputStream resultsRf2DeltaArchive = new FileOutputStream(resultsRf2DeltaArchiveFile)) {
+             OptionalFileInputStream currentReleaseRf2DeltaArchive = new OptionalFileInputStream(currentReleaseRf2DeltaArchiveFile);
+             OutputStream resultsRf2DeltaArchive = new FileOutputStream(resultsRf2DeltaArchiveFile)) {
 
 			classify(classificationId,
 					previousReleaseRf2SnapshotArchives,
@@ -116,7 +119,7 @@ public class SnomedReasonerService {
 		SnomedTaxonomyBuilder snomedTaxonomyBuilder = new SnomedTaxonomyBuilder();
 		SnomedTaxonomy snomedTaxonomy;
 		try {
-			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchives, currentReleaseRf2DeltaArchive, false);
+			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchives, currentReleaseRf2DeltaArchive, true);
 		} catch (ReleaseImportException e) {
 			throw new ReasonerServiceException("Failed to build existing taxonomy.", e);
 		}
@@ -200,8 +203,11 @@ public class SnomedReasonerService {
 				formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
 
 		logger.info("Writing results archive");
+		//WARREN CHANGE
+		//with annotations (FSN)
 		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), snomedTaxonomy.getConceptDescriptionMap(), resultsRf2DeltaArchive, startDate);
-		timer.checkpoint("Write results to disk");
+		//without annotations
+		//classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);		timer.checkpoint("Write results to disk");
 		timer.finish();
 	}
 
@@ -220,5 +226,8 @@ public class SnomedReasonerService {
 			throw new ReasonerServiceException(String.format("An instance of requested reasoner '%s' could not be created.", reasonerFactoryClass), e);
 		}
 	}
-
+	//WARREN CHANGE
+	//public SnomedTaxonomy getSnomedTaxonomy() {
+	//	return this.snomedTaxonomy;
+	//}
 }

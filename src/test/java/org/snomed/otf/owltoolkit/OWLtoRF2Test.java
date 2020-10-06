@@ -1,7 +1,8 @@
+package org.snomed.otf.owltoolkit;
+
 import org.snomed.otf.owltoolkit.conversion.OWLtoRF2Service;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -14,8 +15,8 @@ public class OWLtoRF2Test {
         //String owlFilePath = "E:\\Users\\warren\\Documents\\aPostdoc\\code\\~test-code\\normalisation-randomness-issue\\" +
         //        "left-facet-joint-ontology\\Left_facet_joint_module_after_removing_equivalences.owl";
 
-        String owlFilePath = "C:/Users/warre/Documents/aPostdoc/code/~test-code/abstract-definitions-test/" +
-                "NNF_definitions_test_ontology_failure.owl";
+        String owlFilePath = "E:/Users/warren/Documents/aPostdoc/code/~test-code/abstract-definitions-test/" +
+                "limb-hand-thumb/limb_hand_thumb_with_T.owl";
 
         String outputPath = owlFilePath.substring(0, owlFilePath.lastIndexOf("/")+1);
 
