@@ -1,7 +1,6 @@
 package org.snomed.otf.owltoolkit.conversion;
 
 import org.semanticweb.owlapi.model.*;
-import org.semanticweb.owlapi.vocab.OWL2Datatype;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
@@ -13,7 +12,6 @@ import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.semanticweb.owlapi.vocab.OWL2Datatype.*;
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.CORE_COMPONENT_NAMESPACE_PATTERN;
 
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.SNOMED_ROLE_GROUP_FULL_URI;
@@ -91,7 +89,7 @@ public class AxiomRelationshipConversionService {
 
 		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES && axiomType != AxiomType.SUB_OBJECT_PROPERTY) {
 			LOGGER.debug("Only SubClassOf, EquivalentClasses and SubObjectPropertyOf can be converted to relationships. " +
-					"Axiom given is of type " + axiomType.getName() + ". Returning null.");
+					"Axiom given is of type  \"{}\". Returning null.",  axiomType.getName());
 			return null;
 		}
 
@@ -320,7 +318,6 @@ public class AxiomRelationshipConversionService {
 		OWLDataProperty dataProperty = property.asOWLDataProperty();
 		long typeId = OntologyHelper.getConceptId(dataProperty);
 
-		ClassExpressionType classExpressionType = dataHasValue.getClassExpressionType();
 		OWLLiteral filler = dataHasValue.getFiller();
 		OWLDatatype datatype = filler.getDatatype();
 		String value = filler.getLiteral();
@@ -335,15 +332,6 @@ public class AxiomRelationshipConversionService {
 					break;
 				case XSD_INTEGER :
 					valueType = Relationship.ConcreteValue.Type.INTEGER;
-					break;
-				case XSD_FLOAT :
-					valueType = Relationship.ConcreteValue.Type.FLOAT;
-					break;
-				case XSD_DOUBLE :
-					valueType = Relationship.ConcreteValue.Type.DOUBLE;
-					break;
-				case XSD_BOOLEAN :
-					valueType = Relationship.ConcreteValue.Type.BOOLEAN;
 					break;
 				case XSD_STRING :
 					valueType = Relationship.ConcreteValue.Type.STRING;

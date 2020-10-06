@@ -152,9 +152,6 @@ public class Relationship {
 		public enum Type {
 			INTEGER,
 			DECIMAL,
-			FLOAT,
-			DOUBLE,
-			BOOLEAN,
 			STRING
 		}
 
@@ -174,23 +171,11 @@ public class Relationship {
 
 		public int asInt() { return Integer.parseInt(value); }
 
-		public float asFloat() { return Float.parseFloat(value); }
-
-		public double asDouble() { return Double.parseDouble(value); }
-
-		public boolean asBoolean() { return Boolean.parseBoolean(value); }
-
 		public String asString() { return value; }
-
-		public boolean isFloat() { return Type.FLOAT == type; }
-
-		public boolean isDouble() { return Type.DOUBLE == type; }
-
-		public boolean isBoolean() { return Type.BOOLEAN == type; }
 
 		public boolean isString() { return Type.STRING == type; }
 
-		public boolean isDecimal() { return Type.DECIMAL == type || Type.FLOAT == type || Type.DOUBLE == type; }
+		public boolean isDecimal() { return Type.DECIMAL == type; }
 
 		@Override
 		public String toString() {
