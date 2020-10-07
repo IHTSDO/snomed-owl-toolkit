@@ -87,8 +87,9 @@ public class AxiomRelationshipConversionService {
 	public AxiomRepresentation convertAxiomToRelationships(OWLAxiom owlAxiom) throws ConversionException {
 		AxiomType<?> axiomType = owlAxiom.getAxiomType();
 
-		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES && axiomType != AxiomType.SUB_OBJECT_PROPERTY) {
-			LOGGER.debug("Only SubClassOf, EquivalentClasses and SubObjectPropertyOf can be converted to relationships. " +
+		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES &&
+				axiomType != AxiomType.SUB_OBJECT_PROPERTY && axiomType != AxiomType.SUB_DATA_PROPERTY) {
+			LOGGER.debug("Only SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf can be converted to relationships. " +
 					"Axiom given is of type  \"{}\". Returning null.",  axiomType.getName());
 			return null;
 		}
@@ -106,6 +107,23 @@ public class AxiomRelationshipConversionService {
 
 			OWLObjectPropertyExpression superProperty = subObjectPropertyOfAxiom.getSuperProperty();
 			OWLObjectProperty superPropertyNamedProperty = superProperty.getNamedProperty();
+			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
+
+			representation.setLeftHandSideNamedConcept(subAttributeConceptId);
+			representation.setRightHandSideRelationships(newSingleIsARelationship(superAttributeConceptId));
+			representation.setPrimitive(true);
+
+			return representation;
+
+		} else if (axiomType == AxiomType.SUB_DATA_PROPERTY) {
+			OWLSubDataPropertyOfAxiom subDataPropertyOfAxiom = (OWLSubDataPropertyOfAxiom) owlAxiom;
+
+			OWLDataPropertyExpression subProperty = subDataPropertyOfAxiom.getSubProperty();
+			OWLDataProperty namedProperty = subProperty.getDataPropertiesInSignature().iterator().next();
+			long subAttributeConceptId = OntologyHelper.getConceptId(namedProperty);
+
+			OWLDataPropertyExpression superProperty = subDataPropertyOfAxiom.getSuperProperty();
+			OWLDataProperty superPropertyNamedProperty = superProperty.getDataPropertiesInSignature().iterator().next();
 			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
 
 			representation.setLeftHandSideNamedConcept(subAttributeConceptId);
