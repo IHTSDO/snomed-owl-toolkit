@@ -41,6 +41,10 @@ public class StatedRelationshipToOwlRefsetService {
 	private Supplier<String> identifierSupplier = () -> UUID.randomUUID().toString();
 	private static final String TAB = "\t";
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR= Comparator
+			.comparing(Relationship::getRelationshipId)
+			.thenComparing(Relationship::getTypeId)
+			.thenComparing(Relationship::getGroup);
 	
 	public File convertExtensionStatedRelationshipsToOwlRefsetAndInactiveRelationshipsArchive(InputStreamSet snapshotInputStreamSet,
 			OptionalFileInputStream deltaStream,
@@ -86,11 +90,12 @@ public class StatedRelationshipToOwlRefsetService {
 			writer.write(RF2Headers.RELATIONSHIP_HEADER);
 			writer.newLine();
 			for (Long conceptId : sortedConceptIds) {
-				for (Relationship rel : snomedTaxonomy.getStatedRelationships(conceptId)) {
-					
-					writeStateRelationshipRow(writer, String.valueOf(rel.getRelationshipId()), 
+				List<Relationship> relationships = snomedTaxonomy.getStatedRelationships(conceptId).stream().collect(Collectors.toList());
+				Collections.sort(relationships, RELATIONSHIP_COMPARATOR);
+				for (Relationship rel : relationships) {
+					writeStateRelationshipRow(writer, String.valueOf(rel.getRelationshipId()),
 							"0", String.valueOf(rel.getModuleId()), String.valueOf(conceptId),
-							String.valueOf(rel.getDestinationId()), String.valueOf(rel.getGroup()), 
+							String.valueOf(rel.getDestinationId()), String.valueOf(rel.getGroup()),
 							String.valueOf(rel.getTypeId()));
 				}
 			}

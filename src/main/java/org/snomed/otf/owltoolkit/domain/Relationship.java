@@ -15,7 +15,7 @@
  */
 package org.snomed.otf.owltoolkit.domain;
 
-import com.google.common.base.Objects;
+import java.util.Objects;
 
 public class Relationship {
 	private long relationshipId;
@@ -187,12 +187,12 @@ public class Relationship {
 			if (this == o) return true;
 			if (o == null || getClass() != o.getClass()) return false;
 			ConcreteValue value1 = (ConcreteValue) o;
-			return type == value1.type && Objects.equal(value, value1.value);
+			return type == value1.type && Objects.equals(value, value1.value);
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hashCode(type, value);
+			return Objects.hash(type, value);
 		}
 	}
 
@@ -207,12 +207,12 @@ public class Relationship {
 				&& unionGroup == that.unionGroup && universal == that.universal
 				&& destinationNegated == that.destinationNegated
 				&& characteristicTypeId == that.characteristicTypeId
-				&& Objects.equal(value, that.value);
+				&& Objects.equals(value, that.value);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(relationshipId, effectiveTime, moduleId, typeId, destinationId,
+		return Objects.hash(relationshipId, effectiveTime, moduleId, typeId, destinationId,
 				group, unionGroup, universal, destinationNegated, characteristicTypeId, value);
 	}
 
