@@ -14,3 +14,4 @@ log.log
 /SnomedCT_*
 *.jar
 /out*
+rf2-extract
