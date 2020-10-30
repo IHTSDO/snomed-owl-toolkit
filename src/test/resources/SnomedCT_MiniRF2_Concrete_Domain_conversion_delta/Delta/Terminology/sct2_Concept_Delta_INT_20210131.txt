@@ -1,0 +1,7 @@
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# Count of base active ingredient - Make Concept model object attribute inactive
+766952006	20210131	0	900000000000012004	900000000000074008
+
+# New "Count of base active ingredient" concept under Concept model data attribute
+100000001001	20210131	1	900000000000012004	900000000000074008

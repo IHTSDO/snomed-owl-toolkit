@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2020 SNOMED International, http://snomed.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -137,21 +137,56 @@ public class Relationship {
 		this.relationshipId = relationshipId;
 	}
 
-	public ConcreteValue getValue() { return value; }
+	public ConcreteValue getValue() {
+		return value;
+	}
+
+	public boolean isConcrete() {
+		return value != null;
+	}
 
 	public static final class ConcreteValue {
+
 		public enum Type {
 			INTEGER,
 			DECIMAL,
-			STRING
+			STRING;
 		}
 
 		private final Type type;
 		private final String value;
 
+		public ConcreteValue(String value) {
+			// Guess type, shouldn't matter if this is wrong for NNF process
+			if (value.startsWith("#")) {
+				value = value.substring(1);
+				this.type = value.contains(".") ? Type.DECIMAL : Type.INTEGER;
+			} else {
+				if (value.startsWith("\"")) {
+					value = value.substring(1);
+				}
+				if (value.endsWith("\"")) {
+					value = value.substring(0, value.length() -1);
+				}
+				type = Type.STRING;
+			}
+			this.value = value;
+		}
+
 		public ConcreteValue(Type type, String value) {
 			this.type = type;
 			this.value = value;
+		}
+
+		public String getRF2Value() {
+			if (value != null) {
+				if (type == Type.STRING) {
+					return String.format("\"%s\"", value);
+				} else {
+					return "#" + value;
+				}
+			}
+			return null;
 		}
 
 		public Type getType() {

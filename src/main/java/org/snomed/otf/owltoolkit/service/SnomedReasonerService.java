@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 SNOMED International, http://snomed.org
+ * Copyright 2020 SNOMED International, http://snomed.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ public class SnomedReasonerService {
 
 	private final ClassificationResultsWriter classificationResultsWriter;
 
-	private Logger logger = LoggerFactory.getLogger(getClass());
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	public SnomedReasonerService() {
 		this.classificationResultsWriter = new ClassificationResultsWriter();

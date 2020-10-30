@@ -1,0 +1,6 @@
+id	effectiveTime	active	moduleId	sourceId	value	relationshipGroup	typeId	characteristicTypeId	modifierId
+
+# Inferred concrete value
+# Product containing only eptinezumab : Count of base active ingredient = 1
+# Expected output but commented out to be asserted in unit test
+# 		1		871788009	#1	0	766952006	900000000000011006	900000000000451002

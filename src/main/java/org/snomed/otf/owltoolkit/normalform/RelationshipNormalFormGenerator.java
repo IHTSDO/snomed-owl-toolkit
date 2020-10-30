@@ -428,16 +428,32 @@ public final class RelationshipNormalFormGenerator {
 
 	private Set<Relationship> fromUnionGroup(final UnionGroup unionGroup, final int groupNumber, final int unionGroupNumber) {
 		return unionGroup.getRelationshipFragments().stream()
-				.map(input -> new Relationship(
-						input.getStatementId(),
-						-1,
-						input.getModuleId(),
-						input.getTypeId(),
-						input.getDestinationId(),
-						groupNumber,
-						unionGroupNumber,
-						input.isUniversal(),
-						-1))
+				.map(input -> {
+					Relationship relationship = input.getRelationship();
+					if (!relationship.isConcrete()) {
+						return new Relationship(
+								input.getStatementId(),
+								-1,
+								input.getModuleId(),
+								input.getTypeId(),
+								input.getDestinationId(),
+								groupNumber,
+								unionGroupNumber,
+								input.isUniversal(),
+								-1);
+					} else {
+						return new Relationship(
+								input.getStatementId(),
+								-1,
+								input.getModuleId(),
+								input.getTypeId(),
+								relationship.getValue(),
+								groupNumber,
+								unionGroupNumber,
+								input.isUniversal(),
+								-1);
+					}
+				})
 				.collect(Collectors.toSet());
 	}
 

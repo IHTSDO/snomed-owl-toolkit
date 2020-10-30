@@ -1,0 +1,16 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+
+# Disorder of adrenal gland
+3e15a819-dc93-4b22-80b8-75ac8e485325	20190131	1	900000000000207008	733073007	30171000	EquivalentClasses(:30171000 ObjectIntersectionOf(:362969004 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :23451007))))
+
+# Count of base active ingredient - a Concept model object attribute.
+cb4e04ae-fb5f-4af1-80f6-4f928defc43b	20190731	1	900000000000012004	733073007	766952006	SubObjectPropertyOf(:766952006 :762705008)
+
+# 871788009 |Product containing only eptinezumab (medicinal product)|
+7b74db66-d9c5-47a8-bc6e-3e726e23fa1a	20200731	1	900000000000207008	733073007	871788009	SubClassOf(:871788009 ObjectIntersectionOf(:138875005 ObjectSomeValuesFrom(:766952006 :38112003)))
+
+# 260299005 | Number (qualifier value) |
+2e2bbeb4-3845-44c6-9c09-535fca63e72f	20190731	1	900000000000207008	733073007	260299005	SubClassOf(:260299005 :138875005)
+
+# 38112003 | 1 (qualifier value) |
+6cd10909-8b9a-4a8d-8f8c-60f370cd9858	20190731	1	900000000000207008	733073007	38112003	SubClassOf(:38112003 :260299005)
