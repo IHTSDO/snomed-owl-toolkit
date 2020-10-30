@@ -60,11 +60,6 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 		this.fragment = checkNotNull(fragment, "fragment");
 	}
 
-	public boolean isDestinationNegated() {
-		return fragment.isDestinationNegated();
-	}
-
-
 	public boolean isUniversal() {
 		return fragment.isUniversal();
 	}
@@ -89,7 +84,6 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 
 	@Override
 	public boolean isSameOrStrongerThan(final RelationshipFragment other) {
-
 		if (this.equals(other)) {
 			return true;
 		}
@@ -102,95 +96,52 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 			System.out.println("Two IS As compared");
 		}
 
-		if (!isDestinationNegated() && !other.isDestinationNegated()) {
+		// noinspection UnnecessaryLocalVariable
+		RelationshipFragment A = other;
+		RelationshipFragment B = this;
 
-			// noinspection UnnecessaryLocalVariable
-			RelationshipFragment A = other;
-			RelationshipFragment B = this;
+		/*
+		 * We will return true if A is redundant.
+		 *
+		 * Rules for determining redundant relationships.
+		 *
+		 * Rule 1 - Class and Role inclusions
+		 * 	Given two relationships, A and B, A with r = C and B with s = D, within the same role group,
+		 * 	A is redundant if:
+		 * 		r is the same as or a supertype of s, and
+		 * 		C is the same as or a supertype of D
+		 *
+		 * Rule 2 - Property chains including transitive properties
+		 * 	Given attribute r, s and t with a property chain SubObjectPropertyOf(ObjectPropertyChain(t s) r),
+		 * 	and two relationships A and B, A with r = C and B with u = D, within the same role group,
+		 * 	A is redundant if:
+		 * 		Attribute u is the same as or a subtype of t, and
+		 * 		D has relationship to C via attribute s
+		 *
+		 */
 
-			/*
-			 * We will return true if A is redundant.
-			 *
-			 * Rules for determining redundant relationships.
-			 *
-			 * Rule 1 - Class and Role inclusions
-			 * 	Given two relationships, A and B, A with r = C and B with s = D, within the same role group,
-			 * 	A is redundant if:
-			 * 		r is the same as or a supertype of s, and
-			 * 		C is the same as or a supertype of D
-			 *
-			 * Rule 2 - Property chains including transitive properties
-			 * 	Given attribute r, s and t with a property chain SubObjectPropertyOf(ObjectPropertyChain(t s) r),
-			 * 	and two relationships A and B, A with r = C and B with u = D, within the same role group,
-			 * 	A is redundant if:
-			 * 		Attribute u is the same as or a subtype of t, and
-			 * 		D has relationship to C via attribute s
-			 *
-			 */
+		final Set<Long> BAttributeClosure = getTransitiveClosure(B.getTypeId());
+		final Set<Long> BValueClosure = getTransitiveClosure(B.getDestinationId());
 
-			final Set<Long> BAttributeClosure = getTransitiveClosure(B.getTypeId());
-			final Set<Long> BValueClosure = getTransitiveClosure(B.getDestinationId());
+		// Rule 1
+		if (BAttributeClosure.contains(A.getTypeId()) && BValueClosure.contains(A.getDestinationId())) {
+			return true;
+		}
 
-			// Rule 1
-			if (BAttributeClosure.contains(A.getTypeId()) && BValueClosure.contains(A.getDestinationId())) {
-				return true;
-			}
-
-			// Rule 2
-			else {
-				Set<PropertyChain> relevantPropertyChains = relationshipNormalFormGenerator.getPropertyChains().stream()
-						.filter(propertyChain -> BAttributeClosure.contains(propertyChain.getSourceType()))
-						.filter(propertyChain -> propertyChain.getInferredType().equals(A.getTypeId()))
-						.collect(Collectors.toSet());
-				for (PropertyChain propertyChain : relevantPropertyChains) {
-					if (getPropertyChainTransitiveClosure(B.getDestinationId(), propertyChain.getDestinationType())
-							.contains(A.getDestinationId())) {
-						return true;
-					}
+		// Rule 2
+		else {
+			Set<PropertyChain> relevantPropertyChains = relationshipNormalFormGenerator.getPropertyChains().stream()
+					.filter(propertyChain -> BAttributeClosure.contains(propertyChain.getSourceType()))
+					.filter(propertyChain -> propertyChain.getInferredType().equals(A.getTypeId()))
+					.collect(Collectors.toSet());
+			for (PropertyChain propertyChain : relevantPropertyChains) {
+				if (getPropertyChainTransitiveClosure(B.getDestinationId(), propertyChain.getDestinationType())
+						.contains(A.getDestinationId())) {
+					return true;
 				}
 			}
-			return false;
-
-		// TODO: Remove all negation logic - Snomed International does not use it.
-		} else if (isDestinationNegated() && !other.isDestinationNegated()) {
-
-			final Set<Long> otherAttributeClosure = getTransitiveClosure(other.getTypeId());
-			final Set<Long> superTypes = getTransitiveClosure(getDestinationId());
-			superTypes.remove(getDestinationId());
-
-			/*
-			 * Note that "other" itself may be exhaustive in this case --
-			 * the negation will work entirely within the confines of
-			 * "other", so it is still going to be more expressive than
-			 * "other".
-			 *
-			 * Supertypes of the negated value can only appear above the
-			 * "layers" of exhaustive concepts, because any other case
-			 * should be unsatisfiable.
-			 */
-			return otherAttributeClosure.contains(getTypeId()) && (hasCommonExhaustiveSuperType(other) || isDestinationExhaustive()) && superTypes.contains(other.getDestinationId());
-
-		} else if (!isDestinationNegated() && other.isDestinationNegated()) {
-
-			final Set<Long> attributeClosure = getTransitiveClosure(getTypeId());
-
-			/*
-			 * Any contradictions should be filtered out by the reasoner beforehand, so we just check if the two concepts
-			 * have a common exhaustive ancestor.
-			 */
-			return attributeClosure.contains(other.getTypeId()) && hasCommonExhaustiveSuperType(other);
-
-		} else /* if (destinationNegated && other.destinationNegated) */ {
-
-			/*
-			 * Note that the comparison is the exact opposite of the first case - if both fragments are negated,
-			 * the one which negates a more loose definition is the one that is more strict in the end.
-			 */
-			final Set<Long> otherAttributeClosure = getTransitiveClosure(other.getTypeId());
-			final Set<Long> otherValueClosure = getTransitiveClosure(other.getDestinationId());
-
-			return otherAttributeClosure.contains(getTypeId()) && otherValueClosure.contains(getDestinationId());
 		}
+		return false;
 	}
 
 	private boolean isDestinationExhaustive() {
@@ -264,18 +215,17 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 		final RelationshipFragment other = (RelationshipFragment) obj;
 
 		return (isUniversal() == other.isUniversal()) &&
-				(isDestinationNegated() == other.isDestinationNegated()) &&
 				(getTypeId() == other.getTypeId()) &&
 				(getDestinationId() == other.getDestinationId());
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(isUniversal(), isDestinationNegated(), getTypeId(), getDestinationId());
+		return Objects.hashCode(isUniversal(), getTypeId(), getDestinationId());
 	}
 
 	@Override
 	public String toString() {
-		return MessageFormat.format("{0,number,#} : {1}{2,number,#} ({3})", getTypeId(), (isDestinationNegated() ? "NOT" : ""), getDestinationId(), isUniversal());
+		return MessageFormat.format("{0,number,#} : {1,number,#} ({2})", getTypeId(), getDestinationId(), isUniversal());
 	}
 }

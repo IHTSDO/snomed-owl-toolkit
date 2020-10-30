@@ -116,7 +116,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 							parseLong(moduleId),
 							parseLong(typeId),
 							parseLong(destinationId),
-							false,// Destination negated is always false
+							// Destination negated is always false
 							Integer.parseInt(relationshipGroup),
 							unionGroup,
 							universal,
@@ -139,7 +139,6 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 						parseLong(moduleId),
 						parseLong(typeId),
 						parseLong(destinationId),
-						false,
 						Integer.parseInt(relationshipGroup),
 						0,
 						universal,
