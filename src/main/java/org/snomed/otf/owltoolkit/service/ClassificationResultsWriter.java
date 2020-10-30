@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2020 SNOMED International, http://snomed.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -31,9 +32,10 @@ import java.util.zip.ZipOutputStream;
 
 class ClassificationResultsWriter {
 
-	private static final Charset UTF_8_CHARSET = Charset.forName("UTF-8");
+	private static final Charset UTF_8_CHARSET = StandardCharsets.UTF_8;
 	public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
 	private static final String RELATIONSHIPS_HEADER = "id\teffectiveTime\tactive\tmoduleId\tsourceId\tdestinationId\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId";
+	private static final String CONCRETE_RELATIONSHIPS_HEADER = "id\teffectiveTime\tactive\tmoduleId\tsourceId\tvalue\trelationshipGroup\ttypeId\tcharacteristicTypeId\tmodifierId";
 	private static final String EQUIVALENT_REFSET_HEADER = "id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\tmapTarget";
 	private static final String TAB = "\t";
 
@@ -49,7 +51,10 @@ class ClassificationResultsWriter {
 
 				String formattedDate = DATE_FORMAT.format(startDate);
 				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/sct2_Relationship_Delta_Classification_%s.txt", formattedDate)));
-				writeRelationshipChanges(writer, changeCollector.getAddedStatements(), changeCollector.getRemovedStatements());
+				writeRelationshipChanges(false, writer, changeCollector.getAddedStatements(), changeCollector.getRemovedStatements());
+
+				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/sct2_RelationshipConcreteValues_Delta_Classification_%s.txt", formattedDate)));
+				writeRelationshipChanges(true, writer, changeCollector.getAddedStatements(), changeCollector.getRemovedStatements());
 
 				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_%s.txt", formattedDate)));
 				writeEquivalentConcepts(writer, equivalentConceptIdSets);
@@ -59,23 +64,24 @@ class ClassificationResultsWriter {
 		}
 	}
 
-	private void writeRelationshipChanges(BufferedWriter writer, Map<Long, Set<Relationship>> addedStatements, Map<Long, Set<Relationship>> removedStatements) throws IOException {
+	private void writeRelationshipChanges(boolean concrete, BufferedWriter writer, Map<Long, Set<Relationship>> addedStatements, Map<Long, Set<Relationship>> removedStatements) throws IOException {
 		// Write header
-		writer.write(RELATIONSHIPS_HEADER);
+		writer.write(concrete ? CONCRETE_RELATIONSHIPS_HEADER : RELATIONSHIPS_HEADER);
 		writer.newLine();
 
 		// Write newly inferred relationships
 		for (Long sourceId : addedStatements.keySet()) {
 			String active = "1";
 			for (Relationship relationship : addedStatements.get(sourceId)) {
-				writeRelationship(writer,
-						relationship.getRelationshipId() == -1 ? "" : relationship.getRelationshipId() + "",
-						active,
-						sourceId,
-						relationship.getDestinationId(),
-						relationship.getGroup(),
-						relationship.getTypeId(),
-						Concepts.EXISTENTIAL_RESTRICTION_MODIFIER);
+				if (concrete == relationship.isConcrete()) {
+					writeRelationship(writer,
+							relationship.getRelationshipId() == -1 ? "" : relationship.getRelationshipId() + "",
+							active,
+							sourceId,
+							concrete ? relationship.getValue().getRF2Value() : "" + relationship.getDestinationId(),
+							relationship.getGroup(),
+							relationship.getTypeId());
+				}
 			}
 		}
 
@@ -83,14 +89,15 @@ class ClassificationResultsWriter {
 		for (Long sourceId : removedStatements.keySet()) {
 			String active = "0";
 			for (Relationship relationship : removedStatements.get(sourceId)) {
-				writeRelationship(writer,
-						relationship.getRelationshipId() + "",
-						active,
-						sourceId,
-						relationship.getDestinationId(),
-						relationship.getGroup(),
-						relationship.getTypeId(),
-						Concepts.EXISTENTIAL_RESTRICTION_MODIFIER);
+				if (concrete == relationship.isConcrete()) {
+					writeRelationship(writer,
+							relationship.getRelationshipId() + "",
+							active,
+							sourceId,
+							concrete ? relationship.getValue().getRF2Value() : "" + relationship.getDestinationId(),
+							relationship.getGroup(),
+							relationship.getTypeId());
+				}
 			}
 		}
 
@@ -137,7 +144,7 @@ class ClassificationResultsWriter {
 		writer.flush();
 	}
 
-	private void writeRelationship(BufferedWriter writer, String relationshipId, String active, Long sourceId, Long destinationId, Integer group, Long typeId, String existentialRestrictionModifier) throws IOException {
+	private void writeRelationship(BufferedWriter writer, String relationshipId, String active, Long sourceId, String destinationOrValue, Integer group, Long typeId) throws IOException {
 		writer.write(relationshipId);
 		writer.write(TAB);
 
@@ -156,7 +163,7 @@ class ClassificationResultsWriter {
 		writer.write(TAB);
 
 		// destinationId
-		writer.write(destinationId.toString());
+		writer.write(destinationOrValue);
 		writer.write(TAB);
 
 		// relationshipGroup
@@ -172,7 +179,7 @@ class ClassificationResultsWriter {
 		writer.write(TAB);
 
 		// modifierId always existential at this time
-		writer.write(existentialRestrictionModifier);
+		writer.write(Concepts.EXISTENTIAL_RESTRICTION_MODIFIER);
 		writer.newLine();
 	}
 

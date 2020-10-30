@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 SNOMED International, http://snomed.org
+ * Copyright 2020 SNOMED International, http://snomed.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,11 +37,11 @@ import static org.snomed.otf.owltoolkit.constants.Concepts.*;
 
 public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
-	private SnomedTaxonomy snomedTaxonomy = new SnomedTaxonomy();
+	private final SnomedTaxonomy snomedTaxonomy = new SnomedTaxonomy();
 	private static final String ACTIVE = "1";
 
 	private boolean loadingDelta;
-	private int effectiveTimeNow = Integer.parseInt(new SimpleDateFormat("yyyyMMdd").format(new Date()));
+	private final int effectiveTimeNow = Integer.parseInt(new SimpleDateFormat("yyyyMMdd").format(new Date()));
 
 	private Exception owlParsingExceptionThrown;
 	private String owlParsingExceptionMemberId;
@@ -103,23 +103,19 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
 		if (ACTIVE.equals(active) && !ADDITIONAL_RELATIONSHIP.equals(characteristicTypeId)) {// Ignore additional relationships
 
-			int unionGroup = 0;
-			boolean universal = UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId);
-
-			int effectiveTimeInt = !Strings.isNullOrEmpty(effectiveTime) ? Integer.parseInt(effectiveTime) : effectiveTimeNow;
 			snomedTaxonomy.addOrModifyRelationship(
 					stated,
 					parseLong(sourceId),
 					new Relationship(
 							parseLong(id),
-							effectiveTimeInt,
+							getEffectiveTimeInt(effectiveTime),
 							parseLong(moduleId),
 							parseLong(typeId),
 							parseLong(destinationId),
 							// Destination negated is always false
 							Integer.parseInt(relationshipGroup),
-							unionGroup,
-							universal,
+							0,
+							UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId),
 							parseLong(characteristicTypeId)
 					)
 			);
@@ -131,17 +127,15 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			}
 			if (!stated) {
 				// Inactive inferred relationships kept for possible reactivation
-				int effectiveTimeInt = !Strings.isNullOrEmpty(effectiveTime) ? Integer.parseInt(effectiveTime) : effectiveTimeNow;
-				boolean universal = UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId);
 				snomedTaxonomy.addInactiveInferredRelationship(parseLong(sourceId), new Relationship(
 						parseLong(id),
-						effectiveTimeInt,
+						getEffectiveTimeInt(effectiveTime),
 						parseLong(moduleId),
 						parseLong(typeId),
 						parseLong(destinationId),
 						Integer.parseInt(relationshipGroup),
 						0,
-						universal,
+						UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId),
 						parseLong(characteristicTypeId)));
 			}
 		}
@@ -149,6 +143,30 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		if (componentFactoryTap != null) {
 			componentFactoryTap.newRelationshipState(id, effectiveTime, active, moduleId, sourceId, destinationId, relationshipGroup, typeId, characteristicTypeId, modifierId);
 		}
+	}
+
+	@Override
+	public void newConcreteRelationshipState(String id, String effectiveTime, String active, String moduleId, String sourceId, String value, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
+		boolean stated = false;
+
+		if (ACTIVE.equals(active)) {
+			snomedTaxonomy.addOrModifyRelationship(stated, parseLong(sourceId), new Relationship(
+					parseLong(id),
+					getEffectiveTimeInt(effectiveTime),
+					parseLong(moduleId),
+					parseLong(typeId),
+					new Relationship.ConcreteValue(value),
+					Integer.parseInt(relationshipGroup),
+					0,
+					UNIVERSAL_RESTRICTION_MODIFIER.equals(modifierId),
+					parseLong(characteristicTypeId)));
+		} else {
+			snomedTaxonomy.removeRelationship(stated, sourceId, id);
+		}
+	}
+
+	private int getEffectiveTimeInt(String effectiveTime) {
+		return !Strings.isNullOrEmpty(effectiveTime) ? Integer.parseInt(effectiveTime) : effectiveTimeNow;
 	}
 
 	@Override

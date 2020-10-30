@@ -35,16 +35,22 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class TestFileUtil {
 
 	private static final String EQUIVALENT_DELTA = "der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_";
 	private static final String RELATIONSHIP_DELTA = "sct2_Relationship_Delta_Classification_";
+	private static final String RELATIONSHIP_CONCRETE_VALUES_DELTA = "sct2_RelationshipConcreteValues_Delta_Classification_";
 	private static final Logger LOGGER = LoggerFactory.getLogger(TestFileUtil.class);
 
 	public static List<String> readInferredRelationshipLinesTrim(File zipFile) throws IOException {
 		return readLinesTrim(zipFile, RELATIONSHIP_DELTA);
+	}
+
+	public static List<String> readInferredRelationshipConcreteValuesLinesTrim(File zipFile) throws IOException {
+		return readLinesTrim(zipFile, RELATIONSHIP_CONCRETE_VALUES_DELTA);
 	}
 
 	static List<String> readEquivalentConceptLinesTrim(File zipFile) throws IOException {
@@ -55,7 +61,7 @@ public class TestFileUtil {
 		List<String> lines = new ArrayList<>();
 		try (BufferedReader reader = new BufferedReader(new InputStreamReader(ZipUtil.getZipEntryStreamOrThrow(zipFile, zipEntryNamePrefix)))) {
 			int totalColumn = 0;
-			if (zipEntryNamePrefix.equals(RELATIONSHIP_DELTA)) {
+			if (zipEntryNamePrefix.equals(RELATIONSHIP_DELTA) || zipEntryNamePrefix.equals(RELATIONSHIP_CONCRETE_VALUES_DELTA)) {
 				totalColumn = 10;
 			} else if (EQUIVALENT_DELTA.equals(zipEntryNamePrefix)) {
 				totalColumn = 7;
@@ -65,7 +71,7 @@ public class TestFileUtil {
 			while ((line = reader.readLine()) != null) {
 				System.out.println(line);
 				String[] splits = line.split("\t", -1);
-				assertTrue(msg + line, splits.length == totalColumn);
+				assertEquals(msg + line, splits.length, totalColumn);
 				lines.add(line.trim());
 			}
 		}

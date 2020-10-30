@@ -1,0 +1,10 @@
+id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+# Concept-as-number attribute made inactive
+250010021		0	900000000000207008	766952006	762705008	0	116680003	900000000000011006	900000000000451002
+
+# Concrete attribute created
+260010021		1	900000000000207008	100000001001	762706009	0	116680003	900000000000011006	900000000000451002
+
+# Concept-as-number active ingredient count made inactive
+# Expected output but commented out to be asserted in unit test
+# 250040021		0		871788009	38112003	0	766952006	900000000000011006	900000000000451002

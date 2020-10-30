@@ -78,7 +78,7 @@ public class AxiomRelationshipConversionService {
 
 	/**
 	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
-	 * Currently supported axiom types are SubClassOf, EquivalentClasses and SubObjectPropertyOf.
+	 * Currently supported axiom types are SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf.
 	 *
 	 * @param owlAxiom The Axiom expression to convert.
 	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
@@ -174,10 +174,6 @@ public class AxiomRelationshipConversionService {
 
 	/**
 	 * 	Currently supported axiom types are SubClassOf and EquivalentClasses - axioms of other types will be ignored.
-	 *
-	 * @param conceptAxiomMap
-	 * @return
-	 * @throws ConversionException
 	 */
 	public Map<Long, Set<AxiomRepresentation>> convertAxiomsToRelationships(Map<Long, Set<OWLAxiom>> conceptAxiomMap, boolean ignoreGCIAxioms) throws ConversionException {
 		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatements = new HashMap<>();
@@ -202,6 +198,7 @@ public class AxiomRelationshipConversionService {
 			}
 		} catch (ConversionException e) {
 			LOGGER.error("Failed to convert axiom \"{}\".", currentAxiom.toString(), e);
+			throw e;
 		}
 		return conceptAxiomStatements;
 	}

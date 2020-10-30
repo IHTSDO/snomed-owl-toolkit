@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 SNOMED International, http://snomed.org
+ * Copyright 2020 SNOMED International, http://snomed.org
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,11 +76,21 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 		return fragment.getDestinationId();
 	}
 
+	public boolean isConcreteValue() {
+		return getValue() != null;
+	}
+
+	public String getValue() {
+		return fragment.getValue() != null ? fragment.getValue().asString() : null;
+	}
 
 	public long getStatementId() {
 		return fragment.getRelationshipId();
 	}
 
+	public Relationship getRelationship() {
+		return fragment;
+	}
 
 	@Override
 	public boolean isSameOrStrongerThan(final RelationshipFragment other) {
@@ -89,6 +99,9 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 		}
 
 		if (isUniversal() != other.isUniversal()) {
+			return false;
+		}
+		if (isConcreteValue() != other.isConcreteValue()) {
 			return false;
 		}
 
@@ -121,25 +134,36 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 		 */
 
 		final Set<Long> BAttributeClosure = getTransitiveClosure(B.getTypeId());
-		final Set<Long> BValueClosure = getTransitiveClosure(B.getDestinationId());
 
-		// Rule 1
-		if (BAttributeClosure.contains(A.getTypeId()) && BValueClosure.contains(A.getDestinationId())) {
-			return true;
-		}
+		if (!A.isConcreteValue()) {
+			final Set<Long> BValueClosure = getTransitiveClosure(B.getDestinationId());
 
-		// Rule 2
-		else {
-			Set<PropertyChain> relevantPropertyChains = relationshipNormalFormGenerator.getPropertyChains().stream()
-					.filter(propertyChain -> BAttributeClosure.contains(propertyChain.getSourceType()))
-					.filter(propertyChain -> propertyChain.getInferredType().equals(A.getTypeId()))
-					.collect(Collectors.toSet());
-			for (PropertyChain propertyChain : relevantPropertyChains) {
-				if (getPropertyChainTransitiveClosure(B.getDestinationId(), propertyChain.getDestinationType())
-						.contains(A.getDestinationId())) {
-					return true;
+			// Rule 1
+			if (BAttributeClosure.contains(A.getTypeId()) && BValueClosure.contains(A.getDestinationId())) {
+				return true;
+			}
+
+			// Rule 2
+			else {
+				Set<PropertyChain> relevantPropertyChains = relationshipNormalFormGenerator.getPropertyChains().stream()
+						.filter(propertyChain -> BAttributeClosure.contains(propertyChain.getSourceType()))
+						.filter(propertyChain -> propertyChain.getInferredType().equals(A.getTypeId()))
+						.collect(Collectors.toSet());
+				for (PropertyChain propertyChain : relevantPropertyChains) {
+					if (getPropertyChainTransitiveClosure(B.getDestinationId(), propertyChain.getDestinationType())
+							.contains(A.getDestinationId())) {
+						return true;
+					}
 				}
 			}
+		} else {
+			// Rule 1
+			if (BAttributeClosure.contains(A.getTypeId()) && A.getValue() != null && A.getValue().equals(B.getValue())) {
+				return true;
+			}
+
+			// Rule 2 does not apply to concrete relationships.
+			// Concrete relationships can not take part in a property chain because a concrete value has no model or ancestors.
 		}
 		return false;
 	}
@@ -216,16 +240,20 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 
 		return (isUniversal() == other.isUniversal()) &&
 				(getTypeId() == other.getTypeId()) &&
-				(getDestinationId() == other.getDestinationId());
+				(getDestinationId() == other.getDestinationId()) &&
+				(
+						(getValue() == null && other.getValue() == null)
+						|| (getValue() != null && getValue().equals(other.getValue()))
+				);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hashCode(isUniversal(), getTypeId(), getDestinationId());
+		return Objects.hashCode(isUniversal(), getTypeId(), getDestinationId(), getValue());
 	}
 
 	@Override
 	public String toString() {
-		return MessageFormat.format("{0,number,#} : {1,number,#} ({2})", getTypeId(), getDestinationId(), isUniversal());
+		return MessageFormat.format("%s : %s", getTypeId(), getDestinationId() != -1 ? getDestinationId() : getValue());
 	}
 }
