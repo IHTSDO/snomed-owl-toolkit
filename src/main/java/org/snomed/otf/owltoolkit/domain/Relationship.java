@@ -26,40 +26,37 @@ public class Relationship {
 	private int group;
 	private final int unionGroup;
 	private final boolean universal;
-	private final boolean destinationNegated;
 	private final long characteristicTypeId;
 	private ConcreteValue value;
 
 	public Relationship(final int group, final long typeId, ConcreteValue value) {
-		this(-1, -1, -1, typeId, -1, false, group, 0, false, -1);
+		this(-1, -1, -1, typeId, -1, group, 0, false, -1);
 		this.value = value;
 	}
 
 
 	public Relationship(final long typeId, final long destinationId) {
-		this(-1, -1, -1, typeId, destinationId, false, 0, 0, false, -1);
+		this(-1, -1, -1, typeId, destinationId, 0, 0, false, -1);
 	}
 
 	public Relationship(final int group, final long typeId, final long destinationId) {
-		this(-1, -1, -1, typeId, destinationId, false, group, 0, false, -1);
+		this(-1, -1, -1, typeId, destinationId, group, 0, false, -1);
 	}
 
 	public Relationship(long relationshipId,
-						int effectiveTime,
-						long moduleId,
-						long typeId,
-						long destinationId,
-						boolean destinationNegated,
-						int group,
-						int unionGroup,
-						boolean universal,
-						long characteristicTypeId) {
+			int effectiveTime,
+			long moduleId,
+			long typeId,
+			long destinationId,
+			int group,
+			int unionGroup,
+			boolean universal,
+			long characteristicTypeId) {
 		this.relationshipId = relationshipId;
 		this.effectiveTime = effectiveTime;
 		this.moduleId = moduleId;
 		this.typeId = typeId;
 		this.destinationId = destinationId;
-		this.destinationNegated = destinationNegated;
 		this.group = group;
 		this.unionGroup = unionGroup;
 		this.universal = universal;
@@ -68,21 +65,19 @@ public class Relationship {
 	}
 
 	public Relationship(long relationshipId,
-						int effectiveTime,
-						long moduleId,
-						long typeId,
-						ConcreteValue value,
-						boolean destinationNegated,
-						int group,
-						int unionGroup,
-						boolean universal,
-						long characteristicTypeId) {
+			int effectiveTime,
+			long moduleId,
+			long typeId,
+			ConcreteValue value,
+			int group,
+			int unionGroup,
+			boolean universal,
+			long characteristicTypeId) {
 		this.relationshipId = relationshipId;
 		this.effectiveTime = effectiveTime;
 		this.moduleId = moduleId;
 		this.typeId = typeId;
 		this.value = value;
-		this.destinationNegated = destinationNegated;
 		this.group = group;
 		this.unionGroup = unionGroup;
 		this.universal = universal;
@@ -116,10 +111,6 @@ public class Relationship {
 
 	public boolean isUniversal() {
 		return universal;
-	}
-
-	public boolean isDestinationNegated() {
-		return destinationNegated;
 	}
 
 	public long getCharacteristicTypeId() {
@@ -205,7 +196,6 @@ public class Relationship {
 				&& moduleId == that.moduleId && typeId == that.typeId
 				&& destinationId == that.destinationId && group == that.group
 				&& unionGroup == that.unionGroup && universal == that.universal
-				&& destinationNegated == that.destinationNegated
 				&& characteristicTypeId == that.characteristicTypeId
 				&& Objects.equals(value, that.value);
 	}
@@ -213,7 +203,7 @@ public class Relationship {
 	@Override
 	public int hashCode() {
 		return Objects.hash(relationshipId, effectiveTime, moduleId, typeId, destinationId,
-				group, unionGroup, universal, destinationNegated, characteristicTypeId, value);
+				group, unionGroup, universal, characteristicTypeId, value);
 	}
 
 	@Override

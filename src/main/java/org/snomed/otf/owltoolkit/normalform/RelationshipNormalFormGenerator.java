@@ -434,7 +434,6 @@ public final class RelationshipNormalFormGenerator {
 						input.getModuleId(),
 						input.getTypeId(),
 						input.getDestinationId(),
-						input.isDestinationNegated(),
 						groupNumber,
 						unionGroupNumber,
 						input.isUniversal(),
