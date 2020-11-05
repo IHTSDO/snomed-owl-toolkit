@@ -16,7 +16,7 @@ public class OWLtoRF2Test {
         //        "left-facet-joint-ontology\\Left_facet_joint_module_after_removing_equivalences.owl";
 
         String owlFilePath = "E:/Users/warren/Documents/aPostdoc/code/~test-code/abstract-definitions-test/" +
-                "limb-hand-thumb/limb_hand_thumb_with_T.owl";
+                "sct/sct-july-2020-noReflexivity.owl";
 
         String outputPath = owlFilePath.substring(0, owlFilePath.lastIndexOf("/")+1);
 
