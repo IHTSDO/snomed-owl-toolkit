@@ -5,6 +5,9 @@ import org.apache.commons.io.FileUtils;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.ihtsdo.otf.snomedboot.ReleaseImporter;
 import org.ihtsdo.otf.snomedboot.factory.LoadingProfile;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.OWLOntology;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
@@ -23,7 +26,6 @@ public class RF2ExtractionService {
 
 	public void extractConcepts(InputStreamSet rf2SnapshotArchives, Set<Long> conceptIds, File outputDirectory)
 			throws ReleaseImportException, IOException {
-
 		logger.info("Extracting {} concepts from RF2.", conceptIds.size());
 		ReleaseImporter releaseImporter = new ReleaseImporter();
 		String dateString = ClassificationResultsWriter.DATE_FORMAT.format(new Date());
@@ -33,7 +35,7 @@ public class RF2ExtractionService {
 		logger.info("Extraction complete.");
 	}
 
-	public static void main(String[] args) throws IOException, ReleaseImportException {
+	public static void main(String[] args) throws IOException, ReleaseImportException, OWLOntologyCreationException {
 		File outputDirectory = new File("rf2-extract");
 		FileUtils.deleteDirectory(outputDirectory);
 		new RF2ExtractionService().extractConcepts(
