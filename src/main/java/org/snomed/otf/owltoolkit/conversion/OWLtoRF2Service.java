@@ -19,7 +19,8 @@ public class OWLtoRF2Service {
 
 	public static final SimpleDateFormat SIMPLE_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
 
-	private Map<Long, String> conceptDescriptions;
+	private Map<Long, String> conceptDescriptionsFSN;
+	private Map<Long, String> conceptDescriptionsPreferredSynonym;
 	private Map<Long, Set<OWLAxiom>> conceptAxioms;
 	private Set<Long> definedConcepts;
 
@@ -27,7 +28,8 @@ public class OWLtoRF2Service {
 		OWLOntologyManager man = OWLManager.createOWLOntologyManager();
 		OWLOntology owlOntology = OWLManager.createOWLOntologyManager().loadOntologyFromOntologyDocument(owlFileStream);
 
-		conceptDescriptions = new HashMap<>();
+		conceptDescriptionsFSN = new HashMap<>();
+		conceptDescriptionsPreferredSynonym = new HashMap<>();
 		conceptAxioms = new HashMap<>();
 		definedConcepts = new HashSet<>();
 
@@ -104,15 +106,27 @@ public class OWLtoRF2Service {
 				newline(writer);
 				int dummySequence = 100000000;
 				Map<Pair<Long, String>, String> conceptTermId = new HashMap<>();
-				for (Long conceptId : conceptDescriptions.keySet()) {
+				for (Long conceptId : conceptDescriptionsFSN.keySet()) {
 					// id	effectiveTime	active	moduleId	conceptId	languageCode	typeId	term	caseSignificanceId
 					String descriptionId = format("%s011", dummySequence++);
-					String term = conceptDescriptions.get(conceptId);
+					String term = conceptDescriptionsFSN.get(conceptId);
 					conceptTermId.put(new Pair<>(conceptId, term), descriptionId);
 					writer.write(String.join("\t", descriptionId, "0", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", "900000000000003001", term, "900000000000448009"));
 					//writer.write(String.join("\t", descriptionId, "0", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", Concepts.FULLY_DEFINED, term, "900000000000448009"));
 					newline(writer);
 				}
+				// Write description file with preferred synonyms
+				Map<Pair<Long, String>, String> conceptPreferredSynonymTermId = new HashMap<>();
+				for (Long conceptId : conceptDescriptionsPreferredSynonym.keySet()) {
+					// id	effectiveTime	active	moduleId	conceptId	languageCode	typeId	term	caseSignificanceId
+					String descriptionId = format("%s011", dummySequence++);
+					String term = conceptDescriptionsPreferredSynonym.get(conceptId);
+					conceptPreferredSynonymTermId.put(new Pair<>(conceptId, term), descriptionId);
+					writer.write(String.join("\t", descriptionId, "0", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", "900000000000013009", term, "900000000000448009"));
+					//writer.write(String.join("\t", descriptionId, "0", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", Concepts.FULLY_DEFINED, term, "900000000000448009"));
+					newline(writer);
+				}
+
 				//metadata needed - TODO: clean
 				writer.write(String.join("\t", "517382016", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "138875005", "en", Concepts.FULLY_DEFINED, "SNOMED CT Concept (SNOMED RT+CTV3)", "900000000000448009"));
 				newline(writer);
@@ -133,10 +147,10 @@ public class OWLtoRF2Service {
 				newline(writer);
 				int dummySequence2 = 100000000;
 				//Map<Pair<Long, String>, String> conceptTermId = new HashMap<>();
-				for (Long conceptId : conceptDescriptions.keySet()) {
+				for (Long conceptId : conceptDescriptionsFSN.keySet()) {
 					// id	effectiveTime	active	moduleId	conceptId	languageCode	typeId	term	caseSignificanceId
 					String descriptionId = format("%s011", dummySequence2++);
-					String term = conceptDescriptions.get(conceptId);
+					String term = conceptDescriptionsFSN.get(conceptId);
 					conceptTermId.put(new Pair<>(conceptId, term), descriptionId);
 					writer.write(String.join("\t", descriptionId, "0", "1", Concepts.SNOMED_CT_CORE_MODULE, conceptId.toString(), "en", "900000000000003001", term, "900000000000448009"));
 					newline(writer);
@@ -147,8 +161,8 @@ public class OWLtoRF2Service {
 				zipOutputStream.putNextEntry(new ZipEntry(format("SnomedCT/Snapshot/Refset/Language/der2_cRefset_LanguageSnapshot-en_INT_%s.txt", date)));
 				writer.write(RF2Headers.LANGUAGE_REFERENCE_SET_HEADER);
 				newline(writer);
-				for (Long conceptId : conceptDescriptions.keySet()) {
-					String term = conceptDescriptions.get(conceptId);
+				for (Long conceptId : conceptDescriptionsFSN.keySet()) {
+					String term = conceptDescriptionsFSN.get(conceptId);
 					String descriptionId = conceptTermId.get(new Pair(conceptId, term));
 
 					// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	acceptabilityId
@@ -204,10 +218,18 @@ public class OWLtoRF2Service {
 				if (value.startsWith("\"")) {
 					value = value.substring(1, value.lastIndexOf("\""));
 				}
-				conceptDescriptions.put(conceptId, value);
+				conceptDescriptionsFSN.put(conceptId, value);
+			}
+			else if ("skos:prefLabel".equals(annotationAssertionAxiom.getProperty().toString())) {
+				String value = annotationAssertionAxiom.getValue().toString();
+				if(value.startsWith("\"")) {
+					value = value.substring(1, value.lastIndexOf("\""));
+				}
+				conceptDescriptionsPreferredSynonym.put(conceptId, value);
 			}
 		}
 	}
+
 
 	private Long getFirstConceptIdFromClassList(Set<OWLClass> classesInSignature) {
 		return getConceptIdFromUri(classesInSignature.iterator().next().getIRI().toString());
