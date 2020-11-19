@@ -98,6 +98,7 @@ public class OWLtoRF2Service {
 				writer.write(String.join("\t", "410662002", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, definedConcepts.contains(410662002L) ? Concepts.FULLY_DEFINED : Concepts.PRIMITIVE));
 				newline(writer);
 				writer.write(String.join("\t", "762705008", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, definedConcepts.contains(762705008L) ? Concepts.FULLY_DEFINED : Concepts.PRIMITIVE));
+				newline(writer);
 				writer.flush();
 
 				// Write description file with FSNs
@@ -139,6 +140,7 @@ public class OWLtoRF2Service {
 				writer.write(String.join("\t", "3635487013", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "762705008", "en", Concepts.FULLY_DEFINED, "Concept model object attribute", "900000000000448009"));
 				newline(writer);
 				writer.write(String.join("\t", "680946014", "0", "1", Concepts.SNOMED_CT_CORE_MODULE, "116680003", "en", Concepts.FULLY_DEFINED, "Is a (attribute)", "900000000000448009"));
+				newline(writer);
 				writer.flush();
 
 				// Write "text definition file" -- TODO: check, seems to be needed for printing FSNs?
@@ -193,6 +195,7 @@ public class OWLtoRF2Service {
 				writer.write(String.join("\t", UUID.randomUUID().toString(), "0", "1", Concepts.SNOMED_CT_CORE_MODULE, Concepts.OWL_AXIOM_REFERENCE_SET, "410662002", "SubClassOf(:410662002 :900000000000441003)"));
 				newline(writer);
 				writer.write(String.join("\t", UUID.randomUUID().toString(), "0", "1", Concepts.SNOMED_CT_CORE_MODULE, Concepts.OWL_AXIOM_REFERENCE_SET, "900000000000441003", "SubClassOf(:900000000000441003 :138875005)"));
+				newline(writer);
 				writer.flush();
 
 				// Write relationship file (expected, can be empty)
@@ -229,7 +232,6 @@ public class OWLtoRF2Service {
 			}
 		}
 	}
-
 
 	private Long getFirstConceptIdFromClassList(Set<OWLClass> classesInSignature) {
 		return getConceptIdFromUri(classesInSignature.iterator().next().getIRI().toString());
