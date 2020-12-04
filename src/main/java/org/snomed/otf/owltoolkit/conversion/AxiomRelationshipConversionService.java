@@ -271,57 +271,79 @@ public class AxiomRelationshipConversionService {
 	}
 
 	private Map<Integer, List<Relationship>> getRelationships(OWLClassExpression owlClassExpression) throws ConversionException {
-		if (owlClassExpression.getClassExpressionType() != ClassExpressionType.OBJECT_INTERSECTION_OF) {
-			throw new ConversionException("Expecting ObjectIntersectionOf at first level of expression, got " + owlClassExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
+		final ClassExpressionType classExpressionType = owlClassExpression.getClassExpressionType();
+		if (classExpressionType != ClassExpressionType.OBJECT_INTERSECTION_OF && classExpressionType != ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
+			throw new ConversionException("Expecting ObjectIntersectionOf or ObjectSomeValuesFrom at first level of expression, got " + owlClassExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 		}
 
-		OWLObjectIntersectionOf intersectionOf = (OWLObjectIntersectionOf) owlClassExpression;
-		List<OWLClassExpression> expressions = intersectionOf.getOperandsAsList();
-
 		Map<Integer, List<Relationship>> relationshipGroups = new HashMap<>();
-		int rollingGroupNumber = 0;
-		for (OWLClassExpression operand : expressions) {
-			ClassExpressionType operandClassExpressionType = operand.getClassExpressionType();
-			if (operandClassExpressionType == ClassExpressionType.OWL_CLASS) {
-				// Is-a relationship
-				relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(new Relationship(0, Concepts.IS_A_LONG, OntologyHelper.getConceptId(operand.asOWLClass())));
-
-			} else if (operandClassExpressionType == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
-				// Either start of attribute or role group
-				OWLObjectSomeValuesFrom someValuesFrom = (OWLObjectSomeValuesFrom) operand;
-				OWLObjectPropertyExpression property = someValuesFrom.getProperty();
-				if (isRoleGroup(property)) {
-					rollingGroupNumber++;
-					// Extract Group
-					OWLClassExpression filler = someValuesFrom.getFiller();
-					if (filler.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
-						Relationship relationship = extractRelationship((OWLObjectSomeValuesFrom) filler, rollingGroupNumber);
+		if (owlClassExpression instanceof OWLObjectSomeValuesFrom) {
+			OWLObjectSomeValuesFrom owlObjectSomeValuesFrom = (OWLObjectSomeValuesFrom) owlClassExpression;
+			OWLObjectPropertyExpression property = owlObjectSomeValuesFrom.getProperty();
+			int rollingGroupNumber = 0;
+			if (isRoleGroup(property)) {
+				rollingGroupNumber++;
+				// Extract Group
+				OWLClassExpression filler = owlObjectSomeValuesFrom.getFiller();
+				if (filler.getClassExpressionType() == ClassExpressionType.DATA_HAS_VALUE) {
+					for (OWLClassExpression nestedClassExpression : filler.getNestedClassExpressions()) {
+						Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) nestedClassExpression, rollingGroupNumber);
 						relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
-					} else if (filler.getClassExpressionType() == ClassExpressionType.OBJECT_INTERSECTION_OF) {
-						OWLObjectIntersectionOf listOfAttributes = (OWLObjectIntersectionOf) filler;
-						for (OWLClassExpression classExpression : listOfAttributes.getOperandsAsList()) {
-							if (classExpression.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
-								Relationship relationship = extractRelationship((OWLObjectSomeValuesFrom) classExpression, rollingGroupNumber);
-								relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
-							} else if (classExpression.getClassExpressionType() == ClassExpressionType.DATA_HAS_VALUE) {
-								Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) classExpression, rollingGroupNumber);
-								relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
-							} else {
-								throw new ConversionException("Expecting ObjectSomeValuesFrom or DataHasValue within ObjectIntersectionOf as part of role group, got " + classExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
-							}
-						}
-					} else {
-						throw new ConversionException("Expecting ObjectSomeValuesFrom with role group to have a value of ObjectSomeValuesFrom, got " + filler.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 					}
 				} else {
-					Relationship relationship = extractRelationship(someValuesFrom, 0);
-					relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);
+					throw new ConversionException("Expecting ObjectSomeValuesFrom with role group to have a value of ObjectSomeValuesFrom, got " + filler.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 				}
-			} else if (operandClassExpressionType == ClassExpressionType.DATA_HAS_VALUE) {
-				Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) operand, 0);
-				relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);
 			} else {
-				throw new ConversionException("Expecting Class or ObjectSomeValuesFrom or DataHasValue at second level of expression, got " + operandClassExpressionType + " in expression " + owlClassExpression.toString() + ".");
+				Relationship relationship = extractRelationship(owlObjectSomeValuesFrom, 0);
+				relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);
+			}
+		} else {
+			OWLObjectIntersectionOf intersectionOf = (OWLObjectIntersectionOf) owlClassExpression;
+			List<OWLClassExpression> expressions = intersectionOf.getOperandsAsList();
+			int rollingGroupNumber = 0;
+			for (OWLClassExpression operand : expressions) {
+				ClassExpressionType operandClassExpressionType = operand.getClassExpressionType();
+				if (operandClassExpressionType == ClassExpressionType.OWL_CLASS) {
+					// Is-a relationship
+					relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(new Relationship(0, Concepts.IS_A_LONG, OntologyHelper.getConceptId(operand.asOWLClass())));
+
+				} else if (operandClassExpressionType == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
+					// Either start of attribute or role group
+					OWLObjectSomeValuesFrom someValuesFrom = (OWLObjectSomeValuesFrom) operand;
+					OWLObjectPropertyExpression property = someValuesFrom.getProperty();
+					if (isRoleGroup(property)) {
+						rollingGroupNumber++;
+						// Extract Group
+						OWLClassExpression filler = someValuesFrom.getFiller();
+						if (filler.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
+							Relationship relationship = extractRelationship((OWLObjectSomeValuesFrom) filler, rollingGroupNumber);
+							relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
+						} else if (filler.getClassExpressionType() == ClassExpressionType.OBJECT_INTERSECTION_OF) {
+							OWLObjectIntersectionOf listOfAttributes = (OWLObjectIntersectionOf) filler;
+							for (OWLClassExpression classExpression : listOfAttributes.getOperandsAsList()) {
+								if (classExpression.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
+									Relationship relationship = extractRelationship((OWLObjectSomeValuesFrom) classExpression, rollingGroupNumber);
+									relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
+								} else if (classExpression.getClassExpressionType() == ClassExpressionType.DATA_HAS_VALUE) {
+									Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) classExpression, rollingGroupNumber);
+									relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
+								} else {
+									throw new ConversionException("Expecting ObjectSomeValuesFrom or DataHasValue within ObjectIntersectionOf as part of role group, got " + classExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
+								}
+							}
+						} else {
+							throw new ConversionException("Expecting ObjectSomeValuesFrom with role group to have a value of ObjectSomeValuesFrom, got " + filler.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
+						}
+					} else {
+						Relationship relationship = extractRelationship(someValuesFrom, 0);
+						relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);
+					}
+				} else if (operandClassExpressionType == ClassExpressionType.DATA_HAS_VALUE) {
+					Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) operand, 0);
+					relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);
+				} else {
+					throw new ConversionException("Expecting Class or ObjectSomeValuesFrom or DataHasValue at second level of expression, got " + operandClassExpressionType + " in expression " + owlClassExpression.toString() + ".");
+				}
 			}
 		}
 
