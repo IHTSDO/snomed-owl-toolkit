@@ -322,6 +322,36 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
+	public void testMinimalAxiomWithConcreteValueToRelationships() throws ConversionException {
+		String axiom =
+				"SubClassOf(" +
+				"	:12345678910" + // Named class
+				"	ObjectIntersectionOf(" +
+				"		:138875005 " + // Parent (is-a relationship)
+				"		ObjectSomeValuesFrom(" +
+				"			:609096000 " + // Role group
+				"			DataHasValue(:1234567891011 \"1\"^^xsd:integer)" + // Concrete attribute-value pair
+				"		)" +
+				"	)" +
+				")";
+
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
+
+		assertEquals(12345678910L, representation.getLeftHandSideNamedConcept().longValue());
+		assertEquals(
+				"0 116680003=138875005\n" +
+						"1 1234567891011=1",
+				toString(representation.getRightHandSideRelationships()));
+
+		assertNull(representation.getRightHandSideNamedConcept());
+
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
+		assertEquals(axiom.replaceAll("\\W", ""), recreatedAxiom.replaceAll("\\W", ""));
+		assertTrue(representation.isPrimitive());
+	}
+
+	@Test
 	public void testConvertRelationshipConcreteValueToAxiom() throws ConversionException {
 		AxiomRepresentation representation = new AxiomRepresentation();
 		representation.setLeftHandSideNamedConcept(322236009L);
