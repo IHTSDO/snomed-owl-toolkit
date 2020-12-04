@@ -260,7 +260,7 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
-	public void testConvertRelationshipsToAxiomAllowGroupedAttribute() {
+	public void testConvertRelationshipsToAxiomAllowGroupedAttribute() throws ConversionException {
 		AxiomRepresentation representation = new AxiomRepresentation();
 		representation.setLeftHandSideNamedConcept(9846003L);
 		representation.setRightHandSideRelationships(toMap(
@@ -274,7 +274,7 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
-	public void testConvertRelationshipsToAxiomMoveUngroupedAttribute() {
+	public void testConvertRelationshipsToAxiomMoveUngroupedAttribute() throws ConversionException {
 		AxiomRepresentation representation = new AxiomRepresentation();
 		representation.setLeftHandSideNamedConcept(9846003L);
 		representation.setRightHandSideRelationships(toMap(
@@ -322,7 +322,7 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
-	public void testConvertRelationshipConcreteValueToAxiom() {
+	public void testConvertRelationshipConcreteValueToAxiom() throws ConversionException {
 		AxiomRepresentation representation = new AxiomRepresentation();
 		representation.setLeftHandSideNamedConcept(322236009L);
 		representation.setRightHandSideRelationships(toMap(
@@ -337,6 +337,17 @@ public class AxiomRelationshipConversionServiceTest {
 		assertEquals("EquivalentClasses(:322236009 ObjectIntersectionOf(:763158003 ObjectSomeValuesFrom(:411116001 :421026006) " +
 				"ObjectSomeValuesFrom(:763032000 :732936001) DataHasValue(:3264479001 \"1\"^^xsd:integer)))", actual);
 
+	}
+
+	@Test(expected = ConversionException.class)
+	public void testConvertConcreteValueAndNoParentMustFail() throws ConversionException {
+		AxiomRepresentation representation = new AxiomRepresentation();
+		representation.setLeftHandSideNamedConcept(322236009L);
+		representation.setRightHandSideRelationships(toMap(
+				new Relationship(0, 3264479001L, new ConcreteValue(ConcreteValue.Type.INTEGER, "1"))
+		));
+
+		axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
 	}
 
 	private Map<Integer, List<Relationship>> toMap(Relationship... relationships) {

@@ -203,11 +203,18 @@ public class AxiomRelationshipConversionService {
 		return conceptAxiomStatements;
 	}
 
-	public String convertRelationshipsToAxiom(AxiomRepresentation representation) {
+	public String convertRelationshipsToAxiom(AxiomRepresentation representation) throws ConversionException {
 
 		// Identify and convert object and data property axioms
 		if (representation.getLeftHandSideNamedConcept() != null && representation.getRightHandSideRelationships() != null) {
-			List<Relationship> relationships = representation.getRightHandSideRelationships().get(0);
+			final Map<Integer, List<Relationship>> rightHandSideRelationships = representation.getRightHandSideRelationships();
+			if (!rightHandSideRelationships.containsKey(0)) {
+				throw new ConversionException("At least one relationship is required in group 0.");
+			}
+			if (rightHandSideRelationships.get(0).stream().noneMatch(relationship -> Concepts.IS_A_LONG == relationship.getTypeId())) {
+				throw new ConversionException("At least one relationship with type '116680003 | Is a (attribute) |' is required in group 0.");
+			}
+			List<Relationship> relationships = rightHandSideRelationships.get(0);
 			for (Relationship relationship : relationships) {
 				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
 					if (objectAttributes != null && objectAttributes.contains(relationship.getDestinationId())) {
