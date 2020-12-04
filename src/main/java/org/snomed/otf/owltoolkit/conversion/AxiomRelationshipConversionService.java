@@ -304,6 +304,9 @@ public class AxiomRelationshipConversionService {
 					if (filler.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
 						Relationship relationship = extractRelationship((OWLObjectSomeValuesFrom) filler, rollingGroupNumber);
 						relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
+					} else if (filler.getClassExpressionType() == ClassExpressionType.DATA_HAS_VALUE) {
+						Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) filler, rollingGroupNumber);
+						relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
 					} else if (filler.getClassExpressionType() == ClassExpressionType.OBJECT_INTERSECTION_OF) {
 						OWLObjectIntersectionOf listOfAttributes = (OWLObjectIntersectionOf) filler;
 						for (OWLClassExpression classExpression : listOfAttributes.getOperandsAsList()) {
@@ -314,11 +317,13 @@ public class AxiomRelationshipConversionService {
 								Relationship relationship = extractRelationshipConcreteValue((OWLDataHasValue) classExpression, rollingGroupNumber);
 								relationshipGroups.computeIfAbsent(rollingGroupNumber, key -> new ArrayList<>()).add(relationship);
 							} else {
-								throw new ConversionException("Expecting ObjectSomeValuesFrom or DataHasValue within ObjectIntersectionOf as part of role group, got " + classExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
+								throw new ConversionException("Expecting ObjectSomeValuesFrom or DataHasValue within ObjectIntersectionOf as part of role group, " +
+										"got " + classExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 							}
 						}
 					} else {
-						throw new ConversionException("Expecting ObjectSomeValuesFrom with role group to have a value of ObjectSomeValuesFrom, got " + filler.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
+						throw new ConversionException("Expecting ObjectSomeValuesFrom with role group to have one of ObjectSomeValuesFrom, DataHasValue or ObjectIntersectionOf, " +
+								"got " + filler.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 					}
 				} else {
 					Relationship relationship = extractRelationship(someValuesFrom, 0);
