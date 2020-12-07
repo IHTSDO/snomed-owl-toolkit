@@ -260,7 +260,7 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
-	public void testConvertRelationshipsToAxiomAllowGroupedAttribute() {
+	public void testConvertRelationshipsToAxiomAllowGroupedAttribute() throws ConversionException {
 		AxiomRepresentation representation = new AxiomRepresentation();
 		representation.setLeftHandSideNamedConcept(9846003L);
 		representation.setRightHandSideRelationships(toMap(
@@ -274,7 +274,7 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
-	public void testConvertRelationshipsToAxiomMoveUngroupedAttribute() {
+	public void testConvertRelationshipsToAxiomMoveUngroupedAttribute() throws ConversionException {
 		AxiomRepresentation representation = new AxiomRepresentation();
 		representation.setLeftHandSideNamedConcept(9846003L);
 		representation.setRightHandSideRelationships(toMap(
@@ -322,7 +322,37 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
-	public void testConvertRelationshipConcreteValueToAxiom() {
+	public void testMinimalAxiomWithConcreteValueToRelationships() throws ConversionException {
+		String axiom =
+				"SubClassOf(" +
+				"	:12345678910" + // Named class
+				"	ObjectIntersectionOf(" +
+				"		:138875005 " + // Parent (is-a relationship)
+				"		ObjectSomeValuesFrom(" +
+				"			:609096000 " + // Role group
+				"			DataHasValue(:1234567891011 \"1\"^^xsd:integer)" + // Concrete attribute-value pair
+				"		)" +
+				"	)" +
+				")";
+
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
+
+		assertEquals(12345678910L, representation.getLeftHandSideNamedConcept().longValue());
+		assertEquals(
+				"0 116680003=138875005\n" +
+						"1 1234567891011=1",
+				toString(representation.getRightHandSideRelationships()));
+
+		assertNull(representation.getRightHandSideNamedConcept());
+
+		// Test converting relationships back to an axiom
+		String recreatedAxiom = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
+		assertEquals(axiom.replaceAll("\\W", ""), recreatedAxiom.replaceAll("\\W", ""));
+		assertTrue(representation.isPrimitive());
+	}
+
+	@Test
+	public void testConvertRelationshipConcreteValueToAxiom() throws ConversionException {
 		AxiomRepresentation representation = new AxiomRepresentation();
 		representation.setLeftHandSideNamedConcept(322236009L);
 		representation.setRightHandSideRelationships(toMap(
@@ -337,6 +367,17 @@ public class AxiomRelationshipConversionServiceTest {
 		assertEquals("EquivalentClasses(:322236009 ObjectIntersectionOf(:763158003 ObjectSomeValuesFrom(:411116001 :421026006) " +
 				"ObjectSomeValuesFrom(:763032000 :732936001) DataHasValue(:3264479001 \"1\"^^xsd:integer)))", actual);
 
+	}
+
+	@Test(expected = ConversionException.class)
+	public void testConvertConcreteValueAndNoParentMustFail() throws ConversionException {
+		AxiomRepresentation representation = new AxiomRepresentation();
+		representation.setLeftHandSideNamedConcept(322236009L);
+		representation.setRightHandSideRelationships(toMap(
+				new Relationship(0, 3264479001L, new ConcreteValue(ConcreteValue.Type.INTEGER, "1"))
+		));
+
+		axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
 	}
 
 	private Map<Integer, List<Relationship>> toMap(Relationship... relationships) {
