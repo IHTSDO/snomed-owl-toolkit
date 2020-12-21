@@ -206,12 +206,14 @@ public class Relationship {
 		public boolean isInteger() { return this.type == Type.INTEGER; }
 
 		public int asInt() { return Integer.parseInt(value); }
-
+		
+		public boolean isString() { return Type.STRING == type; }
+		
 		public String asString() { return value; }
 
-		public boolean isString() { return Type.STRING == type; }
-
 		public boolean isDecimal() { return Type.DECIMAL == type; }
+		
+		public Double asDecimal() { return Double.parseDouble(value); }
 
 		@Override
 		public String toString() {
