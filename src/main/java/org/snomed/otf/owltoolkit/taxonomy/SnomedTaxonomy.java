@@ -85,7 +85,7 @@ public class SnomedTaxonomy {
 		return conceptInactiveInferredRelationshipMap.getOrDefault(conceptId, Collections.emptySet());
 	}
 
-	public void addOrModifyRelationship(boolean stated, long conceptId, Relationship relationship) {
+	public synchronized void addOrModifyRelationship(boolean stated, long conceptId, Relationship relationship) {
 		// Have we seen this relationship before ie we need to modify it?
 		Relationship existingRelationship = stated ? statedRelationshipsById.get(relationship.getRelationshipId())
 				: inferredRelationshipsById.get(relationship.getRelationshipId());
@@ -109,7 +109,7 @@ public class SnomedTaxonomy {
 		}
 	}
 
-	public void addInactiveInferredRelationship(long conceptId, Relationship relationship) {
+	public synchronized void addInactiveInferredRelationship(long conceptId, Relationship relationship) {
 		conceptInactiveInferredRelationshipMap.computeIfAbsent(conceptId, k -> new HashSet<>()).add(relationship);
 	}
 
@@ -194,7 +194,7 @@ public class SnomedTaxonomy {
 		return conceptInferredRelationshipMap.getOrDefault(conceptId, Collections.emptySet());
 	}
 
-	public void removeRelationship(boolean stated, String sourceId, String relationshipIdStr) {
+	public synchronized void removeRelationship(boolean stated, String sourceId, String relationshipIdStr) {
 		long relationshipId = parseLong(relationshipIdStr);
 		if (stated) {
 			getStatedRelationships(parseLong(sourceId)).removeIf(relationship -> relationshipId == relationship.getRelationshipId());
