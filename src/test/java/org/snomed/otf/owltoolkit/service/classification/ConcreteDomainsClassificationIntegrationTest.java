@@ -89,4 +89,23 @@ public class ConcreteDomainsClassificationIntegrationTest {
 				"1\t\t871788009\t#1\t0\t100000001001\t900000000000011006\t900000000000451002", concreteValueInferredChanges.get(1));
 	}
 
+	@Test
+	public void testReClassifyConcreteDomains() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_with_Concepts_as_numbers_snapshot");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Concrete_Domain_conversion_classified_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		List<String> conceptInferredChanges = readInferredRelationshipLinesTrim(results);
+		assertEquals("No changes, just header line.", 1, conceptInferredChanges.size());
+
+		// Assert concrete values results
+		List<String> concreteValueInferredChanges = readInferredRelationshipConcreteValuesLinesTrim(results);
+		assertEquals("No changes, just header line.", 1, concreteValueInferredChanges.size());
+	}
+
 }

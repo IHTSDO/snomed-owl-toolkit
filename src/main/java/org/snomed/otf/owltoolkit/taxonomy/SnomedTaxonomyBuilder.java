@@ -30,12 +30,13 @@ import static org.snomed.otf.owltoolkit.constants.Concepts.*;
 
 public class SnomedTaxonomyBuilder {
 
-	private Logger logger = LoggerFactory.getLogger(getClass());
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
 			.withoutDescriptions()
 			.withInactiveConcepts()
 			.withFullRelationshipObjects()
+			.withFullConcreteRelationshipObjects()
 			.withStatedRelationships()
 			.withFullRefsetMemberObjects()
 			// Inactive relationships needed when loading the snapshot for ID reuse.

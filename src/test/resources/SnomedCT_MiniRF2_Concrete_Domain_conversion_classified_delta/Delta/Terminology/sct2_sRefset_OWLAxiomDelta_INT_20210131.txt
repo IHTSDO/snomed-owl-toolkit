@@ -1,0 +1,10 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+
+# Inactivate "Count of base active ingredient" Concept model object attribute.
+cb4e04ae-fb5f-4af1-80f6-4f928defc43b	20210131	0	900000000000012004	733073007	766952006	SubObjectPropertyOf(:766952006 :762705008)
+
+# New "Count of base active ingredient" data property
+c86a05ac-bf3a-4f11-809f-444748bfa8bc	20210131	1	900000000000012004	733073007	100000001001	SubDataPropertyOf(:100000001001 :762706009)
+
+# 871788009 |Product containing only eptinezumab (medicinal product)| now uses the data property and a concrete value of 1.
+7b74db66-d9c5-47a8-bc6e-3e726e23fa1a	20200731	1	900000000000207008	733073007	871788009	SubClassOf(:871788009 ObjectIntersectionOf(:138875005 DataHasValue(:100000001001 "1"^^xsd:integer)))
