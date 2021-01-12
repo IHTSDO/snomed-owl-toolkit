@@ -257,6 +257,32 @@ public class AxiomRelationshipConversionServiceTest {
 						")" +
 						" )";
 		assertEquals(Sets.newHashSet(9846003L, 39132006L, 64033007L, 272741003L, 24028007L), axiomRelationshipConversionService.getIdsOfConceptsNamedInAxiom(equivalentClassAxiom));
+
+		assertEquals(Sets.newHashSet(784852002L, 763158003L, 411116001L, 385023001L, 609096000L,
+				732943007L, 386859000L,
+				733722007L, 258773002L,
+				733725009L, 258684004L,
+				762949000L, 386859000L,
+				1142137007L,
+				1142138002L,
+				1142139005L),
+				axiomRelationshipConversionService.getIdsOfConceptsNamedInAxiom(
+						"EquivalentClasses(:784852002 " +
+						"	ObjectIntersectionOf(:763158003 " +
+						"		ObjectSomeValuesFrom(:411116001 :385023001) " +
+						"		ObjectSomeValuesFrom(:609096000 " +
+						"			ObjectIntersectionOf(" +
+						"				ObjectSomeValuesFrom(:732943007 :386859000) " +
+						"				ObjectSomeValuesFrom(:733722007 :258773002) " +
+						"				ObjectSomeValuesFrom(:733725009 :258684004) " +
+						"				ObjectSomeValuesFrom(:762949000 :386859000) " +
+						"				DataHasValue(:1142137007 \"1\"^^xsd:integer) " +
+						"				DataHasValue(:1142138002 \"2.5\"^^xsd:decimal)" +
+						"			)" +
+						"		) " +
+						"		DataHasValue(:1142139005 \"1\"^^xsd:integer)" +
+						"	)" +
+						")"));
 	}
 
 	@Test

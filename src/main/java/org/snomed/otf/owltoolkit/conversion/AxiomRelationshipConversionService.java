@@ -248,7 +248,7 @@ public class AxiomRelationshipConversionService {
 	 */
 	public Set<Long> getIdsOfConceptsNamedInAxiom(String axiomExpression) throws ConversionException {
 		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(axiomExpression);
-		return owlAxiom.getSignature().stream().map(OntologyHelper::getConceptId).collect(Collectors.toSet());
+		return owlAxiom.getSignature().stream().filter(OntologyHelper::isNamedConcept).map(OntologyHelper::getConceptId).collect(Collectors.toSet());
 	}
 
 	private OWLAxiom convertOwlExpressionToOWLAxiom(String axiomExpression) throws ConversionException {
