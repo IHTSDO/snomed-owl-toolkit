@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The change log format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+
+## 3.0.0 Release - 2021-01-13
+Initial concrete domain support enable the production of the International Edition Concrete Domain Technical Preview.
+
+### Features
+- Classification and NNF normalisation for concrete domain types Integer, Decimal and String.
+- Ontology file generation with concrete domains.
+
+### Improvements
+- Internal refactoring to remove unused negation flags and logic.
+
+### Fixes
+- Bump minor JUnit version to mitigate security issue.
+
+
 ## 2.9.0 Release - 2020-01-02
 Minor improvements release.
 
