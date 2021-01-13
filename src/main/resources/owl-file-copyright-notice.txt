@@ -1,5 +1,5 @@
 #############################################################################################################
-# © International Health Terminology Standards Development Organisation 2002-2019. All rights reserved.
+# © International Health Terminology Standards Development Organisation 2002-2021. All rights reserved.
 # SNOMED CT® was originally created by the College of American Pathologists.
 # "SNOMED" and "SNOMED CT" are registered trademarks of International Health Terminology Standards
 # Development Organisation, trading as SNOMED International.
