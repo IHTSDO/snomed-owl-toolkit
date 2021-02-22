@@ -141,6 +141,10 @@ public class Relationship {
 		return value;
 	}
 
+	public String getValueAsString() {
+		return value != null ? value.getRF2Value() : null;
+	}
+
 	public boolean isConcrete() {
 		return value != null;
 	}

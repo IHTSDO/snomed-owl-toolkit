@@ -30,6 +30,7 @@ public class RelationshipChangeProcessor {
 	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_ALL_FIELDS = Comparator
 			.comparing(Relationship::getTypeId)
 			.thenComparing(Relationship::getDestinationId)
+			.thenComparing(Relationship::getValueAsString, Comparator.nullsLast(Comparator.naturalOrder()))
 			.thenComparing(Relationship::getGroup)
 			.thenComparing(Relationship::getUnionGroup)
 			.thenComparing(Relationship::isUniversal);
@@ -37,6 +38,7 @@ public class RelationshipChangeProcessor {
 	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_WITH_MODULE_ID = Comparator
 			.comparing(Relationship::getTypeId)
 			.thenComparing(Relationship::getDestinationId)
+			.thenComparing(Relationship::getValueAsString, Comparator.nullsLast(Comparator.naturalOrder()))
 			.thenComparing(Relationship::getGroup)
 			.thenComparing(Relationship::getUnionGroup)
 			.thenComparing(Relationship::isUniversal)
@@ -45,6 +47,7 @@ public class RelationshipChangeProcessor {
 	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_WITHOUT_GROUP = Comparator
 			.comparing(Relationship::getTypeId)
 			.thenComparing(Relationship::getDestinationId)
+			.thenComparing(Relationship::getValueAsString, Comparator.nullsLast(Comparator.naturalOrder()))
 			.thenComparing(Relationship::getUnionGroup)
 			.thenComparing(Relationship::isUniversal);
 
