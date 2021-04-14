@@ -19,7 +19,6 @@ package org.snomed.otf.owltoolkit.classification;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import org.snomed.otf.owltoolkit.domain.Relationship;
 
 import java.io.Serializable;
 import java.util.*;
@@ -97,7 +96,4 @@ public class ReasonerTaxonomy implements Serializable {
 		return insertionOrderedAttributeIds;
 	}
 
-	public Collection<Relationship> getNonIsAFragments(long conceptId) {
-		return null;
-	}
 }
