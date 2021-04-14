@@ -171,11 +171,6 @@ public class SnomedTaxonomy {
 		return longs != null ? longs : Collections.emptySet();
 	}
 
-	public boolean isExhaustive(long conceptId) {
-		// TODO: is this always false?
-		return false;
-	}
-
 	public Set<Long> getAllConceptIds() {
 		return allConceptIds;
 	}

@@ -20,10 +20,10 @@ public class AxiomDeserialiser {
 	private static final String ontologyDocStart = "Prefix(:=<http://snomed.info/id/>) Ontology(";
 	private static final String ontologyDocEnd = ")";
 
-	private OWLOntology owlOntology;
-	private OWLOntologyLoaderConfiguration owlOntologyLoaderConfiguration;
-	private OWLFunctionalSyntaxOWLParser owlFunctionalSyntaxOWLParser;
-	private List<OWLAxiom> owlAxiomsLoaded = new ArrayList<>();
+	private final OWLOntology owlOntology;
+	private final OWLOntologyLoaderConfiguration owlOntologyLoaderConfiguration;
+	private final OWLFunctionalSyntaxOWLParser owlFunctionalSyntaxOWLParser;
+	private final List<OWLAxiom> owlAxiomsLoaded = new ArrayList<>();
 	private int axiomsLoaded = 0;
 	private long timeTakenDeserialisingAxioms;
 	private final OWLOntologyManager owlOntologyManager;
