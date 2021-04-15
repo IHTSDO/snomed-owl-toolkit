@@ -48,7 +48,7 @@ id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId
 # Disorder of adrenal gland - is a - Disorder of endocrine system
 200140021	20190131	1	900000000000207008	30171000	362969004	0	116680003	900000000000011006	900000000000451002
 
-# Disorder of adrenal gland - Finding site  - Structure of endocrine system
+# Disorder of adrenal gland - Finding site - Structure of endocrine system
 200120021	20190131	1	900000000000207008	30171000	113331007	0	363698007	900000000000011006	900000000000451002
 
 # Disorder of adrenal gland - Finding site  - Adrenal structure

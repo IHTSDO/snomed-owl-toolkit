@@ -15,9 +15,7 @@
  */
 package org.snomed.otf.owltoolkit.service.classification;
 
-import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.junit.Test;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.service.ReasonerServiceException;
 import org.snomed.otf.owltoolkit.service.SnomedReasonerService;
 import org.snomed.otf.snomedboot.testutil.ZipUtil;
@@ -37,7 +35,7 @@ public class AdditionalAxiomClassificationIntegrationTest {
 	private SnomedReasonerService snomedReasonerService = new SnomedReasonerService();
 
 	@Test
-	public void testClassifyAdditionalAxiom() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
+	public void testClassifyAdditionalAxiom() throws IOException, ReasonerServiceException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Triangle_Additional_Axiom_delta");
 		assertNotNull(snomedReasonerService);

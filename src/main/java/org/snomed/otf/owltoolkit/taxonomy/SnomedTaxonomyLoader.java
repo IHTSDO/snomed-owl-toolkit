@@ -38,7 +38,7 @@ import static org.snomed.otf.owltoolkit.constants.Concepts.*;
 
 public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 
-	private final SnomedTaxonomy snomedTaxonomy = new SnomedTaxonomy();
+	private final SnomedTaxonomy snomedTaxonomy;
 	private static final String ACTIVE = "1";
 
 	private boolean loadingDelta;
@@ -51,8 +51,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	private ComponentFactory snapshotComponentFactoryTap;
 	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomyLoader.class);
 
-	public SnomedTaxonomyLoader() {
+	SnomedTaxonomyLoader(SnomedTaxonomy snomedTaxonomy) {
 		axiomDeserialiser = new AxiomDeserialiser();
+		this.snomedTaxonomy = snomedTaxonomy;
+	}
+
+	public SnomedTaxonomyLoader() {
+		this(new SnomedTaxonomy());
 	}
 
 	/**

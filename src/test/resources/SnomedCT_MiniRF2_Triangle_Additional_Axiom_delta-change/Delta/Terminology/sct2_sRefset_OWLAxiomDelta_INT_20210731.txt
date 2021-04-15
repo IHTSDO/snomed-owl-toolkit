@@ -1,0 +1,21 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+
+#
+# We will update an existing axiom
+#
+
+# Here is a more human readable version:
+# EquivalentClasses(
+#    :100105001 - Triangle
+#    ObjectIntersectionOf(
+#        :100102001 - Polygon
+#        ObjectSomeValuesFrom(
+#            :100104001 - Number of corners
+#            :100108001 - 4
+#        )
+#    )
+#)
+1b6427e7-23de-476f-8f25-423306f180ac		1	900000000000207008	733073007	100105001	EquivalentClasses(:100105001 ObjectIntersectionOf(:100102001 ObjectSomeValuesFrom(:100104001 :100108001)))

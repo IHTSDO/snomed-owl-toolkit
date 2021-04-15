@@ -15,9 +15,11 @@
  */
 package org.snomed.otf.owltoolkit.service;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
-import org.semanticweb.owlapi.model.OWLOntology;
-import org.semanticweb.owlapi.model.OWLOntologyCreationException;
+import org.semanticweb.owlapi.apibinding.OWLManager;
+import org.semanticweb.owlapi.model.*;
+import org.semanticweb.owlapi.model.parameters.Imports;
 import org.semanticweb.owlapi.reasoner.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +33,9 @@ import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.normalform.RelationshipChangeProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipInactivationProcessor;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
+import org.snomed.otf.owltoolkit.ontology.AxiomChangeSet;
 import org.snomed.otf.owltoolkit.ontology.OntologyDebugUtil;
 import org.snomed.otf.owltoolkit.ontology.OntologyService;
-import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
@@ -42,6 +44,7 @@ import org.snomed.otf.owltoolkit.util.TimerUtil;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Long.parseLong;
 
@@ -50,6 +53,8 @@ public class SnomedReasonerService {
 	public static final String ELK_REASONER_FACTORY = "org.semanticweb.elk.owlapi.ElkReasonerFactory";
 
 	private final ClassificationResultsWriter classificationResultsWriter;
+
+	private final SnomedTaxonomyBuilder snomedTaxonomyBuilder = new SnomedTaxonomyBuilder();
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -64,14 +69,14 @@ public class SnomedReasonerService {
 		this.classificationResultsWriter = new ClassificationResultsWriter();
 	}
 
-	public void classify(String classificationId,
+	public ClassificationContainer classify(String classificationId,
 			File previousReleaseRf2SnapshotArchiveFiles,
 			File currentReleaseRf2DeltaArchiveFile,
 			File resultsRf2DeltaArchiveFile,
 			String reasonerFactoryClassName,
 			boolean outputOntologyFileForDebug) throws ReasonerServiceException {
 
-		classify(classificationId,
+		return classify(classificationId,
 				Collections.singleton(previousReleaseRf2SnapshotArchiveFiles),
 				currentReleaseRf2DeltaArchiveFile,
 				resultsRf2DeltaArchiveFile,
@@ -80,7 +85,7 @@ public class SnomedReasonerService {
 		);
 	}
 
-	public void classify(String classificationId,
+	public ClassificationContainer classify(String classificationId,
 			Set<File> previousReleaseRf2SnapshotArchiveFile,
 			File currentReleaseRf2DeltaArchiveFile,
 			File resultsRf2DeltaArchiveFile,
@@ -91,7 +96,7 @@ public class SnomedReasonerService {
 			 OptionalFileInputStream currentReleaseRf2DeltaArchive = new OptionalFileInputStream(currentReleaseRf2DeltaArchiveFile);
 			 OutputStream resultsRf2DeltaArchive = new FileOutputStream(resultsRf2DeltaArchiveFile)) {
 
-			classify(classificationId,
+			return classify(classificationId,
 					previousReleaseRf2SnapshotArchives,
 					currentReleaseRf2DeltaArchive.getInputStream().orElse(null),
 					resultsRf2DeltaArchive,
@@ -102,7 +107,7 @@ public class SnomedReasonerService {
 		}
 	}
 
-	public void classify(String classificationId,
+	public ClassificationContainer classify(String classificationId,
 			InputStreamSet previousReleaseRf2SnapshotArchives,
 			InputStream currentReleaseRf2DeltaArchive,
 			OutputStream resultsRf2DeltaArchive,
@@ -116,7 +121,6 @@ public class SnomedReasonerService {
 		timer.checkpoint("Create reasoner factory");
 
 		logger.info("Building snomedTaxonomy");
-		SnomedTaxonomyBuilder snomedTaxonomyBuilder = new SnomedTaxonomyBuilder();
 		SnomedTaxonomy snomedTaxonomy;
 		try {
 			snomedTaxonomy = snomedTaxonomyBuilder.build(previousReleaseRf2SnapshotArchives, currentReleaseRf2DeltaArchive, false);
@@ -127,7 +131,8 @@ public class SnomedReasonerService {
 
 		logger.info("Creating OwlOntology");
 		Set<Long> ungroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
-		OntologyService ontologyService = new OntologyService(ungroupedRoles);
+		OWLOntologyManager ontologyManager = OWLManager.createOWLOntologyManager();
+		OntologyService ontologyService = new OntologyService(ungroupedRoles, ontologyManager);
 		OWLOntology owlOntology;
 		try {
 			owlOntology = ontologyService.createOntology(snomedTaxonomy);
@@ -135,8 +140,6 @@ public class SnomedReasonerService {
 			throw new ReasonerServiceException("Failed to build OWL Ontology.", e);
 		}
 		timer.checkpoint("Create OWL Ontology");
-
-		Set<PropertyChain> propertyChains = ontologyService.getPropertyChains(owlOntology);
 
 		if (outputOntologyFileForDebug) {
 			OntologyDebugUtil.serialiseOntologyForDebug(classificationId, owlOntology);
@@ -156,7 +159,6 @@ public class SnomedReasonerService {
 		logger.info("Extract ReasonerTaxonomy");
 		ReasonerTaxonomyWalker walker = new ReasonerTaxonomyWalker(reasoner, new ReasonerTaxonomy());
 		ReasonerTaxonomy reasonerTaxonomy = walker.walk();
-		reasoner.dispose();
 		timer.checkpoint("Extract ReasonerTaxonomy");
 
 		logger.info("Generate normal form");
@@ -167,10 +169,10 @@ public class SnomedReasonerService {
 		} catch (ConversionException e) {
 			throw new ReasonerServiceException("Failed to convert OWL Axiom Expressions into relationships for normal form generation.", e);
 		}
-		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, conceptAxiomStatementMap, propertyChains);
+		RelationshipNormalFormGenerator normalFormGenerator =
+				new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, conceptAxiomStatementMap, ontologyService.getPropertyChains(owlOntology));
 
-		RelationshipChangeProcessor changeCollector = new RelationshipChangeProcessor();
-		normalFormGenerator.collectNormalFormChanges(changeCollector);
+		RelationshipChangeProcessor changeCollector = normalFormGenerator.collectNormalFormChanges(null);
 		timer.checkpoint("Generate normal form");
 
 		logger.info("Inactivating inferred relationships for new inactive concepts");
@@ -213,6 +215,150 @@ public class SnomedReasonerService {
 		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
 		timer.checkpoint("Write results to disk");
 		timer.finish();
+
+		ClassificationContainer container = new ClassificationContainer();
+		container.setSnomedTaxonomy(snomedTaxonomy);
+		container.setUngroupedRoles(ungroupedRoles);
+		container.setOwlOntologyManager(ontologyManager);
+		container.setReasoner(reasoner);
+		container.setReasonerTaxonomy(reasonerTaxonomy);
+		container.setNormalFormGenerator(normalFormGenerator);
+		return container;
+	}
+
+	public void updateClassification(ClassificationContainer container, InputStream deltaZipInputStream, OutputStream resultsRf2DeltaArchive) throws ReasonerServiceException {
+		TimerUtil timer = new TimerUtil("Update Classification");
+
+		// TODO:
+		// - Detect changes to properties and chains then recompute from scratch? Can reasoner/OWLAPI help detect these?
+		// - Clear list of Equivalent concepts and check them again?
+		// - Do something with ReasonerTaxonomy unsatisfiableConceptIds. Throw exception or return to terminology server..
+
+		// Delta zip contains:
+		// - any stated changes since the last classification, including axiom additions, changes or !deletions!
+		// - any saved inferred relationship changes .. inferred relationship changes from the last classification may or may not have been accepted
+
+		// Scope for EXP demo:
+		// - Infer parents
+		// - Calculate NNF
+		// - Could be transient
+
+
+		// Create copy of Snomed Taxonomy and update
+		SnomedTaxonomy snomedTaxonomy = new SnomedTaxonomy(container.getSnomedTaxonomy());
+		try {
+			snomedTaxonomyBuilder.updateTaxonomy(snomedTaxonomy, deltaZipInputStream);
+		} catch (ReleaseImportException e) {
+			throw new ReasonerServiceException("Failed to update snomed taxonomy.", e);
+		}
+		Set<Long> conceptIdsWithStatedChange = snomedTaxonomy.getStatedChangeConceptIds();
+		logger.debug("ConceptIds with stated change: {}", conceptIdsWithStatedChange);
+		timer.checkpoint("Update SNOMED taxonomy");
+
+
+		// Update OWLOntology
+		Set<Long> ungroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
+		final OntologyService ontologyService = new OntologyService(ungroupedRoles, container.getOwlOntologyManager());
+		final OWLOntology owlOntology = container.getReasoner().getRootOntology();
+		final AxiomChangeSet axiomChangeSet = ontologyService.updateOntology(conceptIdsWithStatedChange, snomedTaxonomy, owlOntology);
+		timer.checkpoint("Update OWL Ontology");
+
+		final ReasonerTaxonomy reasonerTaxonomy;
+		Set<Long> conceptsToProcess;
+		try {
+			// Infer hierarchy
+			logger.info("OwlReasoner inferring class hierarchy");
+			final OWLReasoner reasoner = container.getReasoner();
+			reasoner.flush();
+			reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+			timer.checkpoint("Inference computation");
+
+			// Extract hierarchy
+			logger.info("Update ReasonerTaxonomy");
+			// Create copy of ReasonerTaxonomy and update
+			reasonerTaxonomy = new ReasonerTaxonomy(container.getReasonerTaxonomy());
+			ReasonerTaxonomyWalker walker = new ReasonerTaxonomyWalker(reasoner, reasonerTaxonomy);
+			conceptsToProcess = walker.walkUpdatedPart(conceptIdsWithStatedChange);
+			timer.checkpoint("Update ReasonerTaxonomy");
+		} finally {
+			// Revert axiom changes
+			ontologyService.revertOntologyUpdate(axiomChangeSet, owlOntology);
+		}
+
+		// Generate NNF
+		logger.info("Generate normal form");
+		// Convert axioms to relationship-like rows
+		AxiomRelationshipConversionService axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedRoles);
+//		final RelationshipNormalFormGenerator baseNormalFormGenerator = container.getNormalFormGenerator();
+		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, container.getNormalFormGenerator());
+		try {
+			// Convert just the axioms of concepts with stated changes
+			final Map<Long, List<OWLAxiom>> conceptAxiomMapNewEntries = snomedTaxonomy.getConceptAxiomMap().entrySet().stream()
+					.filter((entry) -> conceptIdsWithStatedChange.contains(entry.getKey()))
+					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+							(u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); }, Long2ObjectOpenHashMap::new));
+			Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMapUpdates = axiomRelationshipConversionService.convertAxiomsToRelationships(conceptAxiomMapNewEntries, true);
+			// Update existing map
+			Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap = normalFormGenerator.getConceptAxiomStatementMap();
+			// Remove all concepts with stated change
+			for (Long conceptId : conceptIdsWithStatedChange) {
+				conceptAxiomStatementMap.remove(conceptId);
+			}
+			// Put all new version axioms
+			conceptAxiomStatementMap.putAll(conceptAxiomStatementMapUpdates);
+		} catch (ConversionException e) {
+			throw new ReasonerServiceException("Failed to convert OWL Axiom Expressions into relationships for normal form generation.", e);
+		}
+
+		RelationshipChangeProcessor changeCollector = normalFormGenerator.collectNormalFormChanges(conceptsToProcess);
+		timer.checkpoint("Generate normal form");
+
+		logger.info("Inactivating inferred relationships for new inactive concepts");
+		new RelationshipInactivationProcessor(snomedTaxonomy).processInactivationChanges(changeCollector);
+
+		// Restore inactive relationships where appropriate
+		for (Long conceptId : changeCollector.getAddedStatements().keySet()) {
+			Set<Relationship> conceptInactiveInferredRelationship = snomedTaxonomy.getInactiveInferredRelationships(conceptId);
+			Set<Relationship> newInferredRelationship = changeCollector.getAddedStatements().get(conceptId);
+
+			if(!conceptInactiveInferredRelationship.isEmpty() && !newInferredRelationship.isEmpty()) {
+				for (Relationship newRel : newInferredRelationship) {
+					if (newRel.getRelationshipId() == -1) {// If we are updating an existing relationship then no need to find another one
+						for (Relationship inactiveRel : conceptInactiveInferredRelationship) {
+							if (newRel.getGroup() == inactiveRel.getGroup()
+									&& newRel.getTypeId() == inactiveRel.getTypeId()
+									&& newRel.getDestinationId() == inactiveRel.getDestinationId()) {
+								newRel.setRelationshipId(inactiveRel.getRelationshipId());
+							}
+						}
+					}
+				}
+			}
+		}
+
+		long redundantCount = changeCollector.getRedundantCount();
+		long totalChanges = changeCollector.getAddedCount() + changeCollector.getUpdatedCount() + redundantCount + changeCollector.getRemovedDueToConceptInactivationCount();
+		logger.info("{} relationship rows changed: {} added, {} updated, {} redundant, {} removed due to concept inactivation.",
+				formatDecimal(totalChanges), formatDecimal(changeCollector.getAddedCount()), formatDecimal(changeCollector.getUpdatedCount()),
+				formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
+
+		logger.info("Writing results archive");
+		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, new Date());
+		timer.checkpoint("Write results to disk");
+		timer.finish();
+
+
+	}
+
+	private void printAxioms(OWLOntology ontology, OntologyService ontologyService, Long conceptId, String name) {
+		System.out.println();
+		final OWLClass clazz = ontologyService.getOwlClass(conceptId);
+		final Set<OWLClassAxiom> axioms = ontology.getAxioms(clazz, Imports.EXCLUDED);
+		System.out.println(axioms.size() + " axioms found for concept " + clazz + ": " + name);
+		for (OWLClassAxiom axiom : axioms) {
+			System.out.println(axiom);
+		}
+		System.out.println();
 	}
 
 	private String formatDecimal(long number) {

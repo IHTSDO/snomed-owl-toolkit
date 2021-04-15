@@ -66,7 +66,7 @@ public class SnomedTaxonomyBuilder {
 			.withInactiveRelationships()
 			.withInactiveRefsetMembers();
 
-	private ReleaseImporter releaseImporter = new ReleaseImporter();
+	private final ReleaseImporter releaseImporter = new ReleaseImporter();
 
 	public SnomedTaxonomy build(InputStreamSet snomedRf2SnapshotArchives, boolean includeFSNs) throws ReleaseImportException {
 		return build(snomedRf2SnapshotArchives, null, includeFSNs);
@@ -114,7 +114,6 @@ public class SnomedTaxonomyBuilder {
 
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snapshotComponentFactoryTap, deltaComponentFactoryTap);
 		
-		ReleaseImporter releaseImporter = new ReleaseImporter();
 		releaseImporter.loadEffectiveSnapshotReleaseFileStreams(
 				snomedRf2SnapshotArchives.getFileInputStreams(),
 				includeDescriptions ? SNAPSHOT_LOADING_PROFILE_PLUS_LANGUAGE : SNAPSHOT_LOADING_PROFILE,
@@ -150,4 +149,8 @@ public class SnomedTaxonomyBuilder {
 		return snomedTaxonomy;
 	}
 
+	public void updateTaxonomy(SnomedTaxonomy snomedTaxonomy, InputStream deltaInputStream) throws ReleaseImportException {
+		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snomedTaxonomy);
+		releaseImporter.loadDeltaReleaseFiles(deltaInputStream, DELTA_LOADING_PROFILE, snomedTaxonomyLoader, false);
+	}
 }
