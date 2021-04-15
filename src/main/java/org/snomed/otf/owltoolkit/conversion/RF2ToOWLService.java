@@ -2,6 +2,7 @@ package org.snomed.otf.owltoolkit.conversion;
 
 import com.google.common.collect.Sets;
 import org.ihtsdo.otf.snomedboot.ReleaseImportException;
+import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
@@ -78,7 +79,7 @@ public class RF2ToOWLService {
 		// Create OWL Ontology from stated relationships and OWL Axiom reference set
 		// using list of never grouped roles during relationship to axiom conversion
 		logger.info("Building Ontology");
-		OntologyService ontologyService = new OntologyService(neverGroupedRoles);
+		OntologyService ontologyService = new OntologyService(neverGroupedRoles, OWLManager.createOWLOntologyManager());
 		OWLOntology ontology;
 		try {
 			ontology = ontologyService.createOntology(snomedTaxonomy, ontologyUri, versionDate, includeDescriptions);

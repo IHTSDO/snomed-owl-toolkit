@@ -99,28 +99,45 @@ public final class RelationshipNormalFormGenerator {
 		traversableProperties.forEach(id -> transitiveNodeGraphs.put(id, new NodeGraph()));
 	}
 
+	public RelationshipNormalFormGenerator(ReasonerTaxonomy reasonerTaxonomy, SnomedTaxonomy snomedTaxonomy, RelationshipNormalFormGenerator base) {
+		this.reasonerTaxonomy = reasonerTaxonomy;
+		this.snomedTaxonomy = snomedTaxonomy;
+		this.propertyChains = base.propertyChains;
+		generatedNonIsACache.putAll(base.generatedNonIsACache);
+		traversableProperties = new HashSet<>(base.traversableProperties);
+		conceptAxiomStatementMap = new Long2ObjectOpenHashMap<>(base.conceptAxiomStatementMap);
+	}
+
 	/**
 	 * Computes and returns all changes as a result of normal form computation.
 	 *
-	 * @param processor the change processor to route changes to
-	 * @return the total number of generated components
+	 * @return
+	 * @param conceptsToProcess
 	 */
-	public final void collectNormalFormChanges(final RelationshipChangeProcessor processor) {
+	public final RelationshipChangeProcessor collectNormalFormChanges(Set<Long> conceptsToProcess) {
 		LOGGER.info(">>> Relationship normal form generation");
 		final Stopwatch stopwatch = Stopwatch.createStarted();
 		final List<Long> entries = reasonerTaxonomy.getConceptIds();
 
 		for (Long conceptId : entries) {
+			if (conceptsToProcess != null && !conceptsToProcess.contains(conceptId)) {
+				continue;
+			}
 			firstNormalisationPass(conceptId);
 		}
 
+		RelationshipChangeProcessor changeProcessor = new RelationshipChangeProcessor();
 		for (Long conceptId : entries) {
+			if (conceptsToProcess != null && !conceptsToProcess.contains(conceptId)) {
+				continue;
+			}
 			final Collection<Relationship> existingComponents = snomedTaxonomy.getInferredRelationships((long) conceptId);
 			final Collection<Relationship> generatedComponents = secondNormalisationPass(conceptId);
-			processor.apply(conceptId, existingComponents, generatedComponents);
+			changeProcessor.apply(conceptId, existingComponents, generatedComponents);
 		}
 
 		LOGGER.info(MessageFormat.format("<<< Relationship normal form generation [{0}]", stopwatch.toString()));
+		return changeProcessor;
 	}
 
 	/**
@@ -471,4 +488,11 @@ public final class RelationshipNormalFormGenerator {
 		return transitiveNodeGraphs;
 	}
 
+	public Map<Long, Set<AxiomRepresentation>> getConceptAxiomStatementMap() {
+		return conceptAxiomStatementMap;
+	}
+
+	public Map<Long, Collection<Relationship>> getGeneratedNonIsACache() {
+		return generatedNonIsACache;
+	}
 }

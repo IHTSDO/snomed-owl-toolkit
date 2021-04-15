@@ -26,9 +26,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
+import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.snomed.otf.owltoolkit.ontology.OntologyService.SNOMED_CORE_COMPONENTS_URI;
 
 public class ReasonerTaxonomyWalker {
 
@@ -53,6 +56,10 @@ public class ReasonerTaxonomyWalker {
 	}
 
 	public ReasonerTaxonomy walk() {
+		return walk(null);
+	}
+
+	public ReasonerTaxonomy walk(Set<Long> conceptFilter) {
 		LOGGER.info(">>> SnomedTaxonomy extraction");
 
 		extractProperties();
@@ -65,7 +72,7 @@ public class ReasonerTaxonomyWalker {
 		while (!nodesToProcess.isEmpty()) {
 
 			final Node<OWLClass> currentNode = nodesToProcess.removeFirst();
-			final NodeSet<OWLClass> nextNodeSet = walkClasses(currentNode);
+			final NodeSet<OWLClass> nextNodeSet = walkClasses(currentNode, conceptFilter);
 
 			if (!nextNodeSet.isEmpty()) {
 				nodesToProcess.addAll(nextNodeSet.getNodes());
@@ -85,6 +92,43 @@ public class ReasonerTaxonomyWalker {
 
 		LOGGER.info("<<< taxonomy extraction");
 		return taxonomy;
+	}
+
+	public Set<Long> walkUpdatedPart(Set<Long> conceptIdsWithStatedChange) {
+		// For each changed concept grab super classes and sub classes
+		// Add sub-classes to the changed concepts set
+		OWLDataFactoryImpl factory = new OWLDataFactoryImpl();
+
+		Set<Long> conceptIdsWithPossibleInferredChange = new LongOpenHashSet(conceptIdsWithStatedChange);
+
+		for (Long changedConceptId : conceptIdsWithStatedChange) {
+			OWLClass changeConceptClass = factory.getOWLClass(IRI.create(SNOMED_CORE_COMPONENTS_URI + changedConceptId));
+			NodeSet<OWLClass> subClasses = reasoner.getSubClasses(changeConceptClass, true);
+			for (Node<OWLClass> subClass : subClasses) {
+				final OWLClass owlClass = subClass.getRepresentativeElement();
+				if (OntologyHelper.isConceptClass(owlClass)) {
+					conceptIdsWithPossibleInferredChange.add(OntologyHelper.getConceptId(owlClass));
+				}
+			}
+		}
+
+		taxonomy.removeEntries(conceptIdsWithPossibleInferredChange);
+		System.out.println("Walking: " + conceptIdsWithPossibleInferredChange);
+		walk(conceptIdsWithPossibleInferredChange);
+
+		return conceptIdsWithPossibleInferredChange;
+	}
+
+	private void printRecursively(Node<OWLClass> classNode, String indentation) {
+		indentation += "-";
+		for (Node<OWLClass> subClass : reasoner.getSubClasses(classNode.getRepresentativeElement(), true)) {
+			String uri = subClass.getRepresentativeElement().toString();
+			if (uri.equals("owl:Nothing")) {
+				return;
+			}
+			System.out.println(indentation + " " + uri);
+			printRecursively(subClass, indentation);
+		}
 	}
 
 	private void extractProperties() {
@@ -178,9 +222,9 @@ public class ReasonerTaxonomyWalker {
 		}
 	}
 
-	private NodeSet<OWLClass> walkClasses(final Node<OWLClass> node) {
+	private NodeSet<OWLClass> walkClasses(final Node<OWLClass> node, Set<Long> conceptFilter) {
 
-		if (isNodeProcessed(node)) {
+		if (isNodeProcessed(node, conceptFilter)) {
 			return reasoner.getSubClasses(node.getRepresentativeElement(), true);
 		}
 
@@ -200,7 +244,7 @@ public class ReasonerTaxonomyWalker {
 
 		for (final Node<OWLClass> parentNode : parentNodeSet) {
 
-			if (!isNodeProcessed(parentNode)) {
+			if (!isNodeProcessed(parentNode, conceptFilter)) {
 				return EMPTY_NODE_SET;
 			}
 		}
@@ -256,15 +300,13 @@ public class ReasonerTaxonomyWalker {
 		taxonomy.addEntry(new ReasonerTaxonomyEntry(child, parents));
 	}
 
-	private boolean isNodeProcessed(final Node<OWLClass> node) {
+	private boolean isNodeProcessed(final Node<OWLClass> node, Set<Long> conceptFilter) {
 		for (final OWLClass owlClass : node) {
-			if (!OntologyHelper.isConceptClass(owlClass)) {
-				continue;
-			}
-
-			final long storageKey = OntologyHelper.getConceptId(owlClass);
-			if (!processedConceptIds.contains(storageKey)) {
-				return false;
+			if (OntologyHelper.isConceptClass(owlClass)) {
+				final long conceptId = OntologyHelper.getConceptId(owlClass);
+				if ((conceptFilter == null || conceptFilter.contains(conceptId)) && !processedConceptIds.contains(conceptId)) {
+					return false;
+				}
 			}
 		}
 

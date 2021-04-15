@@ -29,14 +29,24 @@ public class ReasonerTaxonomy implements Serializable {
 	
 	private final List<Set<Long>> equivalentConceptIds = new ArrayList<>();
 	private final Set<Long> unsatisfiableConceptIds = new LongOpenHashSet();
+
 	private final Map<Long, Set<Long>> parentIds = new Long2ObjectOpenHashMap<>();
-	private final Map<Long, Set<Long>> ancestorIds = new Long2ObjectOpenHashMap<>();
+
 	private final List<Long> insertionOrderedIds = new LongArrayList();
 	private final List<Long> insertionOrderedAttributeIds = new LongArrayList();
 
+
 	public ReasonerTaxonomy() {
 	}
-	
+
+	public ReasonerTaxonomy(ReasonerTaxonomy base) {
+		equivalentConceptIds.addAll(base.equivalentConceptIds);
+		unsatisfiableConceptIds.addAll(base.unsatisfiableConceptIds);
+		parentIds.putAll(base.parentIds);
+		insertionOrderedIds.addAll(base.insertionOrderedIds);
+		insertionOrderedAttributeIds.addAll(base.insertionOrderedAttributeIds);
+	}
+
 	public void addEquivalentConceptIds(final Set<Long> conceptIds) {
 		equivalentConceptIds.add(new LongOpenHashSet(conceptIds));
 	}
@@ -45,49 +55,38 @@ public class ReasonerTaxonomy implements Serializable {
 		return equivalentConceptIds;
 	}
 
-	public void addUnsatisfiableConceptIds(final Set<Long> conceptIds) {
-		unsatisfiableConceptIds.addAll(conceptIds);
-	}
-	
 	public Set<Long> getUnsatisfiableConceptIds() {
 		return unsatisfiableConceptIds;
 	}
 
 	public void addEntry(final ReasonerTaxonomyEntry entry) {
 		insertionOrderedIds.add(entry.getSourceId());
-		getOrCreateSet(parentIds, entry.getSourceId()).addAll(entry.getParentIds());
-		getOrCreateSet(ancestorIds, entry.getSourceId()).addAll(entry.getParentIds());
-		for (Long parentId : entry.getParentIds()) {
-			getOrCreateSet(ancestorIds, entry.getSourceId()).addAll(getOrCreateSet(ancestorIds, parentId));
+		parentIds.computeIfAbsent(entry.getSourceId(), (id) -> new HashSet<>()).addAll(entry.getParentIds());
+	}
+
+	public void removeEntries(Set<Long> conceptIds) {
+		for (Long conceptId : conceptIds) {
+			parentIds.remove(conceptId);
 		}
 	}
 
-	private Set<Long> getOrCreateSet(final Map<Long, Set<Long>> map, final long key) {
-		if (map.containsKey(key)) {
-			return map.get(key);
-		} else {
-			final Set<Long> newSet = new LongOpenHashSet();
-			map.put(key, newSet);
-			return newSet;
-		}
+	public Set<Long> getParents(final long conceptId) {
+		return parentIds.getOrDefault(conceptId, Collections.emptySet());
 	}
 
-	private Set<Long> getOrReturnEmptySet(final Map<Long, Set<Long>> map, final long key) {
-		if (map.containsKey(key)) {
-			return map.get(key);
-		} else {
-			return Collections.emptySet();
+	public Set<Long> getAncestors(final long conceptId) {
+		return getAncestors(conceptId, new HashSet<>());
+	}
+
+	private Set<Long> getAncestors(long conceptId, Set<Long> ancestorsSoFar) {
+		final Set<Long> parents = parentIds.getOrDefault(conceptId, Collections.emptySet());
+		ancestorsSoFar.addAll(parents);
+		for (Long parent : parents) {
+			getAncestors(parent, ancestorsSoFar);
 		}
+		return ancestorsSoFar;
 	}
-	
-	public Set<Long> getParents(final long sourceId) {
-		return getOrReturnEmptySet(parentIds, sourceId);
-	}
-	
-	public Set<Long> getAncestors(final long sourceId) {
-		return getOrReturnEmptySet(ancestorIds, sourceId);
-	}
-	
+
 	public List<Long> getConceptIds() {
 		return insertionOrderedIds;
 	}
@@ -95,5 +94,4 @@ public class ReasonerTaxonomy implements Serializable {
 	public List<Long> getAttributeIds() {
 		return insertionOrderedAttributeIds;
 	}
-
 }

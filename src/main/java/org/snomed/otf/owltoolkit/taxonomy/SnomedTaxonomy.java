@@ -38,6 +38,8 @@ public class SnomedTaxonomy {
 	private Map<String, String> ontologyHeader = new HashMap<>();
 	private Set<Long> allConceptIds = new LongOpenHashSet();
 	private Map<Long, Long> conceptModuleMap = new Long2ObjectOpenHashMap<>();
+	private Set<Long> statedChangeConceptIds = new LongOpenHashSet();
+	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
 	private Set<Long> fullyDefinedConceptIds = new LongOpenHashSet();
 	private Map<Long, Relationship> statedRelationshipsById = new HashMap<>();
 	private Map<Long, Relationship> inferredRelationshipsById = new HashMap<>();
@@ -53,7 +55,6 @@ public class SnomedTaxonomy {
 
 	// Ungrouped roles map must be synchronised because international and extension refset members are loaded in parallel. The US Edition package contains the full MRCM.
 	private Map<Long, Set<Long>> ungroupedRolesByContentType = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
-	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
 	private Map<Long, Set<Description>> conceptDescriptionMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 	private Map<Long, Description> descriptionMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 
@@ -65,6 +66,30 @@ public class SnomedTaxonomy {
 	));
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SnomedTaxonomy.class);
+
+	public SnomedTaxonomy() {
+	}
+
+	public SnomedTaxonomy(SnomedTaxonomy base) {
+		ontologyNamespaces.putAll(base.ontologyNamespaces);
+		ontologyHeader.putAll(base.ontologyHeader);
+		allConceptIds.addAll(base.allConceptIds);
+		conceptModuleMap.putAll(base.conceptModuleMap);
+		// statedChangeConceptIds left empty
+		// inactivatedConcepts left empty
+		fullyDefinedConceptIds.addAll(base.fullyDefinedConceptIds);
+		statedRelationshipsById.putAll(base.statedRelationshipsById);
+		inferredRelationshipsById.putAll(base.inferredRelationshipsById);
+		conceptStatedRelationshipMap.putAll(base.conceptStatedRelationshipMap);
+		conceptInferredRelationshipMap.putAll(base.conceptInferredRelationshipMap);
+		conceptInactiveInferredRelationshipMap.putAll(base.conceptInactiveInferredRelationshipMap);
+		conceptAxiomMap.putAll(base.conceptAxiomMap);
+		axiomsById.putAll(base.axiomsById);
+		inferredSubTypesMap.putAll(base.inferredSubTypesMap);
+		ungroupedRolesByContentType.putAll(base.ungroupedRolesByContentType);
+		conceptDescriptionMap.putAll(base.conceptDescriptionMap);
+		descriptionMap.putAll(base.descriptionMap);
+	}
 
 	public boolean isPrimitive(Long conceptId) {
 		return !fullyDefinedConceptIds.contains(conceptId);
@@ -183,21 +208,18 @@ public class SnomedTaxonomy {
 		return fullyDefinedConceptIds;
 	}
 
-	public Set<Long> getConceptIdSet() {
-		return allConceptIds;
-	}
-
 	public Collection<Relationship> getInferredRelationships(long conceptId) {
 		return conceptInferredRelationshipMap.getOrDefault(conceptId, Collections.emptySet());
 	}
 
 	public synchronized void removeRelationship(boolean stated, String sourceId, String relationshipIdStr) {
+		long conceptId = parseLong(sourceId);
 		long relationshipId = parseLong(relationshipIdStr);
 		if (stated) {
-			getStatedRelationships(parseLong(sourceId)).removeIf(relationship -> relationshipId == relationship.getRelationshipId());
+			getStatedRelationships(conceptId).removeIf(relationship -> relationshipId == relationship.getRelationshipId());
 			statedRelationshipsById.remove(relationshipId);
 		} else {
-			getInferredRelationships(parseLong(sourceId)).removeIf(relationship -> relationshipId == relationship.getRelationshipId());
+			getInferredRelationships(conceptId).removeIf(relationship -> relationshipId == relationship.getRelationshipId());
 			inferredRelationshipsById.remove(relationshipId);
 		}
 	}
@@ -227,10 +249,13 @@ public class SnomedTaxonomy {
 	}
 
 	public void addAxiom(String referencedComponentId, String axiomId, OWLAxiom owlAxiom) {
+		long conceptId = parseLong(referencedComponentId);
+		statedChangeConceptIds.add(conceptId);
+
 		// Manually remove any existing axiom by axiomId.
 		// We can't use the natural behaviour of a Java Set because the OWLAxiom does not use the axiomId in the equals method.
 		OWLAxiom existingAxiomVersion = axiomsById.get(axiomId);
-		List<OWLAxiom> conceptAxioms = conceptAxiomMap.computeIfAbsent(parseLong(referencedComponentId), id -> new ArrayList<>());
+		List<OWLAxiom> conceptAxioms = conceptAxiomMap.computeIfAbsent(conceptId, id -> new ArrayList<>());
 		if (existingAxiomVersion != null) {
 			conceptAxioms.remove(existingAxiomVersion);
 		}
@@ -242,7 +267,9 @@ public class SnomedTaxonomy {
 		// Find the previously loaded axiom by id so that it can be removed from the set of axioms on the concept
 		OWLAxiom owlAxiomToRemove = axiomsById.remove(id);
 		if (owlAxiomToRemove != null) {
-			conceptAxiomMap.get(parseLong(referencedComponentId)).remove(owlAxiomToRemove);
+			long conceptId = parseLong(referencedComponentId);
+			statedChangeConceptIds.add(conceptId);
+			conceptAxiomMap.get(conceptId).remove(owlAxiomToRemove);
 		}
 	}
 
@@ -324,4 +351,12 @@ public class SnomedTaxonomy {
 		return axiomsById;
 	}
 
+	public void clearStatedChangeConceptIds() {
+		statedChangeConceptIds.clear();
+		inactivatedConcepts.clear();
+	}
+
+	public Set<Long> getStatedChangeConceptIds() {
+		return statedChangeConceptIds;
+	}
 }

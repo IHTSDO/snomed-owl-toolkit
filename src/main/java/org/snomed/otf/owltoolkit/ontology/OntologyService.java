@@ -17,7 +17,6 @@ package org.snomed.otf.owltoolkit.ontology;
 
 import com.google.common.base.Strings;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat;
 import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
@@ -40,6 +39,7 @@ import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.Long.parseLong;
 import static org.snomed.otf.owltoolkit.domain.Relationship.*;
@@ -66,14 +66,15 @@ public class OntologyService {
 	public static final String LANGUAGE_REFSET_DIALECT_MAP_PROPERTIES = "language-refset-dialect-map.properties";
 
 	private final OWLOntologyManager manager;
-	private OWLDataFactory factory;
-	private DefaultPrefixManager prefixManager;
+	private final OWLDataFactory factory;
+	private final DefaultPrefixManager prefixManager;
 	private final Set<Long> ungroupedAttributes;
-	private AtomicLong missingDialectWarnings;
+	private final AtomicLong missingDialectWarnings;
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	public OntologyService(Set<Long> ungroupedAttributes) {
+	public OntologyService(Set<Long> ungroupedAttributes, OWLOntologyManager owlOntologyManager) {
 		this.ungroupedAttributes = ungroupedAttributes;
-		manager = OWLManager.createOWLOntologyManager();
+		manager = owlOntologyManager;
 		factory = new OWLDataFactoryImpl();
 		prefixManager = new DefaultPrefixManager();
 		prefixManager.setDefaultPrefix(SNOMED_CORE_COMPONENTS_URI);
@@ -122,6 +123,44 @@ public class OntologyService {
 		manager.addAxioms(ontology, axioms);
 		manager.setOntologyFormat(ontology, getFunctionalSyntaxDocumentFormat());
 		return ontology;
+	}
+
+	public AxiomChangeSet updateOntology(Set<Long> changedConceptIds, SnomedTaxonomy snomedTaxonomy, OWLOntology owlOntology) {
+		Map<Long, List<OWLAxiom>> conceptAxiomMap = snomedTaxonomy.getConceptAxiomMap();
+
+		final AxiomChangeSet changeSet = new AxiomChangeSet();
+
+		// For each concept with a changed stated form
+		for (Long changedConceptId : changedConceptIds) {
+			// Grab the owl class
+			OWLClass owlClass = getOwlClass(changedConceptId);
+
+			// Remove existing axioms
+			Stream.of(
+					owlOntology.getSubClassAxiomsForSubClass(owlClass).stream(),
+					owlOntology.getEquivalentClassesAxioms(owlClass).stream())
+					.flatMap(i -> i)
+					.forEach(axiom -> {
+						logger.debug("Remove axiom {}", axiom);
+						manager.removeAxiom(owlOntology, axiom);
+						changeSet.removedAxiom(axiom);
+					});
+
+			// Add current axioms
+			List<OWLAxiom> owlAxiomsList = conceptAxiomMap.get(changedConceptId);
+			if (owlAxiomsList != null && !owlAxiomsList.isEmpty()) {
+				logger.debug("Add axioms for concept {}: {}", changedConceptId, owlAxiomsList);
+				Set<OWLAxiom> owlAxioms = new HashSet<>(owlAxiomsList);
+				manager.addAxioms(owlOntology, owlAxioms);
+				changeSet.addedAxioms(owlAxioms);
+			}
+		}
+		return changeSet;
+	}
+
+	public void revertOntologyUpdate(AxiomChangeSet axiomChangeSet, OWLOntology owlOntology) {
+		manager.removeAxioms(owlOntology, axiomChangeSet.getAddedAxioms());
+		manager.addAxioms(owlOntology, axiomChangeSet.getRemovedAxioms());
 	}
 
 	public Map<Long, Set<OWLAxiom>> createAxiomsFromStatedRelationships(SnomedTaxonomy snomedTaxonomy, Set<Long> conceptIds) {
@@ -358,7 +397,7 @@ public class OntologyService {
 
 		// Build property chains from transitive properties
 		for (OWLTransitiveObjectPropertyAxiom transitiveObjectPropertyAxiom : owlOntology.getAxioms(AxiomType.TRANSITIVE_OBJECT_PROPERTY)) {
-			Long propertyId = getShortForm(transitiveObjectPropertyAxiom.getProperty());
+			long propertyId = getShortForm(transitiveObjectPropertyAxiom.getProperty());
 			propertyChains.add(new PropertyChain(propertyId, propertyId, propertyId));
 		}
 
@@ -397,7 +436,8 @@ public class OntologyService {
 	private OWLAnnotationProperty getOwlAnnotationProperty(long typeId) {
 		return factory.getOWLAnnotationProperty(COLON + typeId, prefixManager);
 	}
-	private OWLClass getOwlClass(Long conceptId) {
+
+	public OWLClass getOwlClass(Long conceptId) {
 		return factory.getOWLClass(COLON + conceptId, prefixManager);
 	}
 
@@ -433,7 +473,7 @@ public class OntologyService {
 				// Use SKOS for other descriptions:
 				String labelUri = null;
 				if (Concepts.SYNONYM.equals(typeId)) {
-					if (acceptabilityMap.values().contains(Concepts.PREFERRED_LONG)) {
+					if (acceptabilityMap.containsValue(Concepts.PREFERRED_LONG)) {
 						// Add preferred synonym as "skos:prefLabel"
 						labelUri = SKOS_PREF_LABEL_URI;
 					} else {
@@ -462,7 +502,7 @@ public class OntologyService {
 		if (preferredLangRefsets.isEmpty() && typeId.equals(Concepts.SYNONYM)) {
 			// Not a preferred synonym, let's collect acceptable entries
 			preferredLangRefsets = acceptabilityMap.entrySet().stream()
-					.filter((entry) -> Concepts.ACCEPTABLE_LONG.equals(entry.getValue())).collect(Collectors.toList());
+					.filter((entry) -> Concepts.ACCEPTABLE_LONG.equals(entry.getValue())).toList();
 		}
 		if (preferredLangRefsets.size() == 1) {
 			Long preferredInLanRefset = preferredLangRefsets.get(0).getKey();
@@ -501,5 +541,4 @@ public class OntologyService {
 		}
 		return map;
 	}
-
 }

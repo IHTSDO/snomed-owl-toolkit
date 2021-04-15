@@ -2,8 +2,8 @@ package org.snomed.otf.owltoolkit.ontology;
 
 import com.google.common.collect.Lists;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
@@ -19,7 +19,7 @@ public class OntologyServiceTest {
 
 	@Before
 	public void setup() {
-		ontologyService = new OntologyService(SnomedTaxonomy.DEFAULT_NEVER_GROUPED_ROLE_IDS);
+		ontologyService = new OntologyService(SnomedTaxonomy.DEFAULT_NEVER_GROUPED_ROLE_IDS, OWLManager.createOWLOntologyManager());
 	}
 
 	@Test
