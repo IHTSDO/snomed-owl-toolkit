@@ -1,0 +1,5 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+486a17c1-0f32-48e1-8a9d-90bcc9a4bfa3	20200131	1	900000000000207008	733073007	15497006	SubClassOf(:15497006 :113331007)
+
+# Disorder of ovary axiom with two finding sites, one is redundant to test attribute subsumption
+be7cdcfc-6ef0-47c7-bf6d-061a3b4d4e77		1	900000000000207008	733073007	5552004	EquivalentClasses(:5552004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:363698007 :113331007) ObjectSomeValuesFrom(:363698007 :15497006)))))

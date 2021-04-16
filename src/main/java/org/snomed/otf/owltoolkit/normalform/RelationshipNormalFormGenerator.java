@@ -204,7 +204,11 @@ public final class RelationshipNormalFormGenerator {
 		 * will already be present in the cache
 		 */
 		for (Long directSuperTypeId : directSuperTypes) {
-			otherNonIsAFragments.put(directSuperTypeId, getCachedNonIsAFragments(directSuperTypeId));
+			final Collection<Relationship> parentCachedNonIsAFragments = getCachedNonIsAFragments(directSuperTypeId);
+			if (parentCachedNonIsAFragments == null) {
+				throw new IllegalStateException(String.format("Parent class %s has not yet been processed. Please check that this class has an axiom.", directSuperTypeId));
+			}
+			otherNonIsAFragments.put(directSuperTypeId, parentCachedNonIsAFragments);
 		}
 
 		Set<AxiomRepresentation> axiomRepresentations = conceptAxiomStatementMap.get(conceptId);
