@@ -1,0 +1,10 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+
+# 15497006 | Ovarian structure (body structure) |
+15497006		1	900000000000207008	900000000000074008
+
+# 5552004 | Disorder of ovary (disorder) |
+5552004		1	900000000000207008	900000000000074008

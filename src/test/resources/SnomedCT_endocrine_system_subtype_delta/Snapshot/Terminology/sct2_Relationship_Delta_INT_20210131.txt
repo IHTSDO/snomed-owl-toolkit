@@ -2,3 +2,4 @@
 # Comments are removed by unit test
 #
 id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+11543537024	20190731	1	900000000000207008	15497006	113331007	0	116680003	900000000000011006	900000000000451002
