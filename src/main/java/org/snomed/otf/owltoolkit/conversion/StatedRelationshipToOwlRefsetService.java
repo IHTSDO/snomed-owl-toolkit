@@ -409,7 +409,7 @@ public class StatedRelationshipToOwlRefsetService {
 														axiomsFromStatedRelationships.get(conceptId));
 					if (modified != null) {
 						logger.debug("Axiom modified for concept " + conceptId);
-						changes.computeIfAbsent(conceptId, k -> new HashSet<OWLAxiom>()).add(modified);
+						changes.computeIfAbsent(conceptId, k -> new HashSet<>()).add(modified);
 						modifiedConcept.add(conceptId);
 						modifiedTotal++;
 						if (!publishedAxiomsIdMap.containsKey(modified)) {
@@ -419,7 +419,7 @@ public class StatedRelationshipToOwlRefsetService {
 				} else {
 					// axioms for new concept
 					logger.debug("Axioms added for new concept " + conceptId);
-					changes.computeIfAbsent(conceptId, k -> new HashSet<OWLAxiom>()).addAll(axiomsFromStatedRelationships.get(conceptId));
+					changes.computeIfAbsent(conceptId, k -> new HashSet<>()).addAll(axiomsFromStatedRelationships.get(conceptId));
 					newlyAdded += axiomsFromStatedRelationships.get(conceptId).size();
 					newlyAddedConcept.add(conceptId);
 				}
@@ -429,7 +429,7 @@ public class StatedRelationshipToOwlRefsetService {
 			inactivatedConcepts = new LongOpenHashSet(snomedTaxonomy.getInactivatedConcepts());
 			inactivatedConcepts.removeAll(completeOwlTaxonomy.getInactivatedConcepts());
 			for (Long conceptId : inactivatedConcepts) {
-				changes.put(conceptId, completeOwlTaxonomy.getConceptAxiomMap().get(conceptId));
+				changes.put(conceptId, new HashSet<>(completeOwlTaxonomy.getConceptAxiomMap().get(conceptId)));
 				inactivation += completeOwlTaxonomy.getConceptAxiomMap().get(conceptId).size();
 			}
 			logger.info("Concepts inactivated:" + inactivatedConcepts);
@@ -442,7 +442,7 @@ public class StatedRelationshipToOwlRefsetService {
 			
 			for (Long conceptId : reActivations) {
 				if (completeOwlTaxonomy.getConceptAxiomMap().containsKey(conceptId)) {
-					changes.put(conceptId, completeOwlTaxonomy.getConceptAxiomMap().get(conceptId));
+					changes.put(conceptId, new HashSet<>(completeOwlTaxonomy.getConceptAxiomMap().get(conceptId)));
 				}
 			}
 			
@@ -473,10 +473,10 @@ public class StatedRelationshipToOwlRefsetService {
 			return this.publishedAxiomsIdMap;
 		}
 
-		OWLAxiom findChanges(Map<OWLAxiom, String> owlAxiomIdMap, Set<OWLAxiom> previous, Set<OWLAxiom> currentFromStated) {
+		OWLAxiom findChanges(Map<OWLAxiom, String> owlAxiomIdMap, List<OWLAxiom> previous, Set<OWLAxiom> currentFromStated) {
 			Set<OWLAxiom> previousAxiomFromStated = previous
 					.stream()
-					.filter(a -> owlAxiomIdMap.containsKey(a))
+					.filter(owlAxiomIdMap::containsKey)
 					.collect(Collectors.toSet());
 			if (previousAxiomFromStated.isEmpty()) {
 				//newly added

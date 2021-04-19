@@ -175,12 +175,12 @@ public class AxiomRelationshipConversionService {
 	/**
 	 * 	Currently supported axiom types are SubClassOf and EquivalentClasses - axioms of other types will be ignored.
 	 */
-	public Map<Long, Set<AxiomRepresentation>> convertAxiomsToRelationships(Map<Long, Set<OWLAxiom>> conceptAxiomMap, boolean ignoreGCIAxioms) throws ConversionException {
+	public Map<Long, Set<AxiomRepresentation>> convertAxiomsToRelationships(Map<Long, List<OWLAxiom>> conceptAxiomMap, boolean ignoreGCIAxioms) throws ConversionException {
 		Map<Long, Set<AxiomRepresentation>> conceptAxiomStatements = new HashMap<>();
 		OWLAxiom currentAxiom = null;
 		try {
 			for (Long conceptId : conceptAxiomMap.keySet()) {
-				Set<OWLAxiom> axioms = conceptAxiomMap.get(conceptId);
+				Collection<OWLAxiom> axioms = conceptAxiomMap.get(conceptId);
 				for (OWLAxiom axiom : axioms) {
 					currentAxiom = axiom;
 					boolean ignore = false;

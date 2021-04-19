@@ -31,6 +31,8 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
 import static java.lang.Long.parseLong;
 import static org.snomed.otf.owltoolkit.constants.Concepts.*;
@@ -173,6 +175,9 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 		boolean activeBool = ACTIVE.equals(active);
 		if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && owlParsingExceptionThrown == null) {
+			if (referencedComponentId.equals("1231000119100")) {
+				System.out.println("!! Loading row");
+			}
 			if (activeBool) {
 				try {
 					addActiveAxiom(id, referencedComponentId, otherValues[0]);
@@ -184,6 +189,10 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 				// Remove the axiom from our active set
 				// Match by id rather than a deserialised representation because the equals method may fail.
 				snomedTaxonomy.removeAxiom(referencedComponentId, id);
+			}
+			if (referencedComponentId.equals("1231000119100")) {
+				final List<OWLAxiom> owlAxioms = snomedTaxonomy.getConceptAxiomMap().get(1231000119100L);
+				System.out.println("1231000119100 axioms: " + owlAxioms);
 			}
 		} else if (refsetId.equals(Concepts.OWL_ONTOLOGY_REFERENCE_SET)) {
 			if (Concepts.OWL_ONTOLOGY_NAMESPACE.equals(referencedComponentId)) {

@@ -13,10 +13,7 @@ import org.springframework.util.StreamUtils;
 
 import java.io.*;
 import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -177,7 +174,7 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 	@Test
 	public void testChangesWithTwoAxioms() throws Exception {
 		AxiomChangesGenerator generator = new AxiomChangesGenerator();
-		Set<OWLAxiom> previous = new HashSet<>();
+		List<OWLAxiom> previous = new ArrayList<>();
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader();
 		OWLAxiom gci = snomedTaxonomyLoader.deserialiseAxiom("SubClassOf(:432685000 ObjectIntersectionOf(:763158003 ObjectSomeValuesFrom(:766939001 :773905006)))");
 		previous.add(gci);

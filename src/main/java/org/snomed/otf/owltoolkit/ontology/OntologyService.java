@@ -97,7 +97,7 @@ public class OntologyService {
 		for (Long conceptId : snomedTaxonomy.getAllConceptIds()) {
 
 			// Add raw axioms from the axiom reference set file
-			axioms.addAll(snomedTaxonomy.getConceptAxiomMap().getOrDefault(conceptId, Collections.emptySet()));
+			axioms.addAll(snomedTaxonomy.getConceptAxiomMap().getOrDefault(conceptId, Collections.emptyList()));
 
 			// Add axioms generated from stated relationships
 			axioms.addAll(axiomsFromStatedRelationships.getOrDefault(conceptId, Collections.emptySet()));

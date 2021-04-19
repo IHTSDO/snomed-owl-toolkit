@@ -37,7 +37,7 @@ public class OWLAxiomToStatedRelationshipService {
 			Long dummyRelationshipId = 1_000_000L;
 
 			AxiomRelationshipConversionService conversionService = new AxiomRelationshipConversionService(Collections.emptySet());
-			Map<Long, Set<OWLAxiom>> conceptAxiomMap = snomedTaxonomy.getConceptAxiomMap();
+			Map<Long, List<OWLAxiom>> conceptAxiomMap = snomedTaxonomy.getConceptAxiomMap();
 			for (Long conceptId : conceptAxiomMap.keySet()) {
 				Map<Integer, List<Relationship>> conceptRelationships = new HashMap<>();
 

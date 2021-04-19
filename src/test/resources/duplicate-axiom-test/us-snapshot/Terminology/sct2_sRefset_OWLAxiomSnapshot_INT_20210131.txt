@@ -1,0 +1,3 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+# Dummy original axiom, donated to international
+8432ddb3-9421-46ce-860a-78b2fe404e82	20180131	1	900000000000207008	733073007	362969004	EquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))
