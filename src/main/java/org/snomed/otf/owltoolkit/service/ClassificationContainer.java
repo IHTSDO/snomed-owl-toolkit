@@ -5,6 +5,7 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
+import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomy;
 
@@ -18,6 +19,7 @@ public class ClassificationContainer {
 	private ReasonerTaxonomy reasonerTaxonomy;
 	private OWLOntologyManager owlOntologyManager;
 	private RelationshipNormalFormGenerator normalFormGenerator;
+	private AxiomRelationshipConversionService axiomRelationshipConversionService;
 
 	// TODO: Call ME
 	public void dispose() {
@@ -72,5 +74,13 @@ public class ClassificationContainer {
 
 	public RelationshipNormalFormGenerator getNormalFormGenerator() {
 		return normalFormGenerator;
+	}
+
+	public void setAxiomRelationshipConversionService(AxiomRelationshipConversionService axiomRelationshipConversionService) {
+		this.axiomRelationshipConversionService = axiomRelationshipConversionService;
+	}
+
+	public AxiomRelationshipConversionService getAxiomRelationshipConversionService() {
+		return axiomRelationshipConversionService;
 	}
 }

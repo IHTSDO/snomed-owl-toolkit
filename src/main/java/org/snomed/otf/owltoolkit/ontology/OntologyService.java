@@ -321,7 +321,7 @@ public class OntologyService {
 				} else if (value != null && destinationId == -1) {
 					processRelationshipsWithConcreteValue(group, typeId, value, terms, nonZeroRoleGroups);
 				} else {
-					throw new IllegalArgumentException("Relationship must not have destination id and concrete value at the same time but got both " + relationship.toString());
+					throw new IllegalArgumentException("Relationship must not have destination id and concrete value at the same time but got both " + relationship);
 				}
 			}
 		}

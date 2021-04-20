@@ -173,6 +173,7 @@ public class SnomedReasonerService {
 				new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, conceptAxiomStatementMap, ontologyService.getPropertyChains(owlOntology));
 
 		RelationshipChangeProcessor changeCollector = normalFormGenerator.collectNormalFormChanges(null);
+		changeCollector.setEquivalentConceptIds(reasonerTaxonomy.getEquivalentConceptIds());
 		timer.checkpoint("Generate normal form");
 
 		logger.info("Inactivating inferred relationships for new inactive concepts");
@@ -212,7 +213,7 @@ public class SnomedReasonerService {
 				formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
 
 		logger.info("Writing results archive");
-		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, startDate);
+		classificationResultsWriter.writeResultsRf2Archive(changeCollector, resultsRf2DeltaArchive, startDate);
 		timer.checkpoint("Write results to disk");
 		timer.finish();
 
@@ -223,11 +224,46 @@ public class SnomedReasonerService {
 		container.setReasoner(reasoner);
 		container.setReasonerTaxonomy(reasonerTaxonomy);
 		container.setNormalFormGenerator(normalFormGenerator);
+		container.setAxiomRelationshipConversionService(axiomRelationshipConversionService);
 		return container;
 	}
 
 	public void updateClassification(ClassificationContainer container, InputStream deltaZipInputStream, OutputStream resultsRf2DeltaArchive) throws ReasonerServiceException {
 		TimerUtil timer = new TimerUtil("Update Classification");
+
+		// Create copy of Snomed Taxonomy and update
+		SnomedTaxonomy snomedTaxonomy = new SnomedTaxonomy(container.getSnomedTaxonomy());
+		try {
+			snomedTaxonomyBuilder.updateTaxonomy(snomedTaxonomy, deltaZipInputStream);
+		} catch (ReleaseImportException e) {
+			throw new ReasonerServiceException("Failed to update snomed taxonomy.", e);
+		}
+
+		final RelationshipChangeProcessor changeCollector = updateClassification(container, snomedTaxonomy, timer);
+
+		logger.info("Writing results archive");
+		classificationResultsWriter.writeResultsRf2Archive(changeCollector, resultsRf2DeltaArchive, new Date());
+		timer.checkpoint("Write results to disk");
+
+		timer.finish();
+	}
+
+	public RelationshipChangeProcessor classifyAxioms(Set<AxiomRepresentation> axioms, ClassificationContainer container) throws ReasonerServiceException {
+		TimerUtil timer = new TimerUtil("Update Classification");
+
+		// Create copy of Snomed Taxonomy and update
+		SnomedTaxonomy snomedTaxonomy = new SnomedTaxonomy(container.getSnomedTaxonomy());
+		try {
+			snomedTaxonomyBuilder.updateTaxonomyWithTransientAxioms(snomedTaxonomy, axioms, container.getAxiomRelationshipConversionService());
+		} catch (ConversionException | OWLOntologyCreationException e) {
+			throw new ReasonerServiceException("Failed to update snomed taxonomy.", e);
+		}
+
+		final RelationshipChangeProcessor changeCollector = updateClassification(container, snomedTaxonomy, timer);
+		return changeCollector;
+	}
+
+	private RelationshipChangeProcessor updateClassification(ClassificationContainer container, SnomedTaxonomy snomedTaxonomy, TimerUtil timer) throws ReasonerServiceException {
 
 		// TODO:
 		// - Detect changes to properties and chains then recompute from scratch? Can reasoner/OWLAPI help detect these?
@@ -244,13 +280,6 @@ public class SnomedReasonerService {
 		// - Could be transient
 
 
-		// Create copy of Snomed Taxonomy and update
-		SnomedTaxonomy snomedTaxonomy = new SnomedTaxonomy(container.getSnomedTaxonomy());
-		try {
-			snomedTaxonomyBuilder.updateTaxonomy(snomedTaxonomy, deltaZipInputStream);
-		} catch (ReleaseImportException e) {
-			throw new ReasonerServiceException("Failed to update snomed taxonomy.", e);
-		}
 		Set<Long> conceptIdsWithStatedChange = snomedTaxonomy.getStatedChangeConceptIds();
 		logger.debug("ConceptIds with stated change: {}", conceptIdsWithStatedChange);
 		timer.checkpoint("Update SNOMED taxonomy");
@@ -311,6 +340,7 @@ public class SnomedReasonerService {
 		}
 
 		RelationshipChangeProcessor changeCollector = normalFormGenerator.collectNormalFormChanges(conceptsToProcess);
+		changeCollector.setEquivalentConceptIds(reasonerTaxonomy.getEquivalentConceptIds());
 		timer.checkpoint("Generate normal form");
 
 		logger.info("Inactivating inferred relationships for new inactive concepts");
@@ -342,12 +372,7 @@ public class SnomedReasonerService {
 				formatDecimal(totalChanges), formatDecimal(changeCollector.getAddedCount()), formatDecimal(changeCollector.getUpdatedCount()),
 				formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
 
-		logger.info("Writing results archive");
-		classificationResultsWriter.writeResultsRf2Archive(changeCollector, reasonerTaxonomy.getEquivalentConceptIds(), resultsRf2DeltaArchive, new Date());
-		timer.checkpoint("Write results to disk");
-		timer.finish();
-
-
+		return changeCollector;
 	}
 
 	private void printAxioms(OWLOntology ontology, OntologyService ontologyService, Long conceptId, String name) {

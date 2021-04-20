@@ -50,6 +50,7 @@ public class RelationshipChangeProcessor {
 
 	private final Map<Long, Set<Relationship>> addedStatements;
 	private final Map<Long, Set<Relationship>> removedStatements;
+	private List<Set<Long>> equivalentConceptIds;
 	private Long addedCount;
 	private Long updatedCount;
 	private Long removedDueToConceptInactivationCount;
@@ -176,5 +177,13 @@ public class RelationshipChangeProcessor {
 
 	public Map<Long, Set<Relationship>> getRemovedStatements() {
 		return removedStatements;
+	}
+
+	public void setEquivalentConceptIds(List<Set<Long>> equivalentConceptIds) {
+		this.equivalentConceptIds = equivalentConceptIds;
+	}
+
+	public List<Set<Long>> getEquivalentConceptIds() {
+		return equivalentConceptIds;
 	}
 }

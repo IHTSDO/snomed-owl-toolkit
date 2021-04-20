@@ -1,8 +1,6 @@
 package org.snomed.otf.owltoolkit.domain;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class AxiomRepresentation {
 
@@ -55,4 +53,10 @@ public class AxiomRepresentation {
 		this.rightHandSideRelationships = rightHandSideRelationships;
 	}
 
+	public void addRightHandSideRelationship(int group, Relationship relationship) {
+		if (rightHandSideRelationships == null) {
+			rightHandSideRelationships = new HashMap<>();
+		}
+		rightHandSideRelationships.computeIfAbsent(group, (i) -> new ArrayList<>()).add(relationship);
+	}
 }

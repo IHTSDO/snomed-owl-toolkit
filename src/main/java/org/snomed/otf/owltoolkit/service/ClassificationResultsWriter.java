@@ -41,7 +41,6 @@ class ClassificationResultsWriter {
 
 	void writeResultsRf2Archive(
 			RelationshipChangeProcessor changeCollector,
-			List<Set<Long>> equivalentConceptIdSets,
 			OutputStream resultsOutputStream,
 			Date startDate) throws ReasonerServiceException {
 
@@ -57,7 +56,7 @@ class ClassificationResultsWriter {
 				writeRelationshipChanges(true, writer, changeCollector.getAddedStatements(), changeCollector.getRemovedStatements());
 
 				zipOutputStream.putNextEntry(new ZipEntry(String.format("RF2/der2_sRefset_EquivalentConceptSimpleMapDelta_Classification_%s.txt", formattedDate)));
-				writeEquivalentConcepts(writer, equivalentConceptIdSets);
+				writeEquivalentConcepts(writer, changeCollector.getEquivalentConceptIds());
 			}
 		} catch (IOException e) {
 			throw new ReasonerServiceException("Failed to write out results archive.", e);
