@@ -19,12 +19,18 @@ import org.ihtsdo.otf.snomedboot.ReleaseImportException;
 import org.ihtsdo.otf.snomedboot.ReleaseImporter;
 import org.ihtsdo.otf.snomedboot.factory.ComponentFactory;
 import org.ihtsdo.otf.snomedboot.factory.LoadingProfile;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
+import org.snomed.otf.owltoolkit.conversion.ConversionException;
+import org.snomed.otf.owltoolkit.domain.AxiomRepresentation;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.springframework.util.StopWatch;
 
 import java.io.InputStream;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.snomed.otf.owltoolkit.constants.Concepts.*;
 
@@ -152,5 +158,22 @@ public class SnomedTaxonomyBuilder {
 	public void updateTaxonomy(SnomedTaxonomy snomedTaxonomy, InputStream deltaInputStream) throws ReleaseImportException {
 		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snomedTaxonomy);
 		releaseImporter.loadDeltaReleaseFiles(deltaInputStream, DELTA_LOADING_PROFILE, snomedTaxonomyLoader, false);
+	}
+
+	/**
+	 * Add the set of axioms to the taxonomy in a loose way. Generate UUIDs and add left hand side concepts as needed.
+	 * @param snomedTaxonomy The taxonomy to update.
+	 * @param axioms The axioms to add.
+	 * @param axiomRelationshipConversionService Service to convert the AxiomRepresentations to owl expression strings.
+	 */
+	public void updateTaxonomyWithTransientAxioms(SnomedTaxonomy snomedTaxonomy, Set<AxiomRepresentation> axioms,
+			AxiomRelationshipConversionService axiomRelationshipConversionService) throws ConversionException, OWLOntologyCreationException {
+
+		SnomedTaxonomyLoader snomedTaxonomyLoader = new SnomedTaxonomyLoader(snomedTaxonomy);
+		for (AxiomRepresentation axiom : axioms) {
+			final Long conceptId = axiom.getLeftHandSideNamedConcept() != null ? axiom.getLeftHandSideNamedConcept() : axiom.getRightHandSideNamedConcept();
+			final String owlExpression = axiomRelationshipConversionService.convertRelationshipsToAxiom(axiom);
+			snomedTaxonomyLoader.addActiveAxiom(UUID.randomUUID().toString(), conceptId.toString(), owlExpression);
+		}
 	}
 }
