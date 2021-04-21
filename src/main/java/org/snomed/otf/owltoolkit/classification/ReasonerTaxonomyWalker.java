@@ -21,11 +21,13 @@ import org.semanticweb.owlapi.model.*;
 import org.semanticweb.owlapi.reasoner.Node;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
+import org.semanticweb.owlapi.reasoner.impl.OWLClassNode;
 import org.semanticweb.owlapi.reasoner.impl.OWLClassNodeSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.ontology.OntologyHelper;
+import uk.ac.manchester.cs.owl.owlapi.OWLClassImpl;
 import uk.ac.manchester.cs.owl.owlapi.OWLDataFactoryImpl;
 
 import java.util.*;
@@ -59,20 +61,25 @@ public class ReasonerTaxonomyWalker {
 		return walk(null);
 	}
 
-	public ReasonerTaxonomy walk(Set<Long> conceptFilter) {
+	public ReasonerTaxonomy walk(List<OWLClass> classFilter) {
 		LOGGER.info(">>> SnomedTaxonomy extraction");
 
 		extractProperties();
 
-		// Now process the concepts
 		final Deque<Node<OWLClass>> nodesToProcess = new LinkedList<>();
-		nodesToProcess.add(reasoner.getTopClassNode());
+		if (classFilter == null) {
+			nodesToProcess.add(reasoner.getTopClassNode());
+		} else {
+			for (OWLClass owlClass : classFilter) {
+				nodesToProcess.add(new OWLClassNode(owlClass));
+			}
+		}
 
 		// Breadth-first walk through the class hierarchy
 		while (!nodesToProcess.isEmpty()) {
 
 			final Node<OWLClass> currentNode = nodesToProcess.removeFirst();
-			final NodeSet<OWLClass> nextNodeSet = walkClasses(currentNode, conceptFilter);
+			final NodeSet<OWLClass> nextNodeSet = walkClasses(currentNode, classFilter);
 
 			if (!nextNodeSet.isEmpty()) {
 				nodesToProcess.addAll(nextNodeSet.getNodes());
@@ -112,9 +119,41 @@ public class ReasonerTaxonomyWalker {
 			}
 		}
 
+		// Create top down list of classes for classFilter
+		List<OWLClass> classFilter = new ArrayList<>();
+		Map<String, Set<String>> superClassMap = new HashMap<>();
+		for (Long conceptId : conceptIdsWithPossibleInferredChange) {
+			final OWLClass owlClass = factory.getOWLClass(IRI.create(SNOMED_CORE_COMPONENTS_URI + conceptId));
+			final NodeSet<OWLClass> superClasses = reasoner.getSuperClasses(owlClass, false);
+			superClassMap.put(owlClass.getIRI().toString(), new HashSet<>(superClasses.getFlattened().stream().map(OWLClass::getIRI).map(IRI::toString).collect(Collectors.toSet())));
+		}
+		while (!superClassMap.isEmpty()) {
+			String topClass = null;
+			for (String owlClass : superClassMap.keySet()) {
+				topClass = owlClass;
+				final Set<String> topClassSuperClasses = superClassMap.get(topClass);
+				for (String otherClass : superClassMap.keySet()) {
+					if (!otherClass.equals(topClass) && topClassSuperClasses.contains(otherClass)) {
+						topClass = null;
+						break;
+					}
+				}
+				if (topClass != null) {
+					break;
+				}
+			}
+			if (topClass != null) {
+				classFilter.add(new OWLClassImpl(IRI.create(topClass)));
+				superClassMap.remove(topClass);
+				for (Set<String> set : superClassMap.values()) {
+					set.remove(topClass);
+				}
+			}
+		}
+
 		taxonomy.removeEntries(conceptIdsWithPossibleInferredChange);
-		System.out.println("Walking: " + conceptIdsWithPossibleInferredChange);
-		walk(conceptIdsWithPossibleInferredChange);
+		System.out.println("Walking: " + classFilter);
+		walk(classFilter);
 
 		return conceptIdsWithPossibleInferredChange;
 	}
@@ -222,7 +261,7 @@ public class ReasonerTaxonomyWalker {
 		}
 	}
 
-	private NodeSet<OWLClass> walkClasses(final Node<OWLClass> node, Set<Long> conceptFilter) {
+	private NodeSet<OWLClass> walkClasses(final Node<OWLClass> node, List<OWLClass> conceptFilter) {
 
 		if (isNodeProcessed(node, conceptFilter)) {
 			return reasoner.getSubClasses(node.getRepresentativeElement(), true);
@@ -300,11 +339,11 @@ public class ReasonerTaxonomyWalker {
 		taxonomy.addEntry(new ReasonerTaxonomyEntry(child, parents));
 	}
 
-	private boolean isNodeProcessed(final Node<OWLClass> node, Set<Long> conceptFilter) {
+	private boolean isNodeProcessed(final Node<OWLClass> node, List<OWLClass> conceptFilter) {
 		for (final OWLClass owlClass : node) {
 			if (OntologyHelper.isConceptClass(owlClass)) {
 				final long conceptId = OntologyHelper.getConceptId(owlClass);
-				if ((conceptFilter == null || conceptFilter.contains(conceptId)) && !processedConceptIds.contains(conceptId)) {
+				if ((conceptFilter == null || conceptFilter.contains(owlClass)) && !processedConceptIds.contains(conceptId)) {
 					return false;
 				}
 			}
