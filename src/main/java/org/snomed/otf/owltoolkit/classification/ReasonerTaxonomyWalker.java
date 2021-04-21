@@ -290,6 +290,11 @@ public class ReasonerTaxonomyWalker {
 
 		if (conceptIds.size() > 1) {
 			registerEquivalentConceptIds(conceptIds, false);
+		} else if (conceptFilter != null) {
+			final Node<OWLClass> equivalentClasses = reasoner.getEquivalentClasses(node.getRepresentativeElement());
+			if (equivalentClasses.getSize() > 1) {
+				registerEquivalentConceptIds(equivalentClasses.getEntities().stream().map(OntologyHelper::getConceptId).collect(Collectors.toSet()), false);
+			}
 		}
 
 		final Set<Long> parentConceptIds = new LongOpenHashSet();
