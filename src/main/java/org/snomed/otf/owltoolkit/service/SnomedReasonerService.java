@@ -259,8 +259,7 @@ public class SnomedReasonerService {
 			throw new ReasonerServiceException("Failed to update snomed taxonomy.", e);
 		}
 
-		final RelationshipChangeProcessor changeCollector = updateClassification(container, snomedTaxonomy, timer);
-		return changeCollector;
+		return updateClassification(container, snomedTaxonomy, timer);
 	}
 
 	private RelationshipChangeProcessor updateClassification(ClassificationContainer container, SnomedTaxonomy snomedTaxonomy, TimerUtil timer) throws ReasonerServiceException {
