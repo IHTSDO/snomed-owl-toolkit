@@ -50,7 +50,9 @@ public class SnomedTaxonomy {
 	private Map<String, OWLAxiom> axiomsById = new ConcurrentHashMap<>();
 
 	private Map<Long, Set<Long>> inferredSubTypesMap = new Long2ObjectOpenHashMap<>();
-	private Map<Long, Set<Long>> ungroupedRolesByContentType = new HashMap<>();
+
+	// Ungrouped roles map must be synchronised because international and extension refset members are loaded in parallel. The US Edition package contains the full MRCM.
+	private Map<Long, Set<Long>> ungroupedRolesByContentType = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 	private Set<Long> inactivatedConcepts = new LongOpenHashSet();
 	private Map<Long, Set<Description>> conceptDescriptionMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
 	private Map<Long, Description> descriptionMap = Long2ObjectMaps.synchronize(new Long2ObjectOpenHashMap<>());
