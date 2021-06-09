@@ -194,10 +194,15 @@ public class Relationship {
 
 		public String getRF2Value() {
 			if (value != null) {
-				if (type == Type.STRING) {
-					return String.format("\"%s\"", value);
-				} else {
-					return "#" + value;
+				switch (type) {
+					case STRING:
+						return String.format("\"%s\"", value);
+					case INTEGER:
+						return "#" + asInt();
+					case DECIMAL:
+						return "#" + asDecimal();
+					default:
+						break;
 				}
 			}
 			return null;
