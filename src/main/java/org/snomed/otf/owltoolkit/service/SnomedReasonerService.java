@@ -39,7 +39,6 @@ import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyBuilder;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 import org.snomed.otf.owltoolkit.util.TimerUtil;
-import sun.awt.ComponentFactory;
 
 import java.io.*;
 import java.util.*;
@@ -59,7 +58,7 @@ public class SnomedReasonerService {
 			.thenComparing(Relationship::getDestinationId)
 			.thenComparing(Relationship::getValueAsString, Comparator.nullsLast(Comparator.naturalOrder()))
 			.thenComparing(Relationship::getGroup)
-			.thenComparing(Relationship::getEffectiveTime, Comparator.nullsFirst(Comparator.reverseOrder()));
+			.thenComparing(Relationship::getEffectiveTime, Comparator.reverseOrder());
 
 	public SnomedReasonerService() {
 		this.classificationResultsWriter = new ClassificationResultsWriter();
@@ -183,7 +182,8 @@ public class SnomedReasonerService {
 			Set<Relationship> newInferredRelationship = changeCollector.getAddedStatements().get(conceptId);
 
 			if(!conceptInactiveInferredRelationship.isEmpty() && !newInferredRelationship.isEmpty()) {
-				// sorted by most recent changes first
+				// sort them by the most recent changes first.
+				// Today's date is used if the effective time is null or empty when loaded by SnomedTaxonomyLoader
 				List<Relationship> inactiveSortedByEffectiveTime = new ArrayList<>(conceptInactiveInferredRelationship);
 				Collections.sort(inactiveSortedByEffectiveTime, RELATIONSHIP_COMPARATOR_RECENT_CHANGE_FIRST);
 
