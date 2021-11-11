@@ -429,8 +429,9 @@ public class StatedRelationshipToOwlRefsetService {
 			inactivatedConcepts = new LongOpenHashSet(snomedTaxonomy.getInactivatedConcepts());
 			inactivatedConcepts.removeAll(completeOwlTaxonomy.getInactivatedConcepts());
 			for (Long conceptId : inactivatedConcepts) {
-				changes.put(conceptId, new HashSet<>(completeOwlTaxonomy.getConceptAxiomMap().get(conceptId)));
-				inactivation += completeOwlTaxonomy.getConceptAxiomMap().get(conceptId).size();
+				List<OWLAxiom> axiomsOfInactiveConcept = completeOwlTaxonomy.getConceptAxiomMap().getOrDefault(conceptId, Collections.emptyList());
+				changes.put(conceptId, new HashSet<>(axiomsOfInactiveConcept));
+				inactivation += axiomsOfInactiveConcept.size();
 			}
 			logger.info("Concepts inactivated:" + inactivatedConcepts);
 

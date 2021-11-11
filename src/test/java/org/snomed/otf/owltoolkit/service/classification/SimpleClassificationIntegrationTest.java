@@ -100,6 +100,24 @@ public class SimpleClassificationIntegrationTest {
 	}
 
 	@Test
+	public void testClassifyConceptDeletion() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Concept_Deletion_Orphan_Relationship_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		assertEquals(2, lines.size());
+		assertTrue(lines.contains("14658205020\t\t0\t\t1142139005\t404684003\t0\t116680003\t900000000000011006\t900000000000451002"));
+		List<String> equivalence = readEquivalentConceptLinesTrim(results);
+		assertEquals(1, equivalence.size());
+	}
+
+	@Test
 	public void testClassifyConceptReactivation() throws IOException, ReasonerServiceException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Concept_Inactivation_snapshot");
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Concept_Reactivation_delta");

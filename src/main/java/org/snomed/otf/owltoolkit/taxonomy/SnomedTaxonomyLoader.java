@@ -101,12 +101,13 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	@Override
 	public void newRelationshipState(String id, String effectiveTime, String active, String moduleId, String sourceId, String destinationId, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
 		boolean stated = STATED_RELATIONSHIP.equals(characteristicTypeId);
+		long conceptId = parseLong(sourceId);
 
 		if (ACTIVE.equals(active) && !ADDITIONAL_RELATIONSHIP.equals(characteristicTypeId)) {// Ignore additional relationships
 
 			snomedTaxonomy.addOrModifyRelationship(
 					stated,
-					parseLong(sourceId),
+					conceptId,
 					new Relationship(
 							parseLong(id),
 							getEffectiveTimeInt(effectiveTime),
@@ -128,7 +129,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 			}
 			if (!stated) {
 				// Inactive inferred relationships kept for possible reactivation
-				snomedTaxonomy.addInactiveInferredRelationship(parseLong(sourceId), new Relationship(
+				snomedTaxonomy.addInactiveInferredRelationship(conceptId, new Relationship(
 						parseLong(id),
 						getEffectiveTimeInt(effectiveTime),
 						parseLong(moduleId),
@@ -143,6 +144,11 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
 			componentFactoryTap.newRelationshipState(id, effectiveTime, active, moduleId, sourceId, destinationId, relationshipGroup, typeId, characteristicTypeId, modifierId);
+		}
+
+		// Detect partially deleted concepts to be cleaned up
+		if (!snomedTaxonomy.getAllConceptIds().contains(conceptId)) {
+			snomedTaxonomy.getInactivatedConcepts().add(conceptId);
 		}
 	}
 
