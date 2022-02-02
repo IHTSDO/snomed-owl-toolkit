@@ -5,6 +5,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 The change log format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 
+## 3.0.6 Release
+
+### Fixes
+- Log4j fix: Upgrade to slf4j-reload4j 1.7.35 (thanks to B2i Healthcare).
+
+
+## 3.0.5 Release - Nov 2021
+
+### Fixes
+- MAINT-1415 Making duplicate axiom inactive no longer removes other.
+- PIP-62 Synchronise MRCM ungrouped roles map to avoid US Edition error.
+- Add Belgian GP French and Belgian GP Dutch to lang-refset to dialect map.
+- FRI-184 Updated inferred relationships reactivation logic to use the most recent published relationship ids.
+- MAINT-1810 Detect and remove orphaned inferred relationships.
+- Add Netherlands Dutch to dialect map.
+
+
 ## 3.0.0 Release - 2021-01-13
 Initial concrete domain support enable the production of the International Edition Concrete Domain Technical Preview.
 
