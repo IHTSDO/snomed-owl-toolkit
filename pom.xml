@@ -12,7 +12,7 @@
 		<java.version>1.8</java.version>
 		<owlapi.version>4.5.21</owlapi.version>
 		<elk-owlapi.version>0.4.3</elk-owlapi.version>
-		<slf4j.version>1.7.25</slf4j.version>
+		<slf4j.version>1.7.35</slf4j.version>
 		<snomed.boot.version>3.0.0</snomed.boot.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
@@ -61,12 +61,12 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.12</version>
+			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.35</version>
+			<version>${slf4j.version}</version>
 			<scope>provided</scope>
 		</dependency>
 
