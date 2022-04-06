@@ -259,7 +259,8 @@ public class RF2ToOWLServiceTest {
 
 		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 		final FileInputStream rf2ArchiveStream = new FileInputStream(baseRF2SnapshotZip);
-		rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180801", true, new InputStreamSet(rf2ArchiveStream), new OptionalFileInputStream(fictitiousDataAttributeDelta), byteArrayOutputStream);
+		rf2ToOWLService.convertRF2ArchiveToOWL(null, "20180801", true, new InputStreamSet(rf2ArchiveStream), new OptionalFileInputStream(fictitiousDataAttributeDelta),
+				byteArrayOutputStream);
 
 		assertEquals("" +
 						rf2ToOWLService.getCopyrightNotice() +

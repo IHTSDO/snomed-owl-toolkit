@@ -10,10 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.snomed.otf.owltoolkit.util.InputStreamSet;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Set;
 
@@ -28,7 +25,7 @@ public class RF2ExtractionService {
 		ReleaseImporter releaseImporter = new ReleaseImporter();
 		String dateString = ClassificationResultsWriter.DATE_FORMAT.format(new Date());
 		try (RF2ExtractionWriter extractionWriter = new RF2ExtractionWriter(conceptIds, dateString, outputDirectory)) {
-			releaseImporter.loadEffectiveSnapshotReleaseFileStreams(rf2SnapshotArchives.getFileInputStreams(), LoadingProfile.complete, extractionWriter);
+			releaseImporter.loadEffectiveSnapshotReleaseFileStreams(rf2SnapshotArchives.getFileInputStreams(), LoadingProfile.complete, extractionWriter, false);
 		}
 		logger.info("Extraction complete.");
 	}

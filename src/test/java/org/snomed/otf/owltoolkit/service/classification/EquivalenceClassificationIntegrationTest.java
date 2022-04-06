@@ -43,7 +43,7 @@ public class EquivalenceClassificationIntegrationTest {
 	 * We expect the original concept and the clone to be returned in the equivalent concept reference set
 	 */
 	@Test
-	public void testClassify() throws IOException, OWLOntologyCreationException, ReleaseImportException, ReasonerServiceException {
+	public void testClassify() throws IOException, ReasonerServiceException {
 		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Equivalence_delta");
 		assertNotNull(snomedReasonerService);
@@ -65,7 +65,7 @@ public class EquivalenceClassificationIntegrationTest {
 				1, equivalentConceptLines.stream().filter(line -> line.contains("\t1\t\t\t" + disorderOfEndocrineSystemClone + "\t")).count());
 
 		List<String> relationshipLines = readInferredRelationshipLinesTrim(results);
-		assertEquals("Relationship delta should contain new inferences.", 5, relationshipLines.size());
+		assertEquals("Relationship delta should contain new inferences.", 3, relationshipLines.size());
 	}
 
 }
