@@ -66,4 +66,33 @@ public class AdditionalAxiomClassificationIntegrationTest {
 
 	}
 
+	@Test
+	public void testClassifyShouldNotMergeMultipleAxiomsFromDelta() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_GroupSeparation_Additional_Axiom_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		int countGroup1 = 0;
+		int countGroup2 = 0;
+		for (String line : lines.subList(1, lines.size())) {
+			String groupId = line.split("\t")[4];
+			if ("1".equals(groupId)) {
+				countGroup1++;
+			}
+
+			if ("2".equals(groupId)) {
+				countGroup2++;
+			}
+		}
+
+		assertEquals(1, countGroup1);
+		assertEquals(1, countGroup2);
+	}
+
 }

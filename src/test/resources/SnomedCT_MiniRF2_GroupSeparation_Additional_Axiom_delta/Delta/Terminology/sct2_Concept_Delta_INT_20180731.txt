@@ -1,0 +1,9 @@
+#
+# Comments are removed by unit test
+#
+id	effectiveTime	active	moduleId	definitionStatusId
+# Entire breast and endocrine system (body structure)
+731165006	20170731	1	900000000000207008	900000000000074008
+
+# Test Clinical Finding
+2000040000	20220912	1	900000000000207008	900000000000074008

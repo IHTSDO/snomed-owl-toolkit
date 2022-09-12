@@ -10,6 +10,7 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.CORE_COMPONENT_NAMESPACE_PATTERN;
@@ -85,6 +86,19 @@ public class AxiomRelationshipConversionService {
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
 	public AxiomRepresentation convertAxiomToRelationships(OWLAxiom owlAxiom) throws ConversionException {
+		return convertAxiomToRelationships(owlAxiom, new AtomicInteger(1));
+	}
+
+	/**
+	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
+	 * Currently supported axiom types are SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf.
+	 *
+	 * @param owlAxiom    The Axiom expression to convert.
+	 * @param groupOffset The starting number for inferred role groups. This can be used to ensure separation of groups for Concepts with multiple Axioms.
+	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
+	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
+	 */
+	public AxiomRepresentation convertAxiomToRelationships(OWLAxiom owlAxiom, AtomicInteger groupOffset) throws ConversionException {
 		AxiomType<?> axiomType = owlAxiom.getAxiomType();
 
 		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES &&
@@ -153,10 +167,10 @@ public class AxiomRelationshipConversionService {
 		if (leftNamedClass != null) {
 			// Normal axiom
 			representation.setLeftHandSideNamedConcept(leftNamedClass);
-			representation.setRightHandSideRelationships(rightNamedClass != null ? newSingleIsARelationship(rightNamedClass) : getRelationships(rightHandExpression));
+			representation.setRightHandSideRelationships(rightNamedClass != null ? newSingleIsARelationship(rightNamedClass) : getRelationships(rightHandExpression, groupOffset));
 		} else {
 			// GCI
-			representation.setLeftHandSideRelationships(getRelationships(leftHandExpression));
+			representation.setLeftHandSideRelationships(getRelationships(leftHandExpression, new AtomicInteger(1))); // Default offset as GCI Axioms do not contribute to necessary normal form
 			if (rightNamedClass == null) {
 				throw new ConversionException("Axioms with expressions on both sides are not supported.");
 			}
@@ -181,6 +195,7 @@ public class AxiomRelationshipConversionService {
 		try {
 			for (Long conceptId : conceptAxiomMap.keySet()) {
 				Collection<OWLAxiom> axioms = conceptAxiomMap.get(conceptId);
+				AtomicInteger groupOffset = new AtomicInteger(1); // Skipping to 1 as 0 reserved for non-grouped
 				for (OWLAxiom axiom : axioms) {
 					currentAxiom = axiom;
 					boolean ignore = false;
@@ -189,7 +204,7 @@ public class AxiomRelationshipConversionService {
 						ignore = classOfAxiom.isGCI();
 					}
 					if (!ignore) {
-						AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom);
+						AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom, groupOffset);
 						if (axiomRepresentation != null) {
 							conceptAxiomStatements.computeIfAbsent(conceptId, id -> new HashSet<>()).add(axiomRepresentation);
 						}
@@ -277,7 +292,7 @@ public class AxiomRelationshipConversionService {
 		return null;
 	}
 
-	private Map<Integer, List<Relationship>> getRelationships(OWLClassExpression owlClassExpression) throws ConversionException {
+	private Map<Integer, List<Relationship>> getRelationships(OWLClassExpression owlClassExpression, AtomicInteger groupOffset) throws ConversionException {
 		if (owlClassExpression.getClassExpressionType() != ClassExpressionType.OBJECT_INTERSECTION_OF) {
 			throw new ConversionException("Expecting ObjectIntersectionOf at first level of expression, got " + owlClassExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 		}
@@ -286,7 +301,6 @@ public class AxiomRelationshipConversionService {
 		List<OWLClassExpression> expressions = intersectionOf.getOperandsAsList();
 
 		Map<Integer, List<Relationship>> relationshipGroups = new HashMap<>();
-		int rollingGroupNumber = 0;
 		for (OWLClassExpression operand : expressions) {
 			ClassExpressionType operandClassExpressionType = operand.getClassExpressionType();
 			if (operandClassExpressionType == ClassExpressionType.OWL_CLASS) {
@@ -298,8 +312,8 @@ public class AxiomRelationshipConversionService {
 				OWLObjectSomeValuesFrom someValuesFrom = (OWLObjectSomeValuesFrom) operand;
 				OWLObjectPropertyExpression property = someValuesFrom.getProperty();
 				if (isRoleGroup(property)) {
-					rollingGroupNumber++;
 					// Extract Group
+					int rollingGroupNumber = groupOffset.get();
 					OWLClassExpression filler = someValuesFrom.getFiller();
 					if (filler.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
 						Relationship relationship = extractRelationship((OWLObjectSomeValuesFrom) filler, rollingGroupNumber);
@@ -325,6 +339,7 @@ public class AxiomRelationshipConversionService {
 						throw new ConversionException("Expecting ObjectSomeValuesFrom with role group to have one of ObjectSomeValuesFrom, DataHasValue or ObjectIntersectionOf, " +
 								"got " + filler.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 					}
+					groupOffset.incrementAndGet();
 				} else {
 					Relationship relationship = extractRelationship(someValuesFrom, 0);
 					relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);
