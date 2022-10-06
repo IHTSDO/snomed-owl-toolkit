@@ -83,7 +83,8 @@ public class AdditionalAxiomClassificationIntegrationTest {
 		int countGroup1 = 0;
 		int countGroup2 = 0;
 		for (String line : lines.subList(1, lines.size())) {
-			String groupId = line.split("\t")[4];
+			List<String> split = reverseSplit(line, "\t");
+			String groupId = split.get(3);
 			if ("1".equals(groupId)) {
 				countGroup1++;
 			}

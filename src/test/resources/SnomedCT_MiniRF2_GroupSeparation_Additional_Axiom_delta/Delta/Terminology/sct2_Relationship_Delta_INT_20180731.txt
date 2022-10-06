@@ -2,3 +2,11 @@
 # Comments are removed by unit test
 #
 id	effectiveTime	active	moduleId	sourceId	destinationId	relationshipGroup	typeId	characteristicTypeId	modifierId
+# Test clinical finding - is a - Clinical finding
+6000000022		1	900000000000207008	2000040000	362969004	0	116680003	900000000000011006	900000000000451002
+
+# Test clinical finding - finding site - Entire breast and endocrine system
+6000000023		1	900000000000207008	2000040000	731165006	1	363698007	900000000000011006	900000000000451001
+
+# Test clinical finding - finding site - Structure of endocrine system
+6000000024		1	900000000000207008	2000040000	113331007	1	363698007	900000000000011006	900000000000451003
