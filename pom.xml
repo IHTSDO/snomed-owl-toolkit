@@ -12,7 +12,7 @@
 
 	<groupId>org.snomed.otf</groupId>
 	<artifactId>snomed-owl-toolkit</artifactId>
-	<version>3.0.10</version>
+	<version>3.0.11-SNAPSHOT</version>
 
 	<dependencies>
 		<!-- RF2 Loading -->
