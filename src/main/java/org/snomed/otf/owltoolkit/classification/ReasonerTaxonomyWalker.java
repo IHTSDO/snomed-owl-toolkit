@@ -101,6 +101,30 @@ public class ReasonerTaxonomyWalker {
 		return taxonomy;
 	}
 
+	public Map<Long, Set<Long>> extractSuperTypes(Set<Long> conceptIds) {
+		OWLDataFactoryImpl factory = new OWLDataFactoryImpl();
+
+		Map<Long, Set<Long>> superTypes = new HashMap<>();
+		for (Long conceptId : conceptIds) {
+			final OWLClass owlClass = factory.getOWLClass(IRI.create(SNOMED_CORE_COMPONENTS_URI + conceptId));
+			final NodeSet<OWLClass> superClasses = reasoner.getSuperClasses(owlClass, false);
+			Set<Long> superIds = new HashSet<>();
+			for (OWLClass superClass : superClasses.getFlattened()) {
+				if (OntologyHelper.isConceptClass(superClass)) {
+					superIds.add(OntologyHelper.getConceptId(superClass));
+				}
+			}
+			superTypes.put(conceptId, superIds);
+
+			Node<OWLClass> equivalentClasses = reasoner.getEquivalentClasses(owlClass);
+			if (equivalentClasses.getSize() > 1) {
+				registerEquivalentConceptIds(equivalentClasses.getEntities().stream().map(OntologyHelper::getConceptId).collect(Collectors.toSet()), false);
+			}
+		}
+
+		return superTypes;
+	}
+
 	public Set<Long> walkUpdatedPart(Set<Long> conceptIdsWithStatedChange) {
 		// For each changed concept grab super classes and sub classes
 		// Add sub-classes to the changed concepts set
@@ -377,5 +401,4 @@ public class ReasonerTaxonomyWalker {
 			taxonomy.addEquivalentConceptIds(conceptIds);
 		}
 	}
-
 }
