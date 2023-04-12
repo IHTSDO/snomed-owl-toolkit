@@ -38,7 +38,7 @@ public class IncrementalClassificationTest {
 		// Run incremental classification using existing container and reasoner ontology
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Change_Axiom_Parents_delta");
 		results = TestFileUtil.newTemporaryFile();
-		snomedReasonerService.updateClassification(classificationContainer, new FileInputStream(deltaZip), new FileOutputStream(results));
+		snomedReasonerService.classifyTransientAxioms(classificationContainer, new FileInputStream(deltaZip), new FileOutputStream(results));
 
 		// Assert results
 		lines = readInferredRelationshipLinesTrim(results);
@@ -52,7 +52,7 @@ public class IncrementalClassificationTest {
 		// Because we have not saved the inferred relationships from the last classification we get the same results again
 		deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Change_Axiom_Parents_delta");
 		results = TestFileUtil.newTemporaryFile();
-		snomedReasonerService.updateClassification(classificationContainer, new FileInputStream(deltaZip), new FileOutputStream(results));
+		snomedReasonerService.classifyTransientAxioms(classificationContainer, new FileInputStream(deltaZip), new FileOutputStream(results));
 
 		// Assert results
 		lines = readInferredRelationshipLinesTrim(results);
@@ -74,7 +74,7 @@ public class IncrementalClassificationTest {
 
 		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_endocrine_system_subtype_delta");
 		results = TestFileUtil.newTemporaryFile();
-		snomedReasonerService.updateClassification(classificationContainer, new FileInputStream(deltaZip), new FileOutputStream(results));
+		snomedReasonerService.classifyTransientAxioms(classificationContainer, new FileInputStream(deltaZip), new FileOutputStream(results));
 
 		// Assert results
 		lines = readInferredRelationshipLinesTrim(results);

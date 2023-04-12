@@ -228,7 +228,7 @@ public class SnomedReasonerService {
 		return container;
 	}
 
-	public void updateClassification(ClassificationContainer container, InputStream deltaZipInputStream, OutputStream resultsRf2DeltaArchive) throws ReasonerServiceException {
+	public void classifyTransientAxioms(ClassificationContainer container, InputStream deltaZipInputStream, OutputStream resultsRf2DeltaArchive) throws ReasonerServiceException {
 		TimerUtil timer = new TimerUtil("Update Classification");
 
 		// Create copy of Snomed Taxonomy and update
@@ -239,7 +239,7 @@ public class SnomedReasonerService {
 			throw new ReasonerServiceException("Failed to update snomed taxonomy.", e);
 		}
 
-		final RelationshipChangeProcessor changeCollector = updateClassification(container, snomedTaxonomy, timer);
+		final RelationshipChangeProcessor changeCollector = doClassifyTransientAxioms(container, false, snomedTaxonomy, timer);
 
 		logger.info("Writing results archive");
 		classificationResultsWriter.writeResultsRf2Archive(changeCollector, resultsRf2DeltaArchive, new Date());
@@ -248,7 +248,7 @@ public class SnomedReasonerService {
 		timer.finish();
 	}
 
-	public RelationshipChangeProcessor classifyAxioms(Set<AxiomRepresentation> axioms, ClassificationContainer container) throws ReasonerServiceException {
+	public RelationshipChangeProcessor classifyTransientAxioms(Set<AxiomRepresentation> axioms, boolean equivalenceTest, ClassificationContainer container) throws ReasonerServiceException {
 		TimerUtil timer = new TimerUtil("Update Classification");
 
 		// Create copy of Snomed Taxonomy and update
@@ -259,30 +259,15 @@ public class SnomedReasonerService {
 			throw new ReasonerServiceException("Failed to update snomed taxonomy.", e);
 		}
 
-		return updateClassification(container, snomedTaxonomy, timer);
+		return doClassifyTransientAxioms(container, equivalenceTest, snomedTaxonomy, timer);
 	}
 
-	private RelationshipChangeProcessor updateClassification(ClassificationContainer container, SnomedTaxonomy snomedTaxonomy, TimerUtil timer) throws ReasonerServiceException {
-
-		// TODO:
-		// - Detect changes to properties and chains then recompute from scratch? Can reasoner/OWLAPI help detect these?
-		// - Clear list of Equivalent concepts and check them again?
-		// - Do something with ReasonerTaxonomy unsatisfiableConceptIds. Throw exception or return to terminology server..
-
-		// Delta zip contains:
-		// - any stated changes since the last classification, including axiom additions, changes or !deletions!
-		// - any saved inferred relationship changes .. inferred relationship changes from the last classification may or may not have been accepted
-
-		// Scope for EXP demo:
-		// - Infer parents
-		// - Calculate NNF
-		// - Could be transient
-
+	private RelationshipChangeProcessor doClassifyTransientAxioms(ClassificationContainer container, boolean equivalenceTest, SnomedTaxonomy snomedTaxonomy, TimerUtil timer)
+			throws ReasonerServiceException {
 
 		Set<Long> conceptIdsWithStatedChange = snomedTaxonomy.getStatedChangeConceptIds();
 		logger.debug("ConceptIds with stated change: {}", conceptIdsWithStatedChange);
 		timer.checkpoint("Update SNOMED taxonomy");
-
 
 		// Update OWLOntology
 		Set<Long> ungroupedRoles = snomedTaxonomy.getUngroupedRolesForContentTypeOrDefault(parseLong(Concepts.ALL_PRECOORDINATED_CONTENT));
@@ -292,7 +277,8 @@ public class SnomedReasonerService {
 		timer.checkpoint("Update OWL Ontology");
 
 		final ReasonerTaxonomy reasonerTaxonomy;
-		Set<Long> conceptsToProcess;
+		Set<Long> conceptsToProcess = Collections.emptySet();
+		Map<Long, Set<Long>> equivalenceTestSuperTypes = Collections.emptyMap();
 		try {
 			// Infer hierarchy
 			logger.info("OwlReasoner inferring class hierarchy");
@@ -306,70 +292,87 @@ public class SnomedReasonerService {
 			// Create copy of ReasonerTaxonomy and update
 			reasonerTaxonomy = new ReasonerTaxonomy(container.getReasonerTaxonomy());
 			ReasonerTaxonomyWalker walker = new ReasonerTaxonomyWalker(reasoner, reasonerTaxonomy);
-			conceptsToProcess = walker.walkUpdatedPart(conceptIdsWithStatedChange);
+			if (equivalenceTest) {
+				equivalenceTestSuperTypes = walker.extractSuperTypes(conceptIdsWithStatedChange);
+			} else {
+				conceptsToProcess = walker.walkUpdatedPart(conceptIdsWithStatedChange);
+			}
 			timer.checkpoint("Update ReasonerTaxonomy");
 		} finally {
 			// Revert axiom changes
 			ontologyService.revertOntologyUpdate(axiomChangeSet, owlOntology);
 		}
 
-		// Generate NNF
-		logger.info("Generate normal form");
-		// Convert axioms to relationship-like rows
-		AxiomRelationshipConversionService axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedRoles);
-//		final RelationshipNormalFormGenerator baseNormalFormGenerator = container.getNormalFormGenerator();
-		RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, container.getNormalFormGenerator());
-		try {
-			// Convert just the axioms of concepts with stated changes
-			final Map<Long, List<OWLAxiom>> conceptAxiomMapNewEntries = snomedTaxonomy.getConceptAxiomMap().entrySet().stream()
-					.filter((entry) -> conceptIdsWithStatedChange.contains(entry.getKey()))
-					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-							(u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); }, Long2ObjectOpenHashMap::new));
-			Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMapUpdates = axiomRelationshipConversionService.convertAxiomsToRelationships(conceptAxiomMapNewEntries, true);
-			// Update existing map
-			Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap = normalFormGenerator.getConceptAxiomStatementMap();
-			// Remove all concepts with stated change
-			for (Long conceptId : conceptIdsWithStatedChange) {
-				conceptAxiomStatementMap.remove(conceptId);
+		RelationshipChangeProcessor changeCollector;
+		if (!equivalenceTest) {
+			// Generate NNF
+			logger.info("Generate normal form");
+			// Convert axioms to relationship-like rows
+			AxiomRelationshipConversionService axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedRoles);
+			RelationshipNormalFormGenerator normalFormGenerator = new RelationshipNormalFormGenerator(reasonerTaxonomy, snomedTaxonomy, container.getNormalFormGenerator());
+			try {
+				// Convert just the axioms of concepts with stated changes
+				final Map<Long, List<OWLAxiom>> conceptAxiomMapNewEntries = snomedTaxonomy.getConceptAxiomMap().entrySet().stream()
+						.filter((entry) -> conceptIdsWithStatedChange.contains(entry.getKey()))
+						.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+								(u,v) -> { throw new IllegalStateException(String.format("Duplicate key %s", u)); }, Long2ObjectOpenHashMap::new));
+				Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMapUpdates = axiomRelationshipConversionService.convertAxiomsToRelationships(conceptAxiomMapNewEntries, true);
+				// Update existing map
+				Map<Long, Set<AxiomRepresentation>> conceptAxiomStatementMap = normalFormGenerator.getConceptAxiomStatementMap();
+				// Remove all concepts with stated change
+				for (Long conceptId : conceptIdsWithStatedChange) {
+					conceptAxiomStatementMap.remove(conceptId);
+				}
+				// Put all new version axioms
+				conceptAxiomStatementMap.putAll(conceptAxiomStatementMapUpdates);
+			} catch (ConversionException e) {
+				throw new ReasonerServiceException("Failed to convert OWL Axiom Expressions into relationships for normal form generation.", e);
 			}
-			// Put all new version axioms
-			conceptAxiomStatementMap.putAll(conceptAxiomStatementMapUpdates);
-		} catch (ConversionException e) {
-			throw new ReasonerServiceException("Failed to convert OWL Axiom Expressions into relationships for normal form generation.", e);
+
+			changeCollector = normalFormGenerator.collectNormalFormChanges(conceptsToProcess);
+			timer.checkpoint("Generate normal form");
+
+			// Collect transitive closures
+			for (Long conceptId : conceptIdsWithStatedChange) {
+				changeCollector.getTransitiveClosures().put(conceptId, reasonerTaxonomy.getAncestors(conceptId));
+			}
+		} else {
+			changeCollector = new RelationshipChangeProcessor();
+			changeCollector.getTransitiveClosures().putAll(equivalenceTestSuperTypes);
 		}
 
-		RelationshipChangeProcessor changeCollector = normalFormGenerator.collectNormalFormChanges(conceptsToProcess);
 		changeCollector.setEquivalentConceptIds(reasonerTaxonomy.getEquivalentConceptIds());
-		timer.checkpoint("Generate normal form");
 
-		logger.info("Inactivating inferred relationships for new inactive concepts");
-		new RelationshipInactivationProcessor(snomedTaxonomy).processInactivationChanges(changeCollector);
+		if (!equivalenceTest) {
+			logger.info("Inactivating inferred relationships for new inactive concepts");
+			new RelationshipInactivationProcessor(snomedTaxonomy).processInactivationChanges(changeCollector);
 
-		// Restore inactive relationships where appropriate
-		for (Long conceptId : changeCollector.getAddedStatements().keySet()) {
-			Set<Relationship> conceptInactiveInferredRelationship = snomedTaxonomy.getInactiveInferredRelationships(conceptId);
-			Set<Relationship> newInferredRelationship = changeCollector.getAddedStatements().get(conceptId);
+			// Restore inactive relationships where appropriate
+			for (Long conceptId : changeCollector.getAddedStatements().keySet()) {
+				Set<Relationship> conceptInactiveInferredRelationship = snomedTaxonomy.getInactiveInferredRelationships(conceptId);
+				Set<Relationship> newInferredRelationship = changeCollector.getAddedStatements().get(conceptId);
 
-			if(!conceptInactiveInferredRelationship.isEmpty() && !newInferredRelationship.isEmpty()) {
-				for (Relationship newRel : newInferredRelationship) {
-					if (newRel.getRelationshipId() == -1) {// If we are updating an existing relationship then no need to find another one
-						for (Relationship inactiveRel : conceptInactiveInferredRelationship) {
-							if (newRel.getGroup() == inactiveRel.getGroup()
-									&& newRel.getTypeId() == inactiveRel.getTypeId()
-									&& newRel.getDestinationId() == inactiveRel.getDestinationId()) {
-								newRel.setRelationshipId(inactiveRel.getRelationshipId());
+				if (!conceptInactiveInferredRelationship.isEmpty() && !newInferredRelationship.isEmpty()) {
+					for (Relationship newRel : newInferredRelationship) {
+						if (newRel.getRelationshipId() == -1) {// If we are updating an existing relationship then no need to find another one
+							for (Relationship inactiveRel : conceptInactiveInferredRelationship) {
+								if (newRel.getGroup() == inactiveRel.getGroup()
+										&& newRel.getTypeId() == inactiveRel.getTypeId()
+										&& newRel.getDestinationId() == inactiveRel.getDestinationId()) {
+									newRel.setRelationshipId(inactiveRel.getRelationshipId());
+								}
 							}
 						}
 					}
 				}
 			}
-		}
 
-		long redundantCount = changeCollector.getRedundantCount();
-		long totalChanges = changeCollector.getAddedCount() + changeCollector.getUpdatedCount() + redundantCount + changeCollector.getRemovedDueToConceptInactivationCount();
-		logger.info("{} relationship rows changed: {} added, {} updated, {} redundant, {} removed due to concept inactivation.",
-				formatDecimal(totalChanges), formatDecimal(changeCollector.getAddedCount()), formatDecimal(changeCollector.getUpdatedCount()),
-				formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
+			long redundantCount = changeCollector.getRedundantCount();
+			long totalChanges = changeCollector.getAddedCount() + changeCollector.getUpdatedCount() + redundantCount + changeCollector.getRemovedDueToConceptInactivationCount();
+			logger.info("{} relationship rows changed: {} added, {} updated, {} redundant, {} removed due to concept inactivation.",
+					formatDecimal(totalChanges), formatDecimal(changeCollector.getAddedCount()), formatDecimal(changeCollector.getUpdatedCount()),
+					formatDecimal(redundantCount), formatDecimal(changeCollector.getRemovedDueToConceptInactivationCount()));
+		}
 
 		return changeCollector;
 	}

@@ -54,6 +54,7 @@ public class RelationshipChangeProcessor {
 	private Long addedCount;
 	private Long updatedCount;
 	private Long removedDueToConceptInactivationCount;
+	private Map<Long, Set<Long>> transitiveClosures;
 
 	public RelationshipChangeProcessor() {
 		addedCount = 0L;
@@ -61,6 +62,7 @@ public class RelationshipChangeProcessor {
 		removedDueToConceptInactivationCount = 0L;
 		addedStatements = new Long2ObjectOpenHashMap<>();
 		removedStatements = new Long2ObjectOpenHashMap<>();
+		transitiveClosures = new Long2ObjectOpenHashMap<>();
 	}
 
 	public void apply(final long conceptId, final Collection<Relationship> existingRelationships, final Collection<Relationship> newRelationships) {
@@ -185,5 +187,9 @@ public class RelationshipChangeProcessor {
 
 	public List<Set<Long>> getEquivalentConceptIds() {
 		return equivalentConceptIds;
+	}
+
+	public Map<Long, Set<Long>> getTransitiveClosures() {
+		return transitiveClosures;
 	}
 }
