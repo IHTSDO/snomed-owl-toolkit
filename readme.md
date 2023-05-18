@@ -55,6 +55,8 @@ can be used via the command line.
 
 The 'executable' jar file is available on the [latest release](https://github.com/IHTSDO/snomed-owl-toolkit/releases) page for use on the command line.
 
+This library is tested against Java 11. It will work with Java 17 and later versions but the following arguments must be added directly after the `java` command: `--add-opens java.base/java.lang=ALL-UNNAMED`. This permits a feature that is required by the OWL reasoner, otherwise there will be an `InvocationTargetException`.
+
 Command line options:
 ```
 Usage:
