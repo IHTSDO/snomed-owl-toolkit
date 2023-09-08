@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.snomed</groupId>
 		<artifactId>snomed-parent-bom</artifactId>
-		<version>1.0.12</version>
+		<version>2.0.0-SNAPSHOT</version>
 	</parent>
 
 	<groupId>org.snomed.otf</groupId>
@@ -74,6 +74,31 @@
 
 	<build>
 		<plugins>
+			<!--
+               Add the Add-Opens to the manifest file to allow snomed-owl-toolkit to work with java 17
+               Remove this when the owl-api is updated to use version 5
+           -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<id>default-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<archive>
+								<manifestEntries>
+									<Add-Opens>java.base/java.lang</Add-Opens>
+								</manifestEntries>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<!-- Create Executable Application Archive -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
