@@ -160,6 +160,20 @@ public class OntologyService {
 			}
 		}
 
+		if (snomedTaxonomy.getAllConceptIds().contains(Concepts.CONCEPT_ANNOTATION_ATTRIBUTE_LONG)) {
+			for (Long dataAttributeId : snomedTaxonomy.getDescendants(Concepts.CONCEPT_ANNOTATION_ATTRIBUTE_LONG)) {
+				if (conceptIds != null && !conceptIds.contains(dataAttributeId)) {
+					continue;
+				}
+				for (Relationship relationship : snomedTaxonomy.getStatedRelationships(dataAttributeId)) {
+					if (relationship.getTypeId() == Concepts.IS_A_LONG) {
+						axiomsMap.computeIfAbsent(dataAttributeId, (id) -> new HashSet<>())
+								.add(createOwlSubAnnotationPropertyOfAxiom(dataAttributeId, relationship.getDestinationId()));
+					}
+				}
+			}
+		}
+
 		// Create axioms of all other Snomed concepts
 		Set<Long> attributeIds = snomedTaxonomy.getDescendants(Concepts.CONCEPT_MODEL_ATTRIBUTE_LONG);
 
@@ -243,6 +257,10 @@ public class OntologyService {
 
 	public OWLSubDataPropertyOfAxiom createOwlSubDataPropertyOfAxiom(Long dataAttributeId, long destinationId) {
 		return factory.getOWLSubDataPropertyOfAxiom(getOwlDataProperty(dataAttributeId), getOwlDataProperty(destinationId));
+	}
+
+	public OWLSubAnnotationPropertyOfAxiom createOwlSubAnnotationPropertyOfAxiom(Long objectAttributeId, long destinationId) {
+		return factory.getOWLSubAnnotationPropertyOfAxiom(getOwlAnnotationProperty(objectAttributeId), getOwlAnnotationProperty(destinationId));
 	}
 
 	private OWLClassExpression createOwlClassExpression(Long namedConcept, Map<Integer, List<Relationship>> relationships) {
@@ -376,6 +394,9 @@ public class OntologyService {
 		return factory.getOWLDataProperty(COLON + typeId, prefixManager);
 	}
 
+	private OWLAnnotationProperty getOwlAnnotationProperty(long typeId) {
+		return factory.getOWLAnnotationProperty(COLON + typeId, prefixManager);
+	}
 	private OWLClass getOwlClass(Long conceptId) {
 		return factory.getOWLClass(COLON + conceptId, prefixManager);
 	}

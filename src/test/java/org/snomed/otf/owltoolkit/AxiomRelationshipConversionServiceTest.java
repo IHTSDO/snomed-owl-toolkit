@@ -26,7 +26,10 @@ public class AxiomRelationshipConversionServiceTest {
 				Long.valueOf(Concepts.HAS_DOSE_FORM),
 				763032000L,
 				3264479001L);
-		axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedAttributes);
+
+		HashSet<Long> annotationAttributes = Sets.newHashSet(
+				1295447006L);
+		axiomRelationshipConversionService = new AxiomRelationshipConversionService(ungroupedAttributes, null, null, annotationAttributes);
 	}
 
 	@Test
@@ -404,6 +407,18 @@ public class AxiomRelationshipConversionServiceTest {
 		));
 
 		axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
+	}
+
+	@Test
+	public void testConvertAnnotationAttributeToAxiom() throws ConversionException {
+		AxiomRepresentation representation = new AxiomRepresentation();
+		representation.setLeftHandSideNamedConcept(322236009L);
+		representation.setRightHandSideRelationships(toMap(
+				new Relationship(Concepts.IS_A_LONG, 1295447006L)
+		));
+		String actual = axiomRelationshipConversionService.convertRelationshipsToAxiom(representation);
+		assertEquals("SubAnnotationPropertyOf(:322236009 :1295447006)", actual);
+
 	}
 
 	private Map<Integer, List<Relationship>> toMap(Relationship... relationships) {
