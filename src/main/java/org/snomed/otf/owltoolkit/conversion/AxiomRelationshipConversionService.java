@@ -163,11 +163,11 @@ public class AxiomRelationshipConversionService {
 			OWLSubAnnotationPropertyOfAxiom subAnnotationPropertyOfAxiom = (OWLSubAnnotationPropertyOfAxiom) owlAxiom;
 
 			OWLAnnotationProperty subProperty = subAnnotationPropertyOfAxiom.getSubProperty();
-			OWLDataProperty namedProperty = subProperty.getDataPropertiesInSignature().iterator().next();
+			OWLAnnotationProperty namedProperty = subProperty.getAnnotationPropertiesInSignature().iterator().next();
 			long subAttributeConceptId = OntologyHelper.getConceptId(namedProperty);
 
 			OWLAnnotationProperty superProperty = subAnnotationPropertyOfAxiom.getSuperProperty();
-			OWLDataProperty superPropertyNamedProperty = superProperty.getDataPropertiesInSignature().iterator().next();
+			OWLAnnotationProperty superPropertyNamedProperty = superProperty.getAnnotationPropertiesInSignature().iterator().next();
 			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
 
 			representation.setLeftHandSideNamedConcept(subAttributeConceptId);

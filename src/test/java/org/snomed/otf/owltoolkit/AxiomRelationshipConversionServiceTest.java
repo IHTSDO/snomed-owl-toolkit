@@ -99,6 +99,17 @@ public class AxiomRelationshipConversionServiceTest {
 	}
 
 	@Test
+	public void tesConvertSubAnnotationPropertyOfToRelationship() throws ConversionException {
+		String axiom = "SubAnnotationPropertyOf(:3110250001 :1295447006)";
+
+		AxiomRepresentation representation = axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
+
+		assertTrue(representation.isPrimitive());
+		assertEquals(3110250001L, representation.getLeftHandSideNamedConcept().longValue());
+		assertEquals("0 116680003=1295447006", toString(representation.getRightHandSideRelationships()));
+	}
+
+	@Test
 	public void testAdditionalAxiomSufficientlyDefinedTwoRelationshipsInGroup() throws ConversionException {
 		String axiom =
 				"EquivalentClasses(" +
