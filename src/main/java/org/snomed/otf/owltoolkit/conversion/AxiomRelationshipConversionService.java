@@ -115,7 +115,7 @@ public class AxiomRelationshipConversionService {
 		AxiomType<?> axiomType = owlAxiom.getAxiomType();
 
 		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES &&
-				axiomType != AxiomType.SUB_OBJECT_PROPERTY && axiomType != AxiomType.SUB_DATA_PROPERTY) {
+				axiomType != AxiomType.SUB_OBJECT_PROPERTY && axiomType != AxiomType.SUB_DATA_PROPERTY && axiomType != AxiomType.SUB_ANNOTATION_PROPERTY_OF) {
 			LOGGER.debug("Only SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf can be converted to relationships. " +
 					"Axiom given is of type  \"{}\". Returning null.",  axiomType.getName());
 			return null;
@@ -150,6 +150,23 @@ public class AxiomRelationshipConversionService {
 			long subAttributeConceptId = OntologyHelper.getConceptId(namedProperty);
 
 			OWLDataPropertyExpression superProperty = subDataPropertyOfAxiom.getSuperProperty();
+			OWLDataProperty superPropertyNamedProperty = superProperty.getDataPropertiesInSignature().iterator().next();
+			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
+
+			representation.setLeftHandSideNamedConcept(subAttributeConceptId);
+			representation.setRightHandSideRelationships(newSingleIsARelationship(superAttributeConceptId));
+			representation.setPrimitive(true);
+
+			return representation;
+
+		} else if (axiomType == AxiomType.SUB_ANNOTATION_PROPERTY_OF) {
+			OWLSubAnnotationPropertyOfAxiom subAnnotationPropertyOfAxiom = (OWLSubAnnotationPropertyOfAxiom) owlAxiom;
+
+			OWLAnnotationProperty subProperty = subAnnotationPropertyOfAxiom.getSubProperty();
+			OWLDataProperty namedProperty = subProperty.getDataPropertiesInSignature().iterator().next();
+			long subAttributeConceptId = OntologyHelper.getConceptId(namedProperty);
+
+			OWLAnnotationProperty superProperty = subAnnotationPropertyOfAxiom.getSuperProperty();
 			OWLDataProperty superPropertyNamedProperty = superProperty.getDataPropertiesInSignature().iterator().next();
 			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
 
