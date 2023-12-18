@@ -1,0 +1,2 @@
+id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
+0d2a21e8-8fcc-4be2-8396-59527e42b70d	20170131	1	900000000000012004	733073007	3113249002	SubAnnotationPropertyOf(:3113249002 :1295447006)
