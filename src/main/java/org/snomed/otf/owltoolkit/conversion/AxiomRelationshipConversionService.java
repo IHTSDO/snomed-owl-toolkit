@@ -25,6 +25,7 @@ public class AxiomRelationshipConversionService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AxiomRelationshipConversionService.class);
 	private Collection<Long> objectAttributes;
 	private Collection<Long> dataAttributes;
+	private Collection<Long> annotationAttributes;
 
 	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
@@ -42,6 +43,18 @@ public class AxiomRelationshipConversionService {
 		ontologyService = new OntologyService(ungroupedAttributes);
 		this.objectAttributes = objectAttributes;
 		this.dataAttributes = dataAttributes;
+	}
+
+	/**
+	 * Use this constructor to enable generating SubObjectPropertyOf, SubDataPropertyOf and SubAnnotationPropertyOf axioms from relationships.
+	 * @param ungroupedAttributes A set of concept identifiers from the referencedComponentIds of rows in the MRCM Attribute Domain reference set which have group=0.
+	 * @param objectAttributes A set of concept identifiers from the descendants of 762705008 |Concept model object attribute (attribute)|.
+	 * @param dataAttributes A set of concept identifiers from the descendants of 762706009 |Concept model data attribute (attribute)|.
+	 * @param annotationAttributes A set of concept identifiers from the descendants of 1295447006 |Annotation attribute (attribute)|.
+	 */
+	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes, Collection<Long> objectAttributes, Collection<Long> dataAttributes, Collection<Long> annotationAttributes) {
+		this(ungroupedAttributes, objectAttributes, dataAttributes);
+		this.annotationAttributes = annotationAttributes;
 	}
 
 	/**
@@ -102,7 +115,7 @@ public class AxiomRelationshipConversionService {
 		AxiomType<?> axiomType = owlAxiom.getAxiomType();
 
 		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES &&
-				axiomType != AxiomType.SUB_OBJECT_PROPERTY && axiomType != AxiomType.SUB_DATA_PROPERTY) {
+				axiomType != AxiomType.SUB_OBJECT_PROPERTY && axiomType != AxiomType.SUB_DATA_PROPERTY && axiomType != AxiomType.SUB_ANNOTATION_PROPERTY_OF) {
 			LOGGER.debug("Only SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf can be converted to relationships. " +
 					"Axiom given is of type  \"{}\". Returning null.",  axiomType.getName());
 			return null;
@@ -138,6 +151,23 @@ public class AxiomRelationshipConversionService {
 
 			OWLDataPropertyExpression superProperty = subDataPropertyOfAxiom.getSuperProperty();
 			OWLDataProperty superPropertyNamedProperty = superProperty.getDataPropertiesInSignature().iterator().next();
+			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
+
+			representation.setLeftHandSideNamedConcept(subAttributeConceptId);
+			representation.setRightHandSideRelationships(newSingleIsARelationship(superAttributeConceptId));
+			representation.setPrimitive(true);
+
+			return representation;
+
+		} else if (axiomType == AxiomType.SUB_ANNOTATION_PROPERTY_OF) {
+			OWLSubAnnotationPropertyOfAxiom subAnnotationPropertyOfAxiom = (OWLSubAnnotationPropertyOfAxiom) owlAxiom;
+
+			OWLAnnotationProperty subProperty = subAnnotationPropertyOfAxiom.getSubProperty();
+			OWLAnnotationProperty namedProperty = subProperty.getAnnotationPropertiesInSignature().iterator().next();
+			long subAttributeConceptId = OntologyHelper.getConceptId(namedProperty);
+
+			OWLAnnotationProperty superProperty = subAnnotationPropertyOfAxiom.getSuperProperty();
+			OWLAnnotationProperty superPropertyNamedProperty = superProperty.getAnnotationPropertiesInSignature().iterator().next();
 			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
 
 			representation.setLeftHandSideNamedConcept(subAttributeConceptId);
@@ -232,7 +262,9 @@ public class AxiomRelationshipConversionService {
 			List<Relationship> relationships = rightHandSideRelationships.get(0);
 			for (Relationship relationship : relationships) {
 				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
-					if (objectAttributes != null && objectAttributes.contains(relationship.getDestinationId())) {
+					if (annotationAttributes != null && annotationAttributes.contains(relationship.getDestinationId())) {
+						return axiomToString(ontologyService.createOwlSubAnnotationPropertyOfAxiom(representation.getLeftHandSideNamedConcept(), relationship.getDestinationId()));
+					} else if (objectAttributes != null && objectAttributes.contains(relationship.getDestinationId())) {
 						// Attribute concepts will only have one parent
 						return axiomToString(ontologyService.createOwlSubObjectPropertyOfAxiom(representation.getLeftHandSideNamedConcept(), relationship.getDestinationId()));
 					} else if (dataAttributes != null && dataAttributes.contains(relationship.getDestinationId())) {
@@ -249,7 +281,7 @@ public class AxiomRelationshipConversionService {
 		return axiomToString(ontologyService.createOwlClassAxiom(representation));
 	}
 
-	public String axiomToString(OWLLogicalAxiom owlAxiom) {
+	public String axiomToString(OWLAxiom owlAxiom) {
 		return owlAxiom.toString().replaceAll(CORE_COMPONENT_NAMESPACE_PATTERN, ":$1").replace(") )", "))");
 	}
 

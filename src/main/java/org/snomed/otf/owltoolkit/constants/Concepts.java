@@ -61,6 +61,8 @@ public class Concepts {
 	public static final Long CONCEPT_MODEL_OBJECT_ATTRIBUTE_LONG = parseLong(CONCEPT_MODEL_OBJECT_ATTRIBUTE);
 	public static final String CONCEPT_MODEL_DATA_ATTRIBUTE = "762706009";
 	public static final Long CONCEPT_MODEL_DATA_ATTRIBUTE_LONG = parseLong(CONCEPT_MODEL_DATA_ATTRIBUTE);
+	public static final String CONCEPT_ANNOTATION_ATTRIBUTE = "1295447006";
+	public static final Long CONCEPT_ANNOTATION_ATTRIBUTE_LONG = parseLong(CONCEPT_ANNOTATION_ATTRIBUTE);
 	public static final String ALL_OR_PART_OF = "733928003";
 	public static final String PART_OF = "123005000";
 	public static final String LATERALITY = "272741003";
