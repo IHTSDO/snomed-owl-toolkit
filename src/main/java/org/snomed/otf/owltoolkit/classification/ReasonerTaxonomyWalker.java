@@ -121,9 +121,35 @@ public class ReasonerTaxonomyWalker {
 			walkDataProperties(topDataProperty);
 		}
 
+		// Extract of Annotation properties
+		// Find top Annotation property
+		OWLAnnotationProperty topAnnotationProperty = null;
+		for (OWLAnnotationProperty annotationProperty : owlOntology.getAnnotationPropertiesInSignature()) {
+			long propertyId = OntologyHelper.getConceptId(annotationProperty);
+			if (Concepts.CONCEPT_ANNOTATION_ATTRIBUTE_LONG.equals(propertyId)) {
+				topAnnotationProperty = annotationProperty;
+				break;
+			}
+		}
+		if (topAnnotationProperty != null) {
+			walkAnnotationProperties(topAnnotationProperty, owlOntology.getAxioms(AxiomType.SUB_ANNOTATION_PROPERTY_OF));
+		}
+
 		// The properties extracted are not concepts so we clear them from the list
 		taxonomy.getAttributeIds().addAll(taxonomy.getConceptIds());
 		taxonomy.getConceptIds().clear();
+	}
+
+	private void walkAnnotationProperties(OWLAnnotationProperty annotationProperty, Set<OWLSubAnnotationPropertyOfAxiom> axioms) {
+		long propertyId = OntologyHelper.getConceptId(annotationProperty);
+		for (OWLSubAnnotationPropertyOfAxiom axiom : axioms) {
+			long superPropertyId = OntologyHelper.getConceptId(axiom.getSuperProperty());
+			if (superPropertyId == propertyId) {
+				Set<Long> parentIds = new HashSet<>();
+				parentIds.add(superPropertyId);
+				taxonomy.addEntry(new ReasonerTaxonomyEntry(OntologyHelper.getConceptId(axiom.getSubProperty()), parentIds));
+			}
+		}
 	}
 
 	private void walkObjectProperties(OWLObjectProperty objectProperty) {
@@ -150,7 +176,6 @@ public class ReasonerTaxonomyWalker {
 		for (OWLSubDataPropertyOfAxiom subProperty : subProperties) {
 			walkDataProperties(subProperty.getSubProperty().asOWLDataProperty());
 		}
-
 	}
 
 	private NodeSet<OWLClass> walkClasses(final Node<OWLClass> node) {
