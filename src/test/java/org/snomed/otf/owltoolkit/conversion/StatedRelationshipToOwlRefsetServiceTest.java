@@ -12,15 +12,13 @@ import org.snomed.otf.snomedboot.testutil.ZipUtil;
 import org.springframework.util.StreamUtils;
 
 import java.io.*;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class StatedRelationshipToOwlRefsetServiceTest {
 	
@@ -48,31 +46,32 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 		try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()))) {
 			ZipEntry nextEntry = zipInputStream.getNextEntry();
 			assertEquals("sct2_StatedRelationship_Delta_INT_20180931.txt", nextEntry.getName());
-			statedRelationships = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			statedRelationships = StreamUtils.copyToString(zipInputStream, StandardCharsets.UTF_8);
 
 			nextEntry = zipInputStream.getNextEntry();
 			assertEquals("sct2_sRefset_OWLAxiomDelta_INT_20180931.txt", nextEntry.getName());
-			owlRefset = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			owlRefset = StreamUtils.copyToString(zipInputStream, StandardCharsets.UTF_8);
 		}
 
 
 		assertFalse("Output should not contain the snomed axiom prefix", owlRefset.contains("<http://snomed.info/id/"));
 
 		// Sequential identifiers used in this test rather than random UUIDs
+		int a=1;
 		assertEquals(
 				"id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\towlExpression\n" +
-				"1\t\t1\t900000000000012004\t733073007\t410662002\tSubClassOf(:410662002 :900000000000441003)\n" +
-				"2\t\t1\t900000000000012004\t733073007\t116680003\tSubClassOf(:116680003 :900000000000441003)\n" +
-				"3\t\t1\t900000000000012004\t733073007\t723594008\tSubClassOf(:723594008 :900000000000441003)\n" +
-				"4\t\t1\t900000000000012004\t733073007\t762705008\tSubClassOf(:762705008 :410662002)\n" +
-				"5\t\t1\t900000000000207008\t733073007\t73211009\tSubClassOf(:73211009 :362969004)\n" +
-				"6\t\t1\t900000000000012004\t733073007\t900000000000441003\tSubClassOf(:900000000000441003 :138875005)\n" +
-				"7\t\t1\t900000000000207008\t733073007\t362969004\tEquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
-				"8\t\t1\t900000000000012004\t733073007\t723596005\tSubClassOf(:723596005 :723594008)\n" +
-				"9\t\t1\t900000000000012004\t733073007\t762706009\tSubClassOf(:762706009 :410662002)\n" +
-				"10\t\t1\t900000000000207008\t733073007\t404684003\tSubClassOf(:404684003 :138875005)\n" +
-				"11\t\t1\t900000000000012004\t733073007\t363698007\tSubObjectPropertyOf(:363698007 :762705008)\n" +
-				"12\t\t1\t900000000000207008\t733073007\t113331007\tSubClassOf(:113331007 :138875005)\n",
+						a++ + "\t\t1\t900000000000207008\t733073007\t73211009\tSubClassOf(:73211009 :362969004)\n" +
+						a++ + "\t\t1\t900000000000207008\t733073007\t113331007\tSubClassOf(:113331007 :138875005)\n" +
+						a++ + "\t\t1\t900000000000012004\t733073007\t116680003\tSubClassOf(:116680003 :900000000000441003)\n" +
+						a++ + "\t\t1\t900000000000207008\t733073007\t362969004\tEquivalentClasses(:362969004 ObjectIntersectionOf(:404684003 ObjectSomeValuesFrom(:609096000 ObjectSomeValuesFrom(:363698007 :113331007))))\n" +
+						a++ + "\t\t1\t900000000000012004\t733073007\t363698007\tSubObjectPropertyOf(:363698007 :762705008)\n" +
+						a++ + "\t\t1\t900000000000207008\t733073007\t404684003\tSubClassOf(:404684003 :138875005)\n" +
+						a++ + "\t\t1\t900000000000012004\t733073007\t410662002\tSubClassOf(:410662002 :900000000000441003)\n" +
+						a++ + "\t\t1\t900000000000012004\t733073007\t723594008\tSubClassOf(:723594008 :900000000000441003)\n" +
+						a++ + "\t\t1\t900000000000012004\t733073007\t723596005\tSubClassOf(:723596005 :723594008)\n" +
+						a++ + "\t\t1\t900000000000012004\t733073007\t762705008\tSubClassOf(:762705008 :410662002)\n" +
+						a++ + "\t\t1\t900000000000012004\t733073007\t762706009\tSubClassOf(:762706009 :410662002)\n" +
+						a + "\t\t1\t900000000000012004\t733073007\t900000000000441003\tSubClassOf(:900000000000441003 :138875005)\n",
 				owlRefset);
 
 		assertEquals(
@@ -105,7 +104,7 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 		try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()))) {
 			ZipEntry nextEntry = zipInputStream.getNextEntry();
 			assertEquals("sct2_sRefset_OWLAxiomDelta_INT_20190731.txt", nextEntry.getName());
-			owlRefset = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			owlRefset = StreamUtils.copyToString(zipInputStream, StandardCharsets.UTF_8);
 		}
 
 		assertFalse("Output should not contain the snomed axiom prefix", owlRefset.contains("<http://snomed.info/id/"));
@@ -134,23 +133,24 @@ public class StatedRelationshipToOwlRefsetServiceTest {
 		try (ZipInputStream zipInputStream = new ZipInputStream(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()))) {
 			ZipEntry nextEntry = zipInputStream.getNextEntry();
 			assertEquals("sct2_sRefset_OWLAxiomDelta_INT_20190901.txt", nextEntry.getName());
-			owlRefset = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			owlRefset = StreamUtils.copyToString(zipInputStream, StandardCharsets.UTF_8);
 			nextEntry = zipInputStream.getNextEntry();
 			assertEquals("sct2_StatedRelationship_Delta_INT_20190901.txt", nextEntry.getName());
-			statedRelationships = StreamUtils.copyToString(zipInputStream, Charset.forName("UTF-8"));
+			statedRelationships = StreamUtils.copyToString(zipInputStream, StandardCharsets.UTF_8);
 			nextEntry = zipInputStream.getNextEntry();
 			assertEquals("sct2_StatedRelationships_Not_Converted.txt", result.getName());
-			statedRelationshipsNotConverted = StreamUtils.copyToString(new FileInputStream(result), Charset.forName("UTF-8"));
+			statedRelationshipsNotConverted = StreamUtils.copyToString(new FileInputStream(result), StandardCharsets.UTF_8);
 		}
 
 		assertFalse("Output should not contain the snomed axiom prefix", owlRefset.contains("<http://snomed.info/id/"));
 
+		int a = 1;
 		assertEquals(
 				"id\teffectiveTime\tactive\tmoduleId\trefsetId\treferencedComponentId\towlExpression\n" +
 				"c569b572-1197-49a6-84b6-c44e98f0c0b6\t\t1\t900101001\t733073007\t555321000005104\tSubClassOf(:555321000005104 :385207009)\n" + 
-				"1\t\t1\t900101001\t733073007\t900101001\tSubClassOf(:900101001 :900000000000441003)\n" + 
-				"2\t\t1\t900101001\t733073007\t18736003\tSubClassOf(:18736003 ObjectIntersectionOf(:12481008 :76145000 ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :129287005) ObjectSomeValuesFrom(:405813007 :84301002))) ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :281615006) ObjectSomeValuesFrom(:405813007 :25342003)))))\n" +
-				"3\t\t1\t900101001\t733073007\t18736004\tSubClassOf(:18736004 :76145000)\n",
+						a++ + "\t\t1\t900101001\t733073007\t18736003\tSubClassOf(:18736003 ObjectIntersectionOf(:12481008 :76145000 ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :129287005) ObjectSomeValuesFrom(:405813007 :84301002))) ObjectSomeValuesFrom(:609096000 ObjectIntersectionOf(ObjectSomeValuesFrom(:260686004 :281615006) ObjectSomeValuesFrom(:405813007 :25342003)))))\n" +
+						a++ + "\t\t1\t900101001\t733073007\t18736004\tSubClassOf(:18736004 :76145000)\n" +
+				a + "\t\t1\t900101001\t733073007\t900101001\tSubClassOf(:900101001 :900000000000441003)\n",
 				owlRefset);
 		
 		assertEquals(

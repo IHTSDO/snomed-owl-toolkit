@@ -10,6 +10,7 @@ import org.snomed.otf.owltoolkit.ontology.OntologyService;
 import org.snomed.otf.owltoolkit.taxonomy.SnomedTaxonomyLoader;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.snomed.otf.owltoolkit.ontology.OntologyService.CORE_COMPONENT_NAMESPACE_PATTERN;
@@ -24,6 +25,7 @@ public class AxiomRelationshipConversionService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AxiomRelationshipConversionService.class);
 	private Collection<Long> objectAttributes;
 	private Collection<Long> dataAttributes;
+	private Collection<Long> annotationAttributes;
 
 	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes) {
 		snomedTaxonomyLoader = new SnomedTaxonomyLoader();
@@ -41,6 +43,18 @@ public class AxiomRelationshipConversionService {
 		ontologyService = new OntologyService(ungroupedAttributes);
 		this.objectAttributes = objectAttributes;
 		this.dataAttributes = dataAttributes;
+	}
+
+	/**
+	 * Use this constructor to enable generating SubObjectPropertyOf, SubDataPropertyOf and SubAnnotationPropertyOf axioms from relationships.
+	 * @param ungroupedAttributes A set of concept identifiers from the referencedComponentIds of rows in the MRCM Attribute Domain reference set which have group=0.
+	 * @param objectAttributes A set of concept identifiers from the descendants of 762705008 |Concept model object attribute (attribute)|.
+	 * @param dataAttributes A set of concept identifiers from the descendants of 762706009 |Concept model data attribute (attribute)|.
+	 * @param annotationAttributes A set of concept identifiers from the descendants of 1295447006 |Annotation attribute (attribute)|.
+	 */
+	public AxiomRelationshipConversionService(Set<Long> ungroupedAttributes, Collection<Long> objectAttributes, Collection<Long> dataAttributes, Collection<Long> annotationAttributes) {
+		this(ungroupedAttributes, objectAttributes, dataAttributes);
+		this.annotationAttributes = annotationAttributes;
 	}
 
 	/**
@@ -85,10 +99,23 @@ public class AxiomRelationshipConversionService {
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
 	public AxiomRepresentation convertAxiomToRelationships(OWLAxiom owlAxiom) throws ConversionException {
+		return convertAxiomToRelationships(owlAxiom, new AtomicInteger(1));
+	}
+
+	/**
+	 * Converts an OWL Axiom expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
+	 * Currently supported axiom types are SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf.
+	 *
+	 * @param owlAxiom    The Axiom expression to convert.
+	 * @param groupOffset The starting number for inferred role groups. This can be used to ensure separation of groups for Concepts with multiple Axioms.
+	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
+	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
+	 */
+	public AxiomRepresentation convertAxiomToRelationships(OWLAxiom owlAxiom, AtomicInteger groupOffset) throws ConversionException {
 		AxiomType<?> axiomType = owlAxiom.getAxiomType();
 
 		if (axiomType != AxiomType.SUBCLASS_OF && axiomType != AxiomType.EQUIVALENT_CLASSES &&
-				axiomType != AxiomType.SUB_OBJECT_PROPERTY && axiomType != AxiomType.SUB_DATA_PROPERTY) {
+				axiomType != AxiomType.SUB_OBJECT_PROPERTY && axiomType != AxiomType.SUB_DATA_PROPERTY && axiomType != AxiomType.SUB_ANNOTATION_PROPERTY_OF) {
 			LOGGER.debug("Only SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf can be converted to relationships. " +
 					"Axiom given is of type  \"{}\". Returning null.",  axiomType.getName());
 			return null;
@@ -132,6 +159,23 @@ public class AxiomRelationshipConversionService {
 
 			return representation;
 
+		} else if (axiomType == AxiomType.SUB_ANNOTATION_PROPERTY_OF) {
+			OWLSubAnnotationPropertyOfAxiom subAnnotationPropertyOfAxiom = (OWLSubAnnotationPropertyOfAxiom) owlAxiom;
+
+			OWLAnnotationProperty subProperty = subAnnotationPropertyOfAxiom.getSubProperty();
+			OWLAnnotationProperty namedProperty = subProperty.getAnnotationPropertiesInSignature().iterator().next();
+			long subAttributeConceptId = OntologyHelper.getConceptId(namedProperty);
+
+			OWLAnnotationProperty superProperty = subAnnotationPropertyOfAxiom.getSuperProperty();
+			OWLAnnotationProperty superPropertyNamedProperty = superProperty.getAnnotationPropertiesInSignature().iterator().next();
+			long superAttributeConceptId = OntologyHelper.getConceptId(superPropertyNamedProperty);
+
+			representation.setLeftHandSideNamedConcept(subAttributeConceptId);
+			representation.setRightHandSideRelationships(newSingleIsARelationship(superAttributeConceptId));
+			representation.setPrimitive(true);
+
+			return representation;
+
 		} else if (axiomType == AxiomType.EQUIVALENT_CLASSES) {
 			OWLEquivalentClassesAxiom equivalentClassesAxiom = (OWLEquivalentClassesAxiom) owlAxiom;
 			Set<OWLClassExpression> classExpressions = equivalentClassesAxiom.getClassExpressions();
@@ -153,10 +197,10 @@ public class AxiomRelationshipConversionService {
 		if (leftNamedClass != null) {
 			// Normal axiom
 			representation.setLeftHandSideNamedConcept(leftNamedClass);
-			representation.setRightHandSideRelationships(rightNamedClass != null ? newSingleIsARelationship(rightNamedClass) : getRelationships(rightHandExpression));
+			representation.setRightHandSideRelationships(rightNamedClass != null ? newSingleIsARelationship(rightNamedClass) : getRelationships(rightHandExpression, groupOffset));
 		} else {
 			// GCI
-			representation.setLeftHandSideRelationships(getRelationships(leftHandExpression));
+			representation.setLeftHandSideRelationships(getRelationships(leftHandExpression, new AtomicInteger(1))); // Default offset as GCI Axioms do not contribute to necessary normal form
 			if (rightNamedClass == null) {
 				throw new ConversionException("Axioms with expressions on both sides are not supported.");
 			}
@@ -181,6 +225,7 @@ public class AxiomRelationshipConversionService {
 		try {
 			for (Long conceptId : conceptAxiomMap.keySet()) {
 				Collection<OWLAxiom> axioms = conceptAxiomMap.get(conceptId);
+				AtomicInteger groupOffset = new AtomicInteger(1); // Skipping to 1 as 0 reserved for non-grouped
 				for (OWLAxiom axiom : axioms) {
 					currentAxiom = axiom;
 					boolean ignore = false;
@@ -189,7 +234,7 @@ public class AxiomRelationshipConversionService {
 						ignore = classOfAxiom.isGCI();
 					}
 					if (!ignore) {
-						AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom);
+						AxiomRepresentation axiomRepresentation = convertAxiomToRelationships(axiom, groupOffset);
 						if (axiomRepresentation != null) {
 							conceptAxiomStatements.computeIfAbsent(conceptId, id -> new HashSet<>()).add(axiomRepresentation);
 						}
@@ -217,7 +262,9 @@ public class AxiomRelationshipConversionService {
 			List<Relationship> relationships = rightHandSideRelationships.get(0);
 			for (Relationship relationship : relationships) {
 				if (relationship.getTypeId() == Concepts.IS_A_LONG) {
-					if (objectAttributes != null && objectAttributes.contains(relationship.getDestinationId())) {
+					if (annotationAttributes != null && annotationAttributes.contains(relationship.getDestinationId())) {
+						return axiomToString(ontologyService.createOwlSubAnnotationPropertyOfAxiom(representation.getLeftHandSideNamedConcept(), relationship.getDestinationId()));
+					} else if (objectAttributes != null && objectAttributes.contains(relationship.getDestinationId())) {
 						// Attribute concepts will only have one parent
 						return axiomToString(ontologyService.createOwlSubObjectPropertyOfAxiom(representation.getLeftHandSideNamedConcept(), relationship.getDestinationId()));
 					} else if (dataAttributes != null && dataAttributes.contains(relationship.getDestinationId())) {
@@ -234,7 +281,7 @@ public class AxiomRelationshipConversionService {
 		return axiomToString(ontologyService.createOwlClassAxiom(representation));
 	}
 
-	public String axiomToString(OWLLogicalAxiom owlAxiom) {
+	public String axiomToString(OWLAxiom owlAxiom) {
 		return owlAxiom.toString().replaceAll(CORE_COMPONENT_NAMESPACE_PATTERN, ":$1").replace(") )", "))");
 	}
 
@@ -277,7 +324,7 @@ public class AxiomRelationshipConversionService {
 		return null;
 	}
 
-	private Map<Integer, List<Relationship>> getRelationships(OWLClassExpression owlClassExpression) throws ConversionException {
+	private Map<Integer, List<Relationship>> getRelationships(OWLClassExpression owlClassExpression, AtomicInteger groupOffset) throws ConversionException {
 		if (owlClassExpression.getClassExpressionType() != ClassExpressionType.OBJECT_INTERSECTION_OF) {
 			throw new ConversionException("Expecting ObjectIntersectionOf at first level of expression, got " + owlClassExpression.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 		}
@@ -286,7 +333,6 @@ public class AxiomRelationshipConversionService {
 		List<OWLClassExpression> expressions = intersectionOf.getOperandsAsList();
 
 		Map<Integer, List<Relationship>> relationshipGroups = new HashMap<>();
-		int rollingGroupNumber = 0;
 		for (OWLClassExpression operand : expressions) {
 			ClassExpressionType operandClassExpressionType = operand.getClassExpressionType();
 			if (operandClassExpressionType == ClassExpressionType.OWL_CLASS) {
@@ -298,8 +344,8 @@ public class AxiomRelationshipConversionService {
 				OWLObjectSomeValuesFrom someValuesFrom = (OWLObjectSomeValuesFrom) operand;
 				OWLObjectPropertyExpression property = someValuesFrom.getProperty();
 				if (isRoleGroup(property)) {
-					rollingGroupNumber++;
 					// Extract Group
+					int rollingGroupNumber = groupOffset.get();
 					OWLClassExpression filler = someValuesFrom.getFiller();
 					if (filler.getClassExpressionType() == ClassExpressionType.OBJECT_SOME_VALUES_FROM) {
 						Relationship relationship = extractRelationship((OWLObjectSomeValuesFrom) filler, rollingGroupNumber);
@@ -325,6 +371,7 @@ public class AxiomRelationshipConversionService {
 						throw new ConversionException("Expecting ObjectSomeValuesFrom with role group to have one of ObjectSomeValuesFrom, DataHasValue or ObjectIntersectionOf, " +
 								"got " + filler.getClassExpressionType() + " in expression " + owlClassExpression.toString() + ".");
 					}
+					groupOffset.incrementAndGet();
 				} else {
 					Relationship relationship = extractRelationship(someValuesFrom, 0);
 					relationshipGroups.computeIfAbsent(0, key -> new ArrayList<>()).add(relationship);

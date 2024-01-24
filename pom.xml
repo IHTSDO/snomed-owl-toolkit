@@ -6,61 +6,55 @@
 
 	<groupId>org.snomed.otf</groupId>
 	<artifactId>snomed-owl-toolkit</artifactId>
-	<version>3.0.4-SNAPSHOT</version>
+	<version>5.2.0-SNAPSHOT</version>
 
-	<properties>
-		<java.version>1.8</java.version>
-		<owlapi.version>4.1.3</owlapi.version>
-		<elk-owlapi.version>0.4.3</elk-owlapi.version>
-		<slf4j.version>1.7.25</slf4j.version>
-		<snomed.boot.version>3.0.0</snomed.boot.version>
-		<maven.compiler.source>${java.version}</maven.compiler.source>
-		<maven.compiler.target>${java.version}</maven.compiler.target>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-	</properties>
+	<parent>
+		<groupId>org.snomed</groupId>
+		<artifactId>snomed-parent-bom</artifactId>
+		<version>3.2.0-SNAPSHOT</version>
+	</parent>
 
 	<dependencies>
 		<!-- RF2 Loading -->
 		<dependency>
 			<groupId>org.snomed.otf</groupId>
 			<artifactId>snomed-boot</artifactId>
-			<version>${snomed.boot.version}</version>
 		</dependency>
 
 		<!-- OWL API -->
 		<dependency>
 			<groupId>net.sourceforge.owlapi</groupId>
 			<artifactId>owlapi-api</artifactId>
-			<version>${owlapi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.owlapi</groupId>
 			<artifactId>owlapi-impl</artifactId>
-			<version>${owlapi.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.owlapi</groupId>
 			<artifactId>owlapi-apibinding</artifactId>
-			<version>${owlapi.version}</version>
 		</dependency>
 
 		<!-- ELK OWL API -->
 		<dependency>
 			<groupId>org.semanticweb.elk</groupId>
 			<artifactId>elk-owlapi</artifactId>
-			<version>${elk-owlapi.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>log4j</groupId>
+					<artifactId>log4j</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Logging -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.7.12</version>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.12</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -68,25 +62,47 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
-			<version>4.3.20.RELEASE</version>
 		</dependency>
 
 		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.13.1</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+			<!--
+               Add the Add-Opens to the manifest file to allow snomed-owl-toolkit to work with java 17
+               Remove this when the owl-api is updated to use version 5
+           -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<id>default-jar</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<archive>
+								<manifestEntries>
+									<Add-Opens>java.base/java.lang</Add-Opens>
+								</manifestEntries>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 			<!-- Create Executable Application Archive -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>1.5.12.RELEASE</version>
 				<executions>
 					<execution>
 						<goals>
@@ -99,47 +115,9 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- Create OSGi Bundle -->
-			<plugin>
-				<groupId>org.apache.felix</groupId>
-				<artifactId>maven-bundle-plugin</artifactId>
-				<extensions>true</extensions>
-				<version>2.5.3</version>
-				<executions>
-					<execution>
-						<id>create-bundle</id>
-						<phase>package</phase>
-						<goals>
-							<goal>bundle</goal>
-						</goals>
-					</execution>
-				</executions>
-				<dependencies>
-					<dependency>
-						<groupId>biz.aQute.bnd</groupId>
-						<artifactId>bndlib</artifactId>
-						<version>2.4.0</version>
-					</dependency>
-				</dependencies>
-				<configuration>
-					<classifier>bundle</classifier>
-					<instructions>
-						<Build-Name>SNOMED-CT OWL Toolkit</Build-Name>
-						<Embed-Dependency>*;scope=compile|runtime</Embed-Dependency>
-						<Embed-Transitive>true</Embed-Transitive>
-						<Export-Package>org.snomed.otf.owltoolkit.conversion,org.snomed.otf.owltoolkit.domain</Export-Package>
-						<Require-Capability>osgi.ee;filter:="(&amp;(osgi.ee=JavaSE)(version=1.8))"</Require-Capability>
-						<Import-Package>
-							javax.naming,
-							org.slf4j;version="1.7.2"
-						</Import-Package>
-					</instructions>
-				</configuration>
-			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.4</version>
 				<executions>
 					<execution>
 						<goals>
@@ -161,34 +139,26 @@
 	<repositories>
 		<repository>
 			<id>ihtsdo-releases</id>
-			<releases><enabled>true</enabled></releases>
-			<snapshots><enabled>false</enabled></snapshots>
+			<name>ihtsdo-releases</name>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
 			<url>https://nexus3.ihtsdotools.org/repository/maven-releases/</url>
 		</repository>
 		<repository>
 			<id>ihtsdo-snapshots</id>
-			<releases><enabled>false</enabled></releases>
-			<snapshots><enabled>true</enabled></snapshots>
+			<name>ihtsdo-snapshots</name>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 			<url>https://nexus3.ihtsdotools.org/repository/maven-snapshots/</url>
-		</repository>
-		<repository>
-			<id>jcenter-snapshots</id>
-			<name>jcenter</name>
-			<url>https://jcenter.bintray.com/</url>
 		</repository>
 	</repositories>
-
-	<distributionManagement>
-		<repository>
-			<id>ihtsdo-public-nexus</id>
-			<name>IHTSDO Public Nexus Releases</name>
-			<url>https://nexus3.ihtsdotools.org/repository/maven-releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>ihtsdo-public-nexus</id>
-			<name>IHTSDO Public Nexus Snapshots</name>
-			<url>https://nexus3.ihtsdotools.org/repository/maven-snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
 
 </project>

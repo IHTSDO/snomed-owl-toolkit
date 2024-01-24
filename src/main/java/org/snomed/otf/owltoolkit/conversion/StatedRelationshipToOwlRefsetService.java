@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -216,14 +217,14 @@ public class StatedRelationshipToOwlRefsetService {
 			OWLOntology ontology,
 			OutputStream outputStream,
 			SnomedTaxonomy snomedTaxonomy,
-			String moduleId) throws OWLOntologyCreationException, ConversionException {
+			String moduleId) throws ConversionException {
 		
 		try {
 			// Leave stream open so other entries can be written when used as a zip stream
 			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
 
 			ByteArrayOutputStream functionalSyntaxOutputStream = new ByteArrayOutputStream();
-			OutputStreamWriter functionalSyntaxWriter = new OutputStreamWriter(functionalSyntaxOutputStream, Charset.forName("UTF-8"));
+			OutputStreamWriter functionalSyntaxWriter = new OutputStreamWriter(functionalSyntaxOutputStream, StandardCharsets.UTF_8);
 			FunctionalSyntaxObjectRenderer functionalSyntaxObjectRenderer = new FunctionalSyntaxObjectRenderer(ontology, functionalSyntaxWriter);
 			functionalSyntaxObjectRenderer.setPrefixManager(ontologyService.getSnomedPrefixManager());
 
@@ -231,7 +232,9 @@ public class StatedRelationshipToOwlRefsetService {
 			modelComponentIds.add(parseLong(Concepts.SNOMED_CT_MODEL_COMPONENT));
 			modelComponentIds.add(Concepts.ROOT_LONG);
 
-			for (Long conceptId : changes.keySet()) {
+			List<Long> conceptIds = new ArrayList<>(changes.keySet());
+			conceptIds.sort(null);
+			for (Long conceptId : conceptIds) {
 				for (OWLAxiom owlAxiom : changes.get(conceptId)) {
 					// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
 
@@ -429,8 +432,9 @@ public class StatedRelationshipToOwlRefsetService {
 			inactivatedConcepts = new LongOpenHashSet(snomedTaxonomy.getInactivatedConcepts());
 			inactivatedConcepts.removeAll(completeOwlTaxonomy.getInactivatedConcepts());
 			for (Long conceptId : inactivatedConcepts) {
-				changes.put(conceptId, new HashSet<>(completeOwlTaxonomy.getConceptAxiomMap().get(conceptId)));
-				inactivation += completeOwlTaxonomy.getConceptAxiomMap().get(conceptId).size();
+				List<OWLAxiom> axiomsOfInactiveConcept = completeOwlTaxonomy.getConceptAxiomMap().getOrDefault(conceptId, Collections.emptyList());
+				changes.put(conceptId, new HashSet<>(axiomsOfInactiveConcept));
+				inactivation += axiomsOfInactiveConcept.size();
 			}
 			logger.info("Concepts inactivated:" + inactivatedConcepts);
 

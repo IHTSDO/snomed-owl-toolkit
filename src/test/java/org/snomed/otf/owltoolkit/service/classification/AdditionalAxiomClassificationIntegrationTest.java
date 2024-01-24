@@ -24,6 +24,8 @@ import org.snomed.otf.snomedboot.testutil.ZipUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -64,6 +66,75 @@ public class AdditionalAxiomClassificationIntegrationTest {
 		assertTrue("Inferred relationship. Right angle triangle - Number of corners - 3",
 				lines.contains("1\t\t100106001\t100107001\t0\t100104001\t900000000000011006\t900000000000451002"));
 
+	}
+
+	@Test
+	public void testClassifyShouldNotMergeMultipleAxiomsFromDelta() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_Base_snapshot");
+		File deltaZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_GroupSeparation_Additional_Axiom_delta");
+		assertNotNull(snomedReasonerService);
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, deltaZip, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		int countGroup1 = 0;
+		int countGroup2 = 0;
+		for (String line : lines.subList(1, lines.size())) {
+			List<String> split = reverseSplit(line, "\t");
+			String groupId = split.get(3);
+			if ("1".equals(groupId)) {
+				countGroup1++;
+			}
+
+			if ("2".equals(groupId)) {
+				countGroup2++;
+			}
+		}
+
+		assertEquals(1, countGroup1);
+		assertEquals(1, countGroup2);
+	}
+
+	@Test
+	public void testClassifyShouldNotMergeMultipleAxiomsFromSnapshot() throws IOException, ReasonerServiceException {
+		File baseRF2SnapshotZip = ZipUtil.zipDirectoryRemovingCommentsAndBlankLines("src/test/resources/SnomedCT_MiniRF2_GroupSeparation_Additional_Axiom_snapshot");
+
+		// Run classification
+		File results = TestFileUtil.newTemporaryFile();
+		snomedReasonerService.classify("", baseRF2SnapshotZip, null, results, ELK_REASONER_FACTORY, false);
+
+		// Assert results
+		int countGroup1 = 0;
+		int countGroup2 = 0;
+		List<String> lines = readInferredRelationshipLinesTrim(results);
+		for (String line : lines.subList(1, lines.size())) {
+			List<String> split = reverseSplit(line, "\t");
+			String groupId = split.get(3);
+			String active = split.get(7);
+
+			if ("2".equals(groupId)) {
+				countGroup2++;
+				assertEquals("1", active);
+			} else if ("1".equals(groupId)) {
+				countGroup1++;
+				assertEquals("0", active);
+			} else {
+				fail();
+			}
+		}
+
+		assertEquals(1, countGroup1);
+		assertEquals(1, countGroup2);
+	}
+
+	private List<String> reverseSplit(String input, String delimiter) {
+		List<String> output = Arrays.asList(input.split(delimiter));
+		Collections.reverse(output);
+
+		return output;
 	}
 
 }

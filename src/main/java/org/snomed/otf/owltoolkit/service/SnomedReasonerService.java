@@ -41,10 +41,7 @@ import org.snomed.otf.owltoolkit.util.OptionalFileInputStream;
 import org.snomed.otf.owltoolkit.util.TimerUtil;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.lang.Long.parseLong;
 
@@ -55,6 +52,13 @@ public class SnomedReasonerService {
 	private final ClassificationResultsWriter classificationResultsWriter;
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
+
+	private static final Comparator<Relationship> RELATIONSHIP_COMPARATOR_RECENT_CHANGE_FIRST = Comparator
+			.comparing(Relationship::getTypeId)
+			.thenComparing(Relationship::getDestinationId)
+			.thenComparing(Relationship::getValueAsString, Comparator.nullsLast(Comparator.naturalOrder()))
+			.thenComparing(Relationship::getGroup)
+			.thenComparing(Relationship::getEffectiveTime, Comparator.reverseOrder());
 
 	public SnomedReasonerService() {
 		this.classificationResultsWriter = new ClassificationResultsWriter();
@@ -178,13 +182,20 @@ public class SnomedReasonerService {
 			Set<Relationship> newInferredRelationship = changeCollector.getAddedStatements().get(conceptId);
 
 			if(!conceptInactiveInferredRelationship.isEmpty() && !newInferredRelationship.isEmpty()) {
+				// sort them by the most recent changes first.
+				// Today's date is used if the effective time is null or empty when loaded by SnomedTaxonomyLoader
+				List<Relationship> inactiveSortedByEffectiveTime = new ArrayList<>(conceptInactiveInferredRelationship);
+				Collections.sort(inactiveSortedByEffectiveTime, RELATIONSHIP_COMPARATOR_RECENT_CHANGE_FIRST);
+
 				for (Relationship newRel : newInferredRelationship) {
 					if (newRel.getRelationshipId() == -1) {// If we are updating an existing relationship then no need to find another one
-						for (Relationship inactiveRel : conceptInactiveInferredRelationship) {
+						for (Relationship inactiveRel : inactiveSortedByEffectiveTime) {
 							if (newRel.getGroup() == inactiveRel.getGroup()
 									&& newRel.getTypeId() == inactiveRel.getTypeId()
 									&& newRel.getDestinationId() == inactiveRel.getDestinationId()) {
 								newRel.setRelationshipId(inactiveRel.getRelationshipId());
+								// only need to find one to prevent inferred relationships churning
+								break;
 							}
 						}
 					}
