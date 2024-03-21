@@ -1,0 +1,179 @@
+repo_name: IHTSDO/snomed-owl-toolkit
+report_id: 4ec06bb6e1c390d7dd07f1822de4f8e8
+version: 0.1
+repo_type: Public
+timestamp: '2024-03-21T12:56:52+00:00'
+requested_by: dmcgihtsdo
+provider: github
+branch: master
+detected_tools_count: 14
+tools:
+- name: Java
+  description: A concurrent, class-based, object-oriented, language specifically designed
+    to have as few implementation dependencies as possible
+  website_url: https://www.java.com
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/995/K85ZWV2F.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit
+  detection_source: Repo Metadata
+- name: Spring Framework
+  description: An application framework and inversion of control container for the
+    Java platform
+  website_url: https://spring.io/projects/spring-framework
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Frameworks (Full Stack)
+  image_url: https://img.stackshare.io/service/2006/spring-framework-project-logo.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Darryn McGaw
+  last_updated_on: 2023-09-08 12:06:59.000000000 Z
+- name: Git
+  description: Fast, scalable, distributed revision control system
+  website_url: http://git-scm.com/
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Version Control System
+  image_url: https://img.stackshare.io/service/1046/git.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit
+  detection_source: Repo Metadata
+- name: JUnit
+  description: A programmer-oriented testing framework for Java
+  website_url: http://junit.org/
+  license: EPL-1.0
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Testing Frameworks
+  image_url: https://img.stackshare.io/service/2020/874086.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Kai Kewley
+  last_updated_on: 2017-12-12 09:35:38.000000000 Z
+- name: Log4j
+  description: A Java-based logging utility
+  website_url: https://logging.apache.org/log4j/2.x/
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Monitoring
+  sub_category: Logging Tools
+  image_url: https://img.stackshare.io/service/2804/Coralogix-log4j-integration.jpg
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Gabor Nagy
+  last_updated_on: 2022-02-02 10:05:12.000000000 Z
+- name: SLF4J
+  description: Simple logging facade for Java
+  website_url: http://slf4j.org/
+  open_source: false
+  hosted_saas: false
+  category: Monitoring
+  sub_category: Log Management
+  image_url: https://img.stackshare.io/service/2805/05518ecaa42841e834421e9d6987b04f_400x400.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Kai Kewley
+  last_updated_on: 2017-12-12 09:35:38.000000000 Z
+- name: Travis CI
+  description: A hosted continuous integration service for open source and private
+    projects
+  website_url: http://travis-ci.com/
+  open_source: false
+  hosted_saas: true
+  category: Build, Test, Deploy
+  sub_category: Continuous Integration
+  image_url: https://img.stackshare.io/service/460/Lu6cGu0z_400x400.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/.travis.yml
+  detection_source: ".travis.yml"
+  last_updated_by: Kai Kewley
+  last_updated_on: 2018-04-26 23:06:18.000000000 Z
+- name: Shell
+  description: A shell is a text-based terminal, used for manipulating programs and
+    files. Shell scripts typically manage program execution.
+  website_url: https://en.wikipedia.org/wiki/Shell_script
+  open_source: false
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/4631/default_c2062d40130562bdc836c13dbca02d318205a962.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit
+  detection_source: Repo Metadata
+- name: junit:junit
+  description: JUnit is a unit testing framework for Java
+  license: EPL-1.0
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Kai Kewley
+  last_updated_on: 2017-12-12 09:35:38.000000000 Z
+- name: net.sourceforge.owlapi:owlapi-api
+  description: OWL API main repository
+  license: GPL-3.0-only
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Darryn McGaw
+  last_updated_on: 2023-09-08 12:06:59.000000000 Z
+- name: net.sourceforge.owlapi:owlapi-apibinding
+  description: OWL API main repository
+  license: GPL-3.0-only
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Darryn McGaw
+  last_updated_on: 2023-09-08 12:06:59.000000000 Z
+- name: org.slf4j:slf4j-api
+  description: The slf4j API
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Jim Cornmell
+  last_updated_on: 2024-01-18 12:49:15.000000000 Z
+- name: org.slf4j:slf4j-log4j12
+  description: SLF4J LOG4J-12 Binding
+  license: MIT
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Jim Cornmell
+  last_updated_on: 2024-01-18 12:49:15.000000000 Z
+- name: org.springframework:spring-core
+  description: Spring Core
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/IHTSDO/snomed-owl-toolkit/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Jim Cornmell
+  last_updated_on: 2024-01-18 12:49:15.000000000 Z
