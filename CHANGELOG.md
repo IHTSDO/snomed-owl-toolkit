@@ -4,7 +4,24 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The change log format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## 4.0.0 Release
+## 5.3.0 Release - May 2024
+### Fixes
+- Issue #91 MAINT-2554 Add jacoco-maven-plugin version to avoid different version being used during mvn build
+
+## 5.2.0 Release - March 2024
+### Improvements
+- ISTO-116 Add au language refset to language-refset-dialect-map.properties
+
+## 5.1.0 Release - January 2024
+### Improvements
+- MAINT-2416 Allow parsing of SubAnnotationPropertyOf when classifying
+- MAINT-2413 Update annotation attribute axiom representation to SubAnnotationPropertyOf
+
+## 5.0.0 Release
+### Breaking
+This release supports Spring 6.
+
+## 4.0.0 Release - September 2023
 
 ### Breaking
 - Support for Java 17.
