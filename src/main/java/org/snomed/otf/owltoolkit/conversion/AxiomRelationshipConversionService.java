@@ -66,8 +66,21 @@ public class AxiomRelationshipConversionService {
 	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
 	 */
 	public AxiomRepresentation convertAxiomToRelationships(String axiomExpression) throws ConversionException {
-		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(axiomExpression);
-		return convertAxiomToRelationships(owlAxiom);
+		return convertAxiomToRelationships(axiomExpression, new AtomicInteger(1));
+	}
+
+	/**
+	 * Converts an OWL expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
+	 * Currently supported axiom types are SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf.
+	 *
+	 * @param owlExpression    The Owl expression to convert.
+	 * @param groupOffset The starting number for inferred role groups. This can be used to ensure separation of groups for Concepts with multiple Axioms.
+	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
+	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
+	 */
+	public AxiomRepresentation convertAxiomToRelationships(String owlExpression, AtomicInteger groupOffset) throws ConversionException {
+		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(owlExpression);
+		return convertAxiomToRelationships(owlAxiom, groupOffset);
 	}
 	
 	/**
@@ -100,20 +113,6 @@ public class AxiomRelationshipConversionService {
 	 */
 	public AxiomRepresentation convertAxiomToRelationships(OWLAxiom owlAxiom) throws ConversionException {
 		return convertAxiomToRelationships(owlAxiom, new AtomicInteger(1));
-	}
-
-	/**
-	 * Converts an OWL expression String to an AxiomRepresentation containing a concept id or set of relationships for each side of the expression.
-	 * Currently supported axiom types are SubClassOf, EquivalentClasses, SubObjectPropertyOf and SubDataPropertyOf.
-	 *
-	 * @param owlExpression    The Owl expression to convert.
-	 * @param groupOffset The starting number for inferred role groups. This can be used to ensure separation of groups for Concepts with multiple Axioms.
-	 * @return AxiomRepresentation with the details of the expression or null if the axiom type is not supported.
-	 * @throws ConversionException if the Axiom expression is malformed or of an unexpected structure.
-	 */
-	public AxiomRepresentation convertAxiomToRelationships(String owlExpression, AtomicInteger groupOffset) throws ConversionException {
-		OWLAxiom owlAxiom = convertOwlExpressionToOWLAxiom(owlExpression);
-		return convertAxiomToRelationships(owlAxiom, groupOffset);
 	}
 
 	/**
@@ -312,7 +311,7 @@ public class AxiomRelationshipConversionService {
 		return owlAxiom.getSignature().stream().filter(OntologyHelper::isNamedConcept).map(OntologyHelper::getConceptId).collect(Collectors.toSet());
 	}
 
-	public OWLAxiom convertOwlExpressionToOWLAxiom(String axiomExpression) throws ConversionException {
+	private OWLAxiom convertOwlExpressionToOWLAxiom(String axiomExpression) throws ConversionException {
 		OWLAxiom owlAxiom;
 		try {
 			owlAxiom = snomedTaxonomyLoader.deserialiseAxiom(axiomExpression);
