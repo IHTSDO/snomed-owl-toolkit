@@ -33,6 +33,8 @@ public class SnomedTaxonomyBuilder {
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
+			.withConcepts()
+			.withRelationships()
 			.withoutDescriptions()
 			.withInactiveConcepts()
 			.withStatedRelationships()
@@ -52,6 +54,8 @@ public class SnomedTaxonomyBuilder {
 	
 	
 	private static final LoadingProfile OWL_SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
+			.withConcepts()
+			.withRelationships()
 			.withInactiveConcepts()
 			.withRefset(OWL_ONTOLOGY_REFERENCE_SET)
 			.withRefset(OWL_AXIOM_REFERENCE_SET)
