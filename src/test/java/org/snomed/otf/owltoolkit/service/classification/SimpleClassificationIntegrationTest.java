@@ -90,11 +90,14 @@ public class SimpleClassificationIntegrationTest {
 
 		// Assert results
 		List<String> lines = readInferredRelationshipLinesTrim(results);
-		assertEquals(3, lines.size());
+		assertEquals(7, lines.size());
 		assertTrue(lines.contains("1\t\t3113249002\t1295447006\t0\t" + Concepts.IS_A+ "\t900000000000011006\t900000000000451002"));
 		assertTrue(lines.contains("1\t\t1295449009\t1295447006\t0\t" + Concepts.IS_A+ "\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("1\t\t1370816003\t1295449009\t0\t" + Concepts.IS_A+ "\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("1\t\t1370816003\t1295447006\t0\t" + Concepts.IS_A+ "\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("1\t\t1370815004\t1295449009\t0\t" + Concepts.IS_A+ "\t900000000000011006\t900000000000451002"));
+		assertTrue(lines.contains("1\t\t1370815004\t1295447006\t0\t" + Concepts.IS_A+ "\t900000000000011006\t900000000000451002"));
 	}
-
 
 	@Test
 	public void testClassifyConceptInactivation() throws IOException, ReasonerServiceException {
