@@ -144,11 +144,10 @@ public class ReasonerTaxonomyWalker {
 		long propertyId = OntologyHelper.getConceptId(annotationProperty);
 		for (OWLSubAnnotationPropertyOfAxiom axiom : axioms) {
 			long superPropertyId = OntologyHelper.getConceptId(axiom.getSuperProperty());
-			if (superPropertyId == propertyId) {
-				Set<Long> parentIds = new HashSet<>();
-				parentIds.add(superPropertyId);
-				taxonomy.addEntry(new ReasonerTaxonomyEntry(OntologyHelper.getConceptId(axiom.getSubProperty()), parentIds));
-			}
+			Set<Long> parentIds = new HashSet<>();
+			parentIds.add(propertyId);
+			parentIds.add(superPropertyId);
+			taxonomy.addEntry(new ReasonerTaxonomyEntry(OntologyHelper.getConceptId(axiom.getSubProperty()), parentIds));
 		}
 	}
 
