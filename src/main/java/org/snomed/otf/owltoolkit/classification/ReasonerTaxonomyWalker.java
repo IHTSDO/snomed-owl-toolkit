@@ -132,7 +132,7 @@ public class ReasonerTaxonomyWalker {
 			}
 		}
 		if (topAnnotationProperty != null) {
-			walkAnnotationProperties(topAnnotationProperty, owlOntology.getAxioms(AxiomType.SUB_ANNOTATION_PROPERTY_OF));
+			walkAnnotationProperties(owlOntology.getAxioms(AxiomType.SUB_ANNOTATION_PROPERTY_OF));
 		}
 
 		// The properties extracted are not concepts so we clear them from the list
@@ -140,14 +140,9 @@ public class ReasonerTaxonomyWalker {
 		taxonomy.getConceptIds().clear();
 	}
 
-	private void walkAnnotationProperties(OWLAnnotationProperty annotationProperty, Set<OWLSubAnnotationPropertyOfAxiom> axioms) {
-		long propertyId = OntologyHelper.getConceptId(annotationProperty);
+	private void walkAnnotationProperties(Set<OWLSubAnnotationPropertyOfAxiom> axioms) {
 		for (OWLSubAnnotationPropertyOfAxiom axiom : axioms) {
-			long superPropertyId = OntologyHelper.getConceptId(axiom.getSuperProperty());
-			Set<Long> parentIds = new HashSet<>();
-			parentIds.add(propertyId);
-			parentIds.add(superPropertyId);
-			taxonomy.addEntry(new ReasonerTaxonomyEntry(OntologyHelper.getConceptId(axiom.getSubProperty()), parentIds));
+			taxonomy.addEntry(new ReasonerTaxonomyEntry(OntologyHelper.getConceptId(axiom.getSubProperty()), Set.of(OntologyHelper.getConceptId(axiom.getSuperProperty()))));
 		}
 	}
 
