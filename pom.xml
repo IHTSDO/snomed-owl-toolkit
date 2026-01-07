@@ -13,6 +13,12 @@
 		<version>3.12.4</version>
 	</parent>
 
+	<properties>
+		<!-- BOM Overrides -->
+		<!-- CVE Fix -->
+		<spring.version>6.2.12</spring.version>
+	</properties>
+
 	<dependencies>
 		<!-- RF2 Loading -->
 		<dependency>
@@ -133,6 +139,13 @@
 					</execution>
 				</executions>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 
