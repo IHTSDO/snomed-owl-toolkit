@@ -44,13 +44,13 @@ public class SnomedTaxonomyBuilder {
 			.withRefset(OWL_AXIOM_REFERENCE_SET)
 			.withRefset(MRCM_ATTRIBUTE_DOMAIN_INTERNATIONAL_REFERENCE_SET)
 			// Giving reference set filename patterns avoids reading them all
-			.withIncludedReferenceSetFilenamePattern(".*_sRefset_OWL.*")
-			.withIncludedReferenceSetFilenamePattern(".*_cissccRefset_MRCMAttributeDomain.*");
+			.withIncludedReferenceSetFilenamePattern(".*_sRefset_.*OWL.*")
+			.withIncludedReferenceSetFilenamePattern(".*_cissccRefset_.*MRCMAttributeDomain.*");
 
 	private static final LoadingProfile SNAPSHOT_LOADING_PROFILE_PLUS_LANGUAGE = SNAPSHOT_LOADING_PROFILE
 			.withDescriptions()
 			.withAllRefsets()// We don't know what the ID of the language reference set is going to be.
-			.withIncludedReferenceSetFilenamePattern("der2_cRefset_Language.*");
+			.withIncludedReferenceSetFilenamePattern("der2_cRefset_.*Language.*");
 	
 	
 	private static final LoadingProfile OWL_SNAPSHOT_LOADING_PROFILE = new LoadingProfile()
