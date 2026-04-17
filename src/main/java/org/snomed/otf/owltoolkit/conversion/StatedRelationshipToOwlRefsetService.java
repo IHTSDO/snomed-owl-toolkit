@@ -569,7 +569,7 @@ public class StatedRelationshipToOwlRefsetService {
 		}
 		
 		@Override
-		public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
+		public void newReferenceSetMemberState(String filename, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 			// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
 			if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET)) {
 				try {

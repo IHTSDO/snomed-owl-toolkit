@@ -110,7 +110,7 @@ public class RF2ExtractionWriter extends ImpotentComponentFactory implements Aut
 	}
 
 	@Override
-	public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
+	public void newReferenceSetMemberState(String filename, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 		if (fieldNames.length == 7 && fieldNames[6].equals("acceptabilityId")) {
 			if (descriptionIds.contains(parseLong(referencedComponentId))) {
 				try {

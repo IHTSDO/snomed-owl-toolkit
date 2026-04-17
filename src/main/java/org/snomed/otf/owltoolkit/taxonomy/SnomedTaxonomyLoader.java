@@ -177,7 +177,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	}
 
 	@Override
-	public void newReferenceSetMemberState(String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
+	public void newReferenceSetMemberState(String filename, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 		boolean activeBool = ACTIVE.equals(active);
 		if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && owlParsingExceptionThrown == null) {
 			if (activeBool) {
@@ -223,7 +223,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
-			componentFactoryTap.newReferenceSetMemberState(fieldNames, id, effectiveTime, active, moduleId, refsetId, referencedComponentId, otherValues);
+			componentFactoryTap.newReferenceSetMemberState(filename, fieldNames, id, effectiveTime, active, moduleId, refsetId, referencedComponentId, otherValues);
 		}
 	}
 
