@@ -14,6 +14,12 @@
 		<version>3.15.0-SNAPSHOT</version>
 	</parent>
 
+	<properties>
+		<java.version>25</java.version>
+		<maven.compiler.release>25</maven.compiler.release>
+		<jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
+	</properties>
+
 	<dependencies>
 		<!-- RF2 Loading -->
 		<dependency>
@@ -75,7 +81,7 @@
 	<build>
 		<plugins>
 			<!--
-               Add the Add-Opens to the manifest file to allow snomed-owl-toolkit to work with java 17
+               Add the Add-Opens to the manifest file to allow snomed-owl-toolkit to work with java 9+
                Remove this when the owl-api is updated to use version 5
            -->
 			<plugin>
@@ -98,6 +104,13 @@
 						</configuration>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+				</configuration>
 			</plugin>
 			<!-- Create Executable Application Archive -->
 			<plugin>
