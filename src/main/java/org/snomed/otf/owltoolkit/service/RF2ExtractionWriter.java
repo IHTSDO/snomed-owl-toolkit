@@ -84,7 +84,7 @@ public class RF2ExtractionWriter extends ImpotentComponentFactory implements Aut
 	}
 
 	@Override
-	public void newConceptState(String conceptId, String effectiveTime, String active, String moduleId, String definitionStatusId) {
+	public void newConceptState(String filename, long lineNumber, String conceptId, String effectiveTime, String active, String moduleId, String definitionStatusId) {
 		if (conceptIds.contains(parseLong(conceptId))) {
 			try {
 				conceptWriter.write(String.join(TAB, conceptId, effectiveTime, active, moduleId, definitionStatusId));
@@ -97,7 +97,7 @@ public class RF2ExtractionWriter extends ImpotentComponentFactory implements Aut
 	}
 
 	@Override
-	public void newDescriptionState(String id, String effectiveTime, String active, String moduleId, String conceptId, String languageCode, String typeId, String term, String caseSignificanceId) {
+	public void newDescriptionState(String filename, long lineNumber, String id, String effectiveTime, String active, String moduleId, String conceptId, String languageCode, String typeId, String term, String caseSignificanceId) {
 		if (conceptIds.contains(parseLong(conceptId))) {
 			descriptionIds.add(parseLong(id));
 			try {
@@ -110,7 +110,7 @@ public class RF2ExtractionWriter extends ImpotentComponentFactory implements Aut
 	}
 
 	@Override
-	public void newReferenceSetMemberState(String filename, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
+	public void newReferenceSetMemberState(String filename, long lineNumber, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 		if (fieldNames.length == 7 && fieldNames[6].equals("acceptabilityId")) {
 			if (descriptionIds.contains(parseLong(referencedComponentId))) {
 				try {

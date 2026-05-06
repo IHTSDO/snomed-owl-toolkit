@@ -49,8 +49,8 @@ public class OntologyServiceTest {
 	}
 
 	private void addAttribute(String attribute, SnomedTaxonomyLoader snomedTaxonomyLoader) {
-		snomedTaxonomyLoader.newConceptState(attribute, "", "1", Concepts.SNOMED_CT_CORE_MODULE, "");
-		snomedTaxonomyLoader.newRelationshipState("101", "", "1", Concepts.SNOMED_CT_CORE_MODULE, attribute, Concepts.CONCEPT_MODEL_ATTRIBUTE, "0", Concepts.IS_A, Concepts.INFERRED_RELATIONSHIP, "");
+		snomedTaxonomyLoader.newConceptState("", 0L, attribute, "", "1", Concepts.SNOMED_CT_CORE_MODULE, "");
+		snomedTaxonomyLoader.newRelationshipState("", 0L, "101", "", "1", Concepts.SNOMED_CT_CORE_MODULE, attribute, Concepts.CONCEPT_MODEL_ATTRIBUTE, "0", Concepts.IS_A, Concepts.INFERRED_RELATIONSHIP, "");
 	}
 
 	private List<PropertyChain> sorted(Set<PropertyChain> propertyChains) {
