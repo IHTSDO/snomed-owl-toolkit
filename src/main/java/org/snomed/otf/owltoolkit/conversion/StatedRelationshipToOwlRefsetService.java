@@ -503,7 +503,7 @@ public class StatedRelationshipToOwlRefsetService {
 		private String extensionModuleId = null;
 		
 		@Override
-		public void newConceptState(String conceptId, String effectiveTime, String active, String moduleId, String definitionStatusId) {
+		public void newConceptState(String filename, long lineNumber, String conceptId, String effectiveTime, String active, String moduleId, String definitionStatusId) {
 			if ("1".equals(active)) {
 				if ("900000000000012004".equals(moduleId) || "900000000000207008".equals(moduleId)) {
 					activeInternationalConcepts.add(Long.valueOf(conceptId));
@@ -537,7 +537,7 @@ public class StatedRelationshipToOwlRefsetService {
 		}
 
 		@Override
-		public void newRelationshipState(String id, String effectiveTime, String active, String moduleId, String sourceId, String destinationId, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
+		public void newRelationshipState(String filename, long lineNumber, String id, String effectiveTime, String active, String moduleId, String sourceId, String destinationId, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
 			if (active.equals("1") && characteristicTypeId.equals(Concepts.STATED_RELATIONSHIP)) {
 				// Make active stated relationship inactive
 				try {
@@ -569,7 +569,7 @@ public class StatedRelationshipToOwlRefsetService {
 		}
 		
 		@Override
-		public void newReferenceSetMemberState(String filename, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
+		public void newReferenceSetMemberState(String filename, long lineNumber, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 			// id	effectiveTime	active	moduleId	refsetId	referencedComponentId	owlExpression
 			if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET)) {
 				try {

@@ -67,7 +67,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	}
 
 	@Override
-	public void newConceptState(String conceptId, String effectiveTime, String active, String moduleId, String definitionStatusId) {
+	public void newConceptState(String filename, long lineNumber, String conceptId, String effectiveTime, String active, String moduleId, String definitionStatusId) {
 		long id = parseLong(conceptId);
 		if (ACTIVE.equals(active)) {
 			snomedTaxonomy.getAllConceptIds().add(id);
@@ -94,12 +94,12 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
-			componentFactoryTap.newConceptState(conceptId, effectiveTime, active, moduleId, definitionStatusId);
+			componentFactoryTap.newConceptState(filename, lineNumber, conceptId, effectiveTime, active, moduleId, definitionStatusId);
 		}
 	}
 
 	@Override
-	public void newRelationshipState(String id, String effectiveTime, String active, String moduleId, String sourceId, String destinationId, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
+	public void newRelationshipState(String filename, long lineNumber, String id, String effectiveTime, String active, String moduleId, String sourceId, String destinationId, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
 		boolean stated = STATED_RELATIONSHIP.equals(characteristicTypeId);
 		long conceptId = parseLong(sourceId);
 
@@ -143,7 +143,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
-			componentFactoryTap.newRelationshipState(id, effectiveTime, active, moduleId, sourceId, destinationId, relationshipGroup, typeId, characteristicTypeId, modifierId);
+			componentFactoryTap.newRelationshipState(filename, lineNumber, id, effectiveTime, active, moduleId, sourceId, destinationId, relationshipGroup, typeId, characteristicTypeId, modifierId);
 		}
 
 		// Detect partially deleted concepts to be cleaned up
@@ -153,7 +153,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	}
 
 	@Override
-	public void newConcreteRelationshipState(String id, String effectiveTime, String active, String moduleId, String sourceId, String value, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
+	public void newConcreteRelationshipState(String filename, long lineNumber, String id, String effectiveTime, String active, String moduleId, String sourceId, String value, String relationshipGroup, String typeId, String characteristicTypeId, String modifierId) {
 		boolean stated = false;
 
 		if (ACTIVE.equals(active)) {
@@ -177,7 +177,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	}
 
 	@Override
-	public void newReferenceSetMemberState(String filename, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
+	public void newReferenceSetMemberState(String filename, long lineNumber, String[] fieldNames, String id, String effectiveTime, String active, String moduleId, String refsetId, String referencedComponentId, String... otherValues) {
 		boolean activeBool = ACTIVE.equals(active);
 		if (refsetId.equals(Concepts.OWL_AXIOM_REFERENCE_SET) && owlParsingExceptionThrown == null) {
 			if (activeBool) {
@@ -223,7 +223,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
-			componentFactoryTap.newReferenceSetMemberState(filename, fieldNames, id, effectiveTime, active, moduleId, refsetId, referencedComponentId, otherValues);
+			componentFactoryTap.newReferenceSetMemberState(filename, lineNumber, fieldNames, id, effectiveTime, active, moduleId, refsetId, referencedComponentId, otherValues);
 		}
 	}
 
@@ -237,7 +237,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 	}
 
 	@Override
-	public void newDescriptionState(String id, String effectiveTime, String active, String moduleId, String conceptId, String languageCode, String typeId, String term, String caseSignificanceId) {
+	public void newDescriptionState(String filename, long lineNumber, String id, String effectiveTime, String active, String moduleId, String conceptId, String languageCode, String typeId, String term, String caseSignificanceId) {
 		if (ACTIVE.equals(active)) {
 			snomedTaxonomy.addDescription(conceptId, id, term, typeId, languageCode);
 		} else {
@@ -245,7 +245,7 @@ public class SnomedTaxonomyLoader extends ImpotentComponentFactory {
 		}
 		ComponentFactory componentFactoryTap = getComponentFactoryTap();
 		if (componentFactoryTap != null) {
-			componentFactoryTap.newDescriptionState(id, effectiveTime, active, moduleId, conceptId, languageCode, typeId, term, caseSignificanceId);
+			componentFactoryTap.newDescriptionState(filename, lineNumber, id, effectiveTime, active, moduleId, conceptId, languageCode, typeId, term, caseSignificanceId);
 		}
 	}
 
