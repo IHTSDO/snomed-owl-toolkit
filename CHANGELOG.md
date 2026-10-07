@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 The change log format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 6.0.1 Release - October 2026
+### Security
+- PIP-1335 Restrict OWL axiom expressions to supported axiom types and block OWL import resolution, preventing remote URL fetches and local file reads from axiom reference set content
+
+### Changes
+- Axiom reference set members using any other axiom type now fail to load with an "Unsupported axiom expression" error. Supported types: `SubClassOf`, `EquivalentClasses`, `SubObjectPropertyOf`, `SubDataPropertyOf`, `SubAnnotationPropertyOf`, `TransitiveObjectProperty`, `ReflexiveObjectProperty`
+
+## 6.0.0 Release - July 2026
+### Breaking
+- PIP-1059 Support for Java 25, including updated `--add-opens` JVM flags
+
+### Improvements
+- PIP-1059 Upgrade snomed-parent-bom to 4.0.0
+
+### Fixes
+- MAINT-2717 Fix compile error
+
+## 5.8.0 Release - April 2026
+### Improvements
+- PIP-980 Upgrade snomed-parent-bom to 3.14.0, including a newer snomed-boot
+
+## 5.7.0 Release - February 2026
+### Improvements
+- RAP-200 Update file patterns to load derivative OWL expression refsets such as GMDN (`der2_sRefset_GMDNMapOWLExpression...`)
+
+## 5.6.0 Release - July 2025
+### Improvements
+- MAINT-2840 Remove the top level annotation property as a parent of sub annotation properties to avoid redundancy
+
+## 5.5.0 Release - January 2025
+### Improvements
+- MAINT-2713 Add Belgian German (de-be) language reference set to language-refset-dialect-map.properties
+- Add Canada French (fr-ca) and Canada English (en-ca) language reference sets to language-refset-dialect-map.properties
+- PIP-561 Upgrade snomed-parent-bom to 3.9.0
+
+## 5.4.0 Release - June 2024
+### Improvements
+- VAL-385 Add `convertAxiomToRelationships(String owlExpression, AtomicInteger groupOffset)` overload
+- Add French (France) language reference set to language-refset-dialect-map.properties
+
 ## 5.3.0 Release - May 2024
 ### Fixes
 - Issue #91 MAINT-2554 Add jacoco-maven-plugin version to avoid different version being used during mvn build
