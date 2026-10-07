@@ -175,7 +175,11 @@ public class ReasonerTaxonomyWalker {
 	private NodeSet<OWLClass> walkClasses(final Node<OWLClass> node) {
 
 		if (isNodeProcessed(node)) {
-			return reasoner.getSubClasses(node.getRepresentativeElement(), true);
+			// The top node holds no concepts so always counts as processed, its children still need walking.
+			// Any other processed node queued its children when it was processed. Queuing them again would walk
+			// the whole subtree again, and that repeats below every concept with more than one parent,
+			// so the work grows with the number of paths through the hierarchy rather than the number of concepts.
+			return node.isTopNode() ? reasoner.getSubClasses(node.getRepresentativeElement(), true) : EMPTY_NODE_SET;
 		}
 
 		// Check first if we are at the bottom node, as all OWL classes are superclasses of Nothing

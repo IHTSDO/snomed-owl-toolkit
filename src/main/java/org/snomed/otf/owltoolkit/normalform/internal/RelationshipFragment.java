@@ -22,7 +22,6 @@ package org.snomed.otf.owltoolkit.normalform.internal;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.Sets;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import org.snomed.otf.owltoolkit.classification.ReasonerTaxonomy;
 import org.snomed.otf.owltoolkit.domain.Relationship;
 import org.snomed.otf.owltoolkit.normalform.RelationshipNormalFormGenerator;
@@ -32,7 +31,6 @@ import org.snomed.otf.owltoolkit.ontology.PropertyChain;
 import java.text.MessageFormat;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -133,24 +131,18 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 		 *
 		 */
 
-		final Set<Long> BAttributeClosure = getTransitiveClosure(B.getTypeId());
-
 		if (!A.isConcreteValue()) {
-			final Set<Long> BValueClosure = getTransitiveClosure(B.getDestinationId());
-
 			// Rule 1
-			if (BAttributeClosure.contains(A.getTypeId()) && BValueClosure.contains(A.getDestinationId())) {
+			if (isSameOrSupertype(A.getTypeId(), B.getTypeId()) && isSameOrSupertype(A.getDestinationId(), B.getDestinationId())) {
 				return true;
 			}
 
 			// Rule 2
 			else {
-				Set<PropertyChain> relevantPropertyChains = relationshipNormalFormGenerator.getPropertyChains().stream()
-						.filter(propertyChain -> BAttributeClosure.contains(propertyChain.getSourceType()))
-						.filter(propertyChain -> propertyChain.getInferredType().equals(A.getTypeId()))
-						.collect(Collectors.toSet());
-				for (PropertyChain propertyChain : relevantPropertyChains) {
-					if (getPropertyChainTransitiveClosure(B.getDestinationId(), propertyChain.getDestinationType())
+				for (PropertyChain propertyChain : relationshipNormalFormGenerator.getPropertyChains()) {
+					if (propertyChain.getInferredType() == A.getTypeId()
+							&& isSameOrSupertype(propertyChain.getSourceType(), B.getTypeId())
+							&& getPropertyChainTransitiveClosure(B.getDestinationId(), propertyChain.getDestinationType())
 							.contains(A.getDestinationId())) {
 						return true;
 					}
@@ -158,7 +150,7 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 			}
 		} else {
 			// Rule 1
-			if (BAttributeClosure.contains(A.getTypeId()) && A.getValue() != null && A.getValue().equals(B.getValue())) {
+			if (isSameOrSupertype(A.getTypeId(), B.getTypeId()) && A.getValue() != null && A.getValue().equals(B.getValue())) {
 				return true;
 			}
 
@@ -192,20 +184,19 @@ public final class RelationshipFragment implements SemanticComparable<Relationsh
 	}
 
 	/**
-	 * Collects all parent concepts reachable from the specified concept. The
-	 * returned set also includes the starting concept.
+	 * Checks whether a concept is the same as, or an inferred supertype of, another concept.
+	 * The ancestor set is checked in place because this is called for every pair of fragments compared.
 	 *
+	 * @param candidateSupertypeId
+	 *            the concept which may be the same or a supertype
 	 * @param conceptId
 	 *            the concept to start from
 	 *
-	 * @return a set containing the starting concept and all reachable
-	 *         supertypes
+	 * @return true if the candidate is the starting concept or one of its supertypes
 	 */
-	private Set<Long> getTransitiveClosure(final long conceptId) {
-		final Set<Long> ancestors = relationshipNormalFormGenerator.getReasonerTaxonomy().getAncestors(conceptId);
-		final Set<Long> conceptAndAncestors = new LongOpenHashSet(ancestors);
-		conceptAndAncestors.add(conceptId);
-		return conceptAndAncestors;
+	private boolean isSameOrSupertype(final long candidateSupertypeId, final long conceptId) {
+		return candidateSupertypeId == conceptId
+				|| relationshipNormalFormGenerator.getReasonerTaxonomy().getAncestors(conceptId).contains(candidateSupertypeId);
 	}
 
 	private Set<Long> getPropertyChainTransitiveClosure(final long conceptId, Long chainDestinationType) {

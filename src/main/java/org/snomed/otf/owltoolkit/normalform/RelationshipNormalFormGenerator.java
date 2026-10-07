@@ -249,19 +249,20 @@ public final class RelationshipNormalFormGenerator {
 
 		// Index existing inferred non-IS A relationship groups into a GroupSet (without redundancy check)
 		final GroupSet inferredGroups = new GroupSet();
-		final Iterable<Group> ownInferredGroups = toGroups(true, ownInferredNonIsAFragments);
+		final Iterable<Group> ownInferredGroups = toGroups(true, false, ownInferredNonIsAFragments);
 		for (final Group ownInferredGroup : ownInferredGroups) {
 			inferredGroups.addUnique(ownInferredGroup);
 		}
 
 		// Eliminate redundancy between existing stated non-IS A relationship groups
 		final GroupSet groups = new GroupSet();
-		final Iterable<Group> ownGroups = toGroups(false, ownStatedNonIsAFragments);
+		final Iterable<Group> ownGroups = toGroups(false, false, ownStatedNonIsAFragments);
 		Iterables.addAll(groups, ownGroups);
 
 		// Continue by adding stated non-IS A relationship groups from parents indicated by the reasoner
 		for (Long parentId : parentStatedNonIsAFragments.keySet()) {
-			final Iterable<Group> otherGroups = toGroups(false, parentStatedNonIsAFragments.get(parentId));
+			// Parent fragments are already in normal form, so the union groups within each group are already disjoint
+			final Iterable<Group> otherGroups = toGroups(false, true, parentStatedNonIsAFragments.get(parentId));
 			Iterables.addAll(groups, otherGroups);
 		}
 
@@ -286,14 +287,18 @@ public final class RelationshipNormalFormGenerator {
 		return parentIds.stream().map(parentId -> new Relationship(IS_A_LONG, parentId)).collect(Collectors.toSet());
 	}
 
-	private Iterable<Group> toGroups(final boolean preserveNumbers, final Collection<Relationship> nonIsARelationshipFragments) {
+	/**
+	 * @param alreadyDisjoint true when the fragments are already in normal form, so redundancy between the union groups
+	 *                        of each group does not need checking again
+	 */
+	private Iterable<Group> toGroups(final boolean preserveNumbers, final boolean alreadyDisjoint, final Collection<Relationship> nonIsARelationshipFragments) {
 
 		final Map<Integer, Collection<Relationship>> relationshipsByGroupId = Multimaps.index(nonIsARelationshipFragments, Relationship::getGroup).asMap();
 
 		final Collection<Collection<Group>> groups = Maps.transformEntries(relationshipsByGroupId,
 				(EntryTransformer<Integer, Collection<Relationship>, Collection<Group>>) (key, values) -> {
 					final Iterable<UnionGroup> unionGroups = toUnionGroups(preserveNumbers, values);
-					final Set<UnionGroup> disjointUnionGroups = getDisjointComparables(unionGroups);
+					final Iterable<UnionGroup> disjointUnionGroups = alreadyDisjoint ? unionGroups : getDisjointComparables(unionGroups);
 
 					if (key == 0) {
 						// Relationships in group 0 form separate groups
@@ -307,8 +312,8 @@ public final class RelationshipNormalFormGenerator {
 		return Iterables.concat(groups);
 	}
 
-	private Iterable<Group> toZeroGroups(final Set<UnionGroup> disjointUnionGroups) {
-		return disjointUnionGroups.stream().map(unionGroup -> {
+	private Iterable<Group> toZeroGroups(final Iterable<UnionGroup> disjointUnionGroups) {
+		return Streams.stream(disjointUnionGroups).map(unionGroup -> {
 			final Group group = new Group(ImmutableList.of(unionGroup));
 			group.setGroupNumber(ZERO_GROUP);
 			return group;
