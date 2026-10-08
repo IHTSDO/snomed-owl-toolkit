@@ -316,7 +316,7 @@ public class AxiomRelationshipConversionService {
 		try {
 			owlAxiom = snomedTaxonomyLoader.deserialiseAxiom(axiomExpression);
 		} catch (OWLOntologyCreationException e) {
-			throw new ConversionException("Failed to deserialise axiom expression '" + axiomExpression + "'.");
+			throw new ConversionException("Failed to deserialise axiom expression '" + axiomExpression + "'.", e);
 		}
 		return owlAxiom;
 	}

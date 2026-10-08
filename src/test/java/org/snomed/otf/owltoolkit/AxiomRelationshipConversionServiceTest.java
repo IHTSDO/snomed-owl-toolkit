@@ -3,6 +3,7 @@ package org.snomed.otf.owltoolkit;
 import com.google.common.collect.Sets;
 import org.junit.Before;
 import org.junit.Test;
+import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.snomed.otf.owltoolkit.constants.Concepts;
 import org.snomed.otf.owltoolkit.conversion.AxiomRelationshipConversionService;
 import org.snomed.otf.owltoolkit.conversion.ConversionException;
@@ -464,5 +465,17 @@ public class AxiomRelationshipConversionServiceTest {
 		return groupsString.toString();
 	}
 
+	@Test
+	public void testRejectedAxiomKeepsCause() {
+		String axiom = "Import(<http://127.0.0.1:8099/ssrf-test>) SubClassOf(:404684003 :138875005)";
+		try {
+			axiomRelationshipConversionService.convertAxiomToRelationships(axiom);
+			fail("Expected ConversionException");
+		} catch (ConversionException e) {
+			assertEquals("Failed to deserialise axiom expression '" + axiom + "'.", e.getMessage());
+			assertTrue(e.getCause() instanceof OWLOntologyCreationException);
+			assertTrue(e.getCause().getMessage(), e.getCause().getMessage().startsWith("Unsupported axiom expression 'Import'"));
+		}
+	}
 
 }
